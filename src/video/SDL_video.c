@@ -1196,6 +1196,16 @@ SDL_GetWindowDisplayMode(SDL_Window * window, SDL_DisplayMode * mode)
     return 0;
 }
 
+void*
+SDL_GetWindowICCProfile(SDL_Window * window, size_t* size)
+{
+    if (!_this->GetWindowICCProfile) {
+        SDL_Unsupported();
+        return NULL;
+    }
+    return _this->GetWindowICCProfile(_this, window, size);
+}
+
 Uint32
 SDL_GetWindowPixelFormat(SDL_Window * window)
 {
@@ -1601,6 +1611,7 @@ SDL_CreateWindow(const char *title, int x, int y, int w, int h, Uint32 flags)
     window->brightness = 1.0f;
     window->next = _this->windows;
     window->is_destroying = SDL_FALSE;
+    window->display_index = SDL_GetWindowDisplayIndex(window);
 
     if (_this->windows) {
         _this->windows->prev = window;
@@ -1680,6 +1691,7 @@ SDL_CreateWindowFrom(const void *data)
         return NULL;
     }
 
+    window->display_index = SDL_GetWindowDisplayIndex(window);
     PrepareDragAndDropSupport(window);
 
     return window;
@@ -2807,8 +2819,25 @@ SDL_OnWindowHidden(SDL_Window * window)
 void
 SDL_OnWindowResized(SDL_Window * window)
 {
+    int display_index = SDL_GetWindowDisplayIndex(window);
     window->surface_valid = SDL_FALSE;
     SDL_SendWindowEvent(window, SDL_WINDOWEVENT_SIZE_CHANGED, window->w, window->h);
+
+    if (display_index != window->display_index && display_index != -1) {
+        window->display_index = display_index;
+        SDL_SendWindowEvent(window, SDL_WINDOWEVENT_DISPLAY_CHANGED, window->display_index, 0);
+    }
+}
+
+void
+SDL_OnWindowMoved(SDL_Window * window)
+{
+    int display_index = SDL_GetWindowDisplayIndex(window);
+
+    if (display_index != window->display_index && display_index != -1) {
+        window->display_index = display_index;
+        SDL_SendWindowEvent(window, SDL_WINDOWEVENT_DISPLAY_CHANGED, window->display_index, 0);
+    }
 }
 
 void

@@ -876,3 +876,4 @@ SDL_DYNAPI_PROC(int,SDL_AndroidShowToast,(const char *a, int b, int c, int d, in
 SDL_DYNAPI_PROC(int,SDL_GetAudioDeviceSpec,(int a, int b, SDL_AudioSpec *c),(a,b,c),return)
 SDL_DYNAPI_PROC(void,SDL_TLSCleanup,(void),(),)
 SDL_DYNAPI_PROC(void,SDL_SetWindowAlwaysOnTop,(SDL_Window *a, SDL_bool b),(a,b),)
+SDL_DYNAPI_PROC(void*,SDL_GetWindowICCProfile,(SDL_Window *a, size_t *b),(a,b),return)

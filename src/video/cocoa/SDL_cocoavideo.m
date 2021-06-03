@@ -96,6 +96,7 @@ Cocoa_CreateDevice(int devindex)
     device->SetWindowFullscreen = Cocoa_SetWindowFullscreen;
     device->SetWindowGammaRamp = Cocoa_SetWindowGammaRamp;
     device->GetWindowGammaRamp = Cocoa_GetWindowGammaRamp;
+    device->GetWindowICCProfile = Cocoa_GetWindowICCProfile;
     device->SetWindowMouseGrab = Cocoa_SetWindowMouseGrab;
     device->DestroyWindow = Cocoa_DestroyWindow;
     device->GetWindowWMInfo = Cocoa_GetWindowWMInfo;
