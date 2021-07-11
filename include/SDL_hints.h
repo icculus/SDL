@@ -96,6 +96,17 @@ extern "C" {
 #define SDL_HINT_RENDER_OPENGL_SHADERS      "SDL_RENDER_OPENGL_SHADERS"
 
 /**
+ *  \brief  A variable controlling if downscaling should use mipmap pyramids
+ *
+ *  This variable can be set to the following values:
+ *    "0"       - Disable mipmap generation and mipmap filtering
+ *    "1"       - Enable automatic mipmap generation and mipmap texture filtering
+ *
+ *  By default mipmap filtering is not enabled
+ */
+#define SDL_HINT_RENDER_OPENGL_FILTER_MIPMAP      "SDL_RENDER_OPENGL_FILTER_MIPMAP"
+
+/**
  *  \brief  A variable controlling whether the Direct3D device is initialized for thread-safe operations.
  *
  *  This variable can be set to the following values:
