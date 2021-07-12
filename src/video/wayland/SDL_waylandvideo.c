@@ -52,6 +52,7 @@
 #include "keyboard-shortcuts-inhibit-unstable-v1-client-protocol.h"
 #include "idle-inhibit-unstable-v1-client-protocol.h"
 #include "xdg-activation-v1-client-protocol.h"
+#include "surface-suspension-v1-client-protocol.h"
 
 #define WAYLANDVID_DRIVER_NAME "wayland"
 
@@ -472,6 +473,8 @@ display_handle_global(void *data, struct wl_registry *registry, uint32_t id,
         Wayland_add_data_device_manager(d, id, version);
     } else if (strcmp(interface, "zxdg_decoration_manager_v1") == 0) {
         d->decoration_manager = wl_registry_bind(d->registry, id, &zxdg_decoration_manager_v1_interface, 1);
+    } else if (strcmp(interface, "wp_surface_suspension_v1") == 0) {
+        d->suspension_manager = wl_registry_bind(d->registry, id, &wp_surface_suspension_manager_v1_interface, 1);
 
 #ifdef SDL_VIDEO_DRIVER_WAYLAND_QT_TOUCH
     } else if (strcmp(interface, "qt_touch_extension") == 0) {
@@ -631,6 +634,9 @@ Wayland_VideoQuit(_THIS)
 
     if (data->decoration_manager)
         zxdg_decoration_manager_v1_destroy(data->decoration_manager);
+
+    if (data->suspension_manager)
+        wp_surface_suspension_manager_v1_destroy(data->suspension_manager);
 
     if (data->compositor)
         wl_compositor_destroy(data->compositor);

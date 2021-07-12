@@ -38,6 +38,7 @@
 #include "xdg-decoration-unstable-v1-client-protocol.h"
 #include "idle-inhibit-unstable-v1-client-protocol.h"
 #include "xdg-activation-v1-client-protocol.h"
+#include "surface-suspension-v1-client-protocol.h"
 
 static float get_window_scale_factor(SDL_Window *window) {
       return ((SDL_WindowData*)window->driverdata)->scale_factor;
@@ -216,6 +217,26 @@ handle_surface_frame_done(void *data, struct wl_callback *cb, uint32_t time)
 
 static const struct wl_callback_listener surface_frame_listener = {
     handle_surface_frame_done
+};
+
+static void
+handle_surface_suspended(void *data, struct wp_surface_suspension_v1 *wp_surface_suspension_v1)
+{
+    SDL_SendWindowEvent((SDL_Window *)data, SDL_WINDOWEVENT_HIDDEN, 0, 0);
+}
+
+static void
+handle_surface_resumed(void *data, struct wp_surface_suspension_v1 *wp_surface_suspension_v1)
+{
+    /* Send SHOWN, to remove the HIDDEN flag, and EXPOSED, to request a frame */
+    SDL_Window *window = (SDL_Window *)data;
+    SDL_SendWindowEvent(window, SDL_WINDOWEVENT_SHOWN, 0, 0);
+    SDL_SendWindowEvent(window, SDL_WINDOWEVENT_EXPOSED, 0, 0);
+}
+
+static const struct wp_surface_suspension_v1_listener suspension_listener = {
+    handle_surface_suspended,
+    handle_surface_resumed
 };
 
 
@@ -1249,6 +1270,14 @@ int Wayland_CreateWindow(_THIS, SDL_Window *window)
         Wayland_input_lock_pointer(c->input);
     }
 
+    if (c->suspension_manager) {
+        data->suspension = wp_surface_suspension_manager_v1_get_surface_suspension(c->suspension_manager,
+                                                                                   data->surface);
+        wp_surface_suspension_v1_add_listener(data->suspension,
+                                              &suspension_listener,
+                                              window);
+    }
+
     wl_surface_commit(data->surface);
     WAYLAND_wl_display_flush(c->display);
 
@@ -1411,6 +1440,10 @@ void Wayland_DestroyWindow(_THIS, SDL_Window *window)
 
         if (wind->activation_token) {
             xdg_activation_token_v1_destroy(wind->activation_token);
+        }
+
+        if (wind->suspension) {
+            wp_surface_suspension_v1_destroy(wind->suspension);
         }
 
         SDL_free(wind->outputs);
