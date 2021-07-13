@@ -43,8 +43,17 @@
 
 /* GL and GLES2 headers conflict on Linux 32 bits */
 #if SDL_VIDEO_OPENGL_ES2 && !SDL_VIDEO_OPENGL
+#if SDL_VIDEO_OPENGL_METALANGLE
+#include <MetalANGLE/GLES2/gl2.h>
+#include <MetalANGLE/GLES2/gl2ext.h>
+#ifndef APIENTRY
+#define APIENTRY GL_APIENTRY
+#endif
+#else 
 #include "SDL_opengles2.h"
+#endif /* SDL_VIDEO_OPENGL_METALANGLE */
 #endif /* SDL_VIDEO_OPENGL_ES2 && !SDL_VIDEO_OPENGL */
+
 
 #if !SDL_VIDEO_OPENGL
 #ifndef GL_CONTEXT_RELEASE_BEHAVIOR_KHR
