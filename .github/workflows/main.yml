@@ -49,7 +49,14 @@ jobs:
           libxxf86vm-dev \
           libdrm-dev \
           libgbm-dev\
-          libpulse-dev
+          libpulse-dev \
+          libpango1.0-dev
+        sudo apt install meson
+        git clone https://gitlab.gnome.org/jadahl/libdecor.git
+        cd libdecor
+        meson build --buildtype release -Ddemo=false -Ddbus=disabled
+        ninja -C build
+        sudo meson install -C build
     - uses: actions/checkout@v2
     - name: Configure CMake
       run: cmake -B build ${{ matrix.platform.flags }}
