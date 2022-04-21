@@ -506,6 +506,7 @@ file(GLOB SOURCE_FILES
   ${SDL3_SOURCE_DIR}/src/dynapi/*.c
   ${SDL3_SOURCE_DIR}/src/events/*.c
   ${SDL3_SOURCE_DIR}/src/file/*.c
+  ${SDL3_SOURCE_DIR}/src/gpu/*.c
   ${SDL3_SOURCE_DIR}/src/joystick/*.c
   ${SDL3_SOURCE_DIR}/src/haptic/*.c
   ${SDL3_SOURCE_DIR}/src/hidapi/*.c
@@ -521,7 +522,6 @@ file(GLOB SOURCE_FILES
   ${SDL3_SOURCE_DIR}/src/timer/*.c
   ${SDL3_SOURCE_DIR}/src/video/*.c
   ${SDL3_SOURCE_DIR}/src/video/yuv2rgb/*.c)
-
 
 set(SDL_DEFAULT_ASSERT_LEVEL_CONFIGURED 1)
 if(SDL_ASSERTIONS MATCHES "^(auto|)$")
