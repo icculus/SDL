@@ -405,6 +405,7 @@ SOURCES="$SOURCES $srcdir/src/cpuinfo/*.c"
 SOURCES="$SOURCES $srcdir/src/dynapi/*.c"
 SOURCES="$SOURCES $srcdir/src/events/*.c"
 SOURCES="$SOURCES $srcdir/src/file/*.c"
+SOURCES="$SOURCES $srcdir/src/gpu/*.c"
 SOURCES="$SOURCES $srcdir/src/haptic/*.c"
 SOURCES="$SOURCES $srcdir/src/hidapi/*.c"
 SOURCES="$SOURCES $srcdir/src/joystick/*.c"
@@ -576,6 +577,14 @@ if test x$enable_cpuinfo != xyes; then
     AC_DEFINE(SDL_CPUINFO_DISABLED, 1, [ ])
 else
     SUMMARY_modules="${SUMMARY_modules} cpuinfo"
+fi
+AC_ARG_ENABLE(gpu,
+[AS_HELP_STRING([--enable-gpu], [Enable the GPU subsystem [default=yes]])],
+              , enable_gpu=yes)
+if test x$enable_gpu != xyes; then
+    AC_DEFINE(SDL_GPU_DISABLED, 1, [ ])
+else
+    SUMMARY_modules="${SUMMARY_modules} gpu"
 fi
 AC_ARG_ENABLE(assembly,
 [AS_HELP_STRING([--enable-assembly], [Enable assembly routines [default=yes]])],

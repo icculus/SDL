@@ -828,6 +828,7 @@ enable_misc
 enable_locale
 enable_loadso
 enable_cpuinfo
+enable_gpu
 enable_assembly
 enable_ssemath
 enable_mmx
@@ -1608,6 +1609,7 @@ Optional Features:
   --enable-loadso         Enable the shared object loading subsystem
                           [default=yes]
   --enable-cpuinfo        Enable the cpuinfo subsystem [default=yes]
+  --enable-gpu            Enable the GPU subsystem [default=yes]
   --enable-assembly       Enable assembly routines [default=yes]
   --enable-ssemath        Allow GCC to use SSE floating point math
                           [default=maybe]
@@ -17956,6 +17958,7 @@ SOURCES="$SOURCES $srcdir/src/cpuinfo/*.c"
 SOURCES="$SOURCES $srcdir/src/dynapi/*.c"
 SOURCES="$SOURCES $srcdir/src/events/*.c"
 SOURCES="$SOURCES $srcdir/src/file/*.c"
+SOURCES="$SOURCES $srcdir/src/gpu/*.c"
 SOURCES="$SOURCES $srcdir/src/haptic/*.c"
 SOURCES="$SOURCES $srcdir/src/hidapi/*.c"
 SOURCES="$SOURCES $srcdir/src/joystick/*.c"
@@ -18234,6 +18237,20 @@ $as_echo "#define SDL_CPUINFO_DISABLED 1" >>confdefs.h
 
 else
     SUMMARY_modules="${SUMMARY_modules} cpuinfo"
+fi
+# Check whether --enable-gpu was given.
+if test "${enable_gpu+set}" = set; then :
+  enableval=$enable_gpu;
+else
+  enable_gpu=yes
+fi
+
+if test x$enable_gpu != xyes; then
+
+$as_echo "#define SDL_GPU_DISABLED 1" >>confdefs.h
+
+else
+    SUMMARY_modules="${SUMMARY_modules} gpu"
 fi
 # Check whether --enable-assembly was given.
 if test "${enable_assembly+set}" = set; then :

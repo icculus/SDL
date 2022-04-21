@@ -488,6 +488,7 @@ file(GLOB SOURCE_FILES
   ${SDL2_SOURCE_DIR}/src/dynapi/*.c
   ${SDL2_SOURCE_DIR}/src/events/*.c
   ${SDL2_SOURCE_DIR}/src/file/*.c
+  ${SDL2_SOURCE_DIR}/src/gpu/*.c
   ${SDL2_SOURCE_DIR}/src/joystick/*.c
   ${SDL2_SOURCE_DIR}/src/haptic/*.c
   ${SDL2_SOURCE_DIR}/src/hidapi/*.c
