@@ -27,7 +27,7 @@ TARGETS = testatomic.exe testdisplayinfo.exe testbounds.exe testdraw2.exe &
           controllermap.exe testhaptic.exe testqsort.exe testresample.exe &
           testaudioinfo.exe testaudiocapture.exe loopwave.exe loopwavequeue.exe &
           testsurround.exe testyuv.exe testgl2.exe testvulkan.exe testnative.exe &
-          testautomation.exe
+          testautomation.exe testgpu_simple_clear.exe
 
 # testautomation sources
 TASRCS = testautomation.c testautomation_audio.c testautomation_clipboard.c &

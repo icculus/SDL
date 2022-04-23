@@ -40,6 +40,7 @@ TARGETS = \
 	testgamecontroller$(EXE) \
 	testgeometry$(EXE) \
 	testgesture$(EXE) \
+	testgpu_simple_clear$(EXE) \
 	testhaptic$(EXE) \
 	testhittesting$(EXE) \
 	testhotplug$(EXE) \
@@ -211,6 +212,9 @@ testgles2$(EXE): $(srcdir)/testgles2.c
 
 testgles2_sdf$(EXE): $(srcdir)/testgles2_sdf.c $(srcdir)/testutils.c
 	$(CC) -o $@ $^ $(CFLAGS) $(LIBS) @MATHLIB@
+
+testgpu_simple_clear$(EXE): $(srcdir)/testgpu_simple_clear.c
+	$(CC) -o $@ $^ $(CFLAGS) $(LIBS)
 
 testhaptic$(EXE): $(srcdir)/testhaptic.c
 	$(CC) -o $@ $^ $(CFLAGS) $(LIBS)
