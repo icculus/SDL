@@ -204,6 +204,7 @@ add_sdl_test_executable(controllermap NEEDS_RESOURCES TESTUTILS controllermap.c)
 add_sdl_test_executable(testvulkan testvulkan.c)
 add_sdl_test_executable(testoffscreen testoffscreen.c)
 add_sdl_test_executable(testgpu_simple_clear testgpu_simple_clear.c)
+add_sdl_test_executable(testgpu_spinning_cube testgpu_spinning_cube.c)
 
 cmake_push_check_state()
 
