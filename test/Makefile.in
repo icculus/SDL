@@ -41,6 +41,7 @@ TARGETS = \
 	testgeometry$(EXE) \
 	testgesture$(EXE) \
 	testgpu_simple_clear$(EXE) \
+	testgpu_spinning_cube$(EXE) \
 	testhaptic$(EXE) \
 	testhittesting$(EXE) \
 	testhotplug$(EXE) \
@@ -214,6 +215,9 @@ testgles2_sdf$(EXE): $(srcdir)/testgles2_sdf.c $(srcdir)/testutils.c
 	$(CC) -o $@ $^ $(CFLAGS) $(LIBS) @MATHLIB@
 
 testgpu_simple_clear$(EXE): $(srcdir)/testgpu_simple_clear.c
+	$(CC) -o $@ $^ $(CFLAGS) $(LIBS)
+
+testgpu_spinning_cube$(EXE): $(srcdir)/testgpu_spinning_cube.c
 	$(CC) -o $@ $^ $(CFLAGS) $(LIBS)
 
 testhaptic$(EXE): $(srcdir)/testhaptic.c
