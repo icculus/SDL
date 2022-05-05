@@ -507,6 +507,7 @@ file(GLOB SOURCE_FILES
   ${SDL3_SOURCE_DIR}/src/events/*.c
   ${SDL3_SOURCE_DIR}/src/file/*.c
   ${SDL3_SOURCE_DIR}/src/gpu/*.c
+  ${SDL3_SOURCE_DIR}/src/gpu/dummy/*.c
   ${SDL3_SOURCE_DIR}/src/joystick/*.c
   ${SDL3_SOURCE_DIR}/src/haptic/*.c
   ${SDL3_SOURCE_DIR}/src/hidapi/*.c
