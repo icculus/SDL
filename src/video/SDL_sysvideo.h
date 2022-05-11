@@ -105,6 +105,8 @@ struct SDL_Window
 
     void *gpu_device;  /* this is only used by the GPU API, don't touch. */
     void *gpu_backbuffer;  /* this is only used by the GPU API, don't touch. */
+    void *gpu_driverdata;  /* this is only used by the GPU API, don't touch. */
+    Uint64 gpu_framenum;  /* this is only used by the GPU API, don't touch. */
 
     void *driverdata;
 
