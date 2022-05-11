@@ -2203,7 +2203,9 @@ dnl     Work around that we don't have Objective-C support in autoconf
             AC_DEFINE(SDL_VIDEO_METAL, 1, [ ])
             if test x$enable_render = xyes -a x$enable_render_metal = xyes; then
                 AC_DEFINE(SDL_VIDEO_RENDER_METAL, 1, [ ])
+                AC_DEFINE(SDL_GPU_METAL, 1, [ ])
                 SOURCES="$SOURCES $srcdir/src/render/metal/*.m"
+                SOURCES="$SOURCES $srcdir/src/gpu/metal/*.m"
             fi
             SUMMARY_video="${SUMMARY_video} metal"
         else

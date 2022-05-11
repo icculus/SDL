@@ -418,6 +418,8 @@
 #undef SDL_VIDEO_RENDER_DIRECTFB
 #undef SDL_VIDEO_RENDER_METAL
 
+#undef SDL_GPU_METAL
+
 /* Enable OpenGL support */
 #undef SDL_VIDEO_OPENGL
 #undef SDL_VIDEO_OPENGL_ES

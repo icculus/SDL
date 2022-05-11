@@ -22695,7 +22695,11 @@ $as_echo "#define SDL_VIDEO_METAL 1" >>confdefs.h
 
 $as_echo "#define SDL_VIDEO_RENDER_METAL 1" >>confdefs.h
 
+
+$as_echo "#define SDL_GPU_METAL 1" >>confdefs.h
+
                 SOURCES="$SOURCES $srcdir/src/render/metal/*.m"
+                SOURCES="$SOURCES $srcdir/src/gpu/metal/*.m"
             fi
             SUMMARY_video="${SUMMARY_video} metal"
         else
