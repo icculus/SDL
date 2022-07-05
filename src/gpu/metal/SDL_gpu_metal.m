@@ -1559,7 +1559,7 @@ IsMetalAvailable(void)
 }
 
 static int
-METAL_GpuCreateDevice(SDL_GpuDevice *device)
+METAL_GpuCreateDevice(SDL_GpuDevice *device, uint8_t debugMode)
 {
     METAL_GpuDeviceData *devdata;
 

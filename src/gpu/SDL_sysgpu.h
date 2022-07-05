@@ -191,7 +191,7 @@ struct SDL_GpuStateCache
 typedef struct SDL_GpuDriver
 {
     const char *name;
-    int (*CreateDevice)(SDL_GpuDevice *device);
+    int (*CreateDevice)(SDL_GpuDevice *device, uint8_t debugMode);
 } SDL_GpuDriver;
 
 #endif /* SDL_sysgpu_h_ */

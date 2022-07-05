@@ -118,7 +118,7 @@ static void *allocate_obj_and_string(const size_t objlen, const char *str, char 
 
 /* !!! FIXME: change this API to allow selection of a specific GPU? */
 static int
-GpuCreateDeviceInternal(SDL_GpuDevice *device, const char *driver)
+GpuCreateDeviceInternal(SDL_GpuDevice *device, const char *driver, uint8_t debugMode)
 {
     size_t i;
 
@@ -126,7 +126,7 @@ GpuCreateDeviceInternal(SDL_GpuDevice *device, const char *driver)
         for (i = 0; i < SDL_arraysize(gpu_drivers); i++) {
             const SDL_GpuDriver *thisdriver = gpu_drivers[i];
             if (SDL_strcasecmp(driver, thisdriver->name) == 0) {
-                return thisdriver->CreateDevice(device);
+                return thisdriver->CreateDevice(device, debugMode);
             }
         }
         return SDL_SetError("GPU driver '%s' not found", driver);  /* possibly misnamed, possibly not built in */
@@ -139,7 +139,7 @@ GpuCreateDeviceInternal(SDL_GpuDevice *device, const char *driver)
         for (i = 0; i < SDL_arraysize(gpu_drivers); i++) {
             const SDL_GpuDriver *thisdriver = gpu_drivers[i];
             if (SDL_strcasecmp(driver, thisdriver->name) == 0) {
-                if (thisdriver->CreateDevice(device) == 0) {
+                if (thisdriver->CreateDevice(device, debugMode) == 0) {
                     return 0;
                 }
             }
@@ -150,7 +150,7 @@ GpuCreateDeviceInternal(SDL_GpuDevice *device, const char *driver)
     for (i = 0; i < SDL_arraysize(gpu_drivers); i++) {
         const SDL_GpuDriver *thisdriver = gpu_drivers[i];
         if (!driver || (SDL_strcasecmp(driver, thisdriver->name) != 0)) {
-            if (thisdriver->CreateDevice(device) == 0) {
+            if (thisdriver->CreateDevice(device, debugMode) == 0) {
                 return 0;
             }
         }
@@ -160,13 +160,13 @@ GpuCreateDeviceInternal(SDL_GpuDevice *device, const char *driver)
 }
 
 SDL_GpuDevice *
-SDL_GpuCreateDevice(const char *label, const char *driver)
+SDL_GpuCreateDevice(const char *label, const char *driver, uint8_t debugMode)
 {
     SDL_GpuDevice *device;
     ALLOC_OBJ_WITH_LABEL(SDL_GpuDevice, device, label);
 
     if (device != NULL) {
-        if (GpuCreateDeviceInternal(device, driver) == -1) {
+        if (GpuCreateDeviceInternal(device, driver, debugMode) == -1) {
             FREE_AND_NULL_OBJ_WITH_LABEL(device);
         }
     }

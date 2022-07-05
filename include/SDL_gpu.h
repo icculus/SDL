@@ -129,7 +129,7 @@ extern "C" {
  *
  *  some things that modern GPU APIs offer that we aren't exposing
  *  (but that does not mean we will _never_ expose)...
- * 
+ *
  *  - compute
  *  - geometry shaders
  *  - tesselation
@@ -164,7 +164,7 @@ const char *SDL_GpuGetDriverName(Uint32 index);
 /* !!! FIXME: Enumerate physical devices. Right now this API doesn't allow it. */
 
 typedef struct SDL_GpuDevice SDL_GpuDevice;
-SDL_GpuDevice *SDL_GpuCreateDevice(const char *label, const char *driver);  /* `label` is for debugging, not a specific device name to access. */
+SDL_GpuDevice *SDL_GpuCreateDevice(const char *label, const char *driver, uint8_t debugMode);  /* `label` is for debugging, not a specific device name to access. */
 void SDL_GpuDestroyDevice(SDL_GpuDevice *device);
 
 /* !!! FIXME: device caps */
@@ -594,7 +594,7 @@ SDL_GpuRenderPass *SDL_GpuStartRenderPass(const char *label, SDL_GpuCommandBuffe
 
 /*
  * These functions encode commands into the render pass...
- * 
+ *
  *  New states can be encoded into the render pass with these function and future encoded
  *   commands will use it. Previously encoded commands use whatever the current state
  *   was set to at the time. Try not to encode redundant state changes into a render pass
