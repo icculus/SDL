@@ -29,10 +29,14 @@
 
 extern const SDL_GpuDriver DUMMY_GpuDriver;
 extern const SDL_GpuDriver METAL_GpuDriver;
+extern const SDL_GpuDriver VULKAN_GpuDriver;
 
 static const SDL_GpuDriver *gpu_drivers[] = {
 #ifdef SDL_GPU_METAL
     &METAL_GpuDriver,
+#endif
+#ifdef SDL_GPU_VULKAN
+    &VULKAN_GpuDriver,
 #endif
     &DUMMY_GpuDriver
 };
