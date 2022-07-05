@@ -2575,6 +2575,11 @@ if(HAVE_VULKAN AND NOT SDL_LOADSO)
   set(SDL_GPU_VULKAN 0)
 endif()
 
+if(SDL_GPU_VULKAN)
+    file(GLOB GPU_VULKAN_SOURCES ${SDL2_SOURCE_DIR}/src/gpu/vulkan/*.c)
+    set(SOURCE_FILES ${SOURCE_FILES} ${GPU_VULKAN_SOURCES})
+endif()
+
 # Dummies
 # configure.ac does it differently:
 # if not have X
