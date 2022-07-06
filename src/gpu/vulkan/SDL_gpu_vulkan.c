@@ -236,6 +236,12 @@ static inline const char* VkErrorMessages(VkResult code)
     #undef ERR_TO_STR
 }
 
+#define VULKAN_SET_ERROR(res, fn) \
+    if (res != VK_SUCCESS) \
+    { \
+        return SDL_SetError("%s %s", #fn, VkErrorMessages(res)); \
+    }
+
 #define VULKAN_ERROR_CHECK(res, fn, ret) \
     if (res != VK_SUCCESS) \
     { \
@@ -273,10 +279,15 @@ typedef struct VULKAN_GpuDeviceData
     VkDevice logicalDevice;
     VkQueue unifiedQueue;
 
+    SDL_HashTable *commandPoolHashTable;
+
     /* Capabilities */
     uint8_t debugMode;
     uint8_t supportsDebugUtils;
     VulkanExtensions supportedExtensions;
+
+    /* Sync primitives */
+    SDL_mutex *acquireCommandBufferLock;
 
     #define VULKAN_INSTANCE_FUNCTION(name) \
         PFN_##name name;
@@ -284,6 +295,44 @@ typedef struct VULKAN_GpuDeviceData
         PFN_##name name;
     #include "SDL_gpu_vulkan_vkfuncs.h"
 } VULKAN_GpuDeviceData;
+
+/* Command buffer management */
+
+typedef struct VULKAN_CommandBufferData VULKAN_CommandBufferData;
+
+typedef struct VULKAN_CommandPool
+{
+    SDL_threadID threadID;
+    VkCommandPool commandPool;
+
+    VULKAN_CommandBufferData **inactiveCommandBuffers;
+    uint32_t inactiveCommandBufferCapacity;
+    uint32_t inactiveCommandBufferCount;
+} VULKAN_CommandPool;
+
+struct VULKAN_CommandBufferData
+{
+    VkCommandBuffer commandBuffer;
+    VULKAN_CommandPool *commandPool;
+    uint8_t submitted;
+};
+
+static uint32_t HashCommandPool(const void *key, void *data)
+{
+    /* FIXME: this is weird */
+    return (uint32_t) key;
+}
+
+static SDL_bool KeyMatchCommandPool(const void *a, const void *b, void *data)
+{
+    const VULKAN_CommandPool *poolA = (const VULKAN_CommandPool *) a;
+    const VULKAN_CommandPool *poolB = (const VULKAN_CommandPool *) b;
+
+    return poolA->threadID == poolB->threadID;
+}
+
+/* We'll never need to remove command pools so just return */
+static void NukeCommandPool(const void *key, const void *value, void *data) { /* no-op */ }
 
 static void VULKAN_GpuDestroyDevice(SDL_GpuDevice *device) { /* no-op */ }
 
@@ -325,7 +374,177 @@ static int VULKAN_GpuCreatePipeline(SDL_GpuPipeline *pipeline) { return 0; }
 static void VULKAN_GpuDestroyPipeline(SDL_GpuPipeline *pipeline) {}
 static int VULKAN_GpuCreateSampler(SDL_GpuSampler *sampler) { return 0; }
 static void VULKAN_GpuDestroySampler(SDL_GpuSampler *sampler) {}
-static int VULKAN_GpuCreateCommandBuffer(SDL_GpuCommandBuffer *cmdbuf) { return 0; }
+
+/* Command buffer management */
+
+static void VULKAN_INTERNAL_AllocateCommandBuffers(
+	VULKAN_GpuDeviceData *deviceData,
+	VULKAN_CommandPool *vulkanCommandPool,
+	uint32_t allocateCount
+) {
+	VkCommandBufferAllocateInfo allocateInfo;
+	VkResult vulkanResult;
+	uint32_t i;
+	VkCommandBuffer *commandBuffers = SDL_stack_alloc(VkCommandBuffer, allocateCount);
+	VULKAN_CommandBufferData *commandBufferData;
+
+	vulkanCommandPool->inactiveCommandBufferCapacity += allocateCount;
+
+	vulkanCommandPool->inactiveCommandBuffers = SDL_realloc(
+		vulkanCommandPool->inactiveCommandBuffers,
+		sizeof(VULKAN_CommandBufferData*) *
+		vulkanCommandPool->inactiveCommandBufferCapacity
+	);
+
+	allocateInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+	allocateInfo.pNext = NULL;
+	allocateInfo.commandPool = vulkanCommandPool->commandPool;
+	allocateInfo.commandBufferCount = allocateCount;
+	allocateInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+
+	vulkanResult = deviceData->vkAllocateCommandBuffers(
+		deviceData->logicalDevice,
+		&allocateInfo,
+		commandBuffers
+	);
+    VULKAN_ERROR_CHECK(vulkanResult, vkAllocateCommandBuffers, )
+
+    for (i = 0; i < allocateCount; i += 1)
+	{
+		commandBufferData = SDL_malloc(sizeof(VULKAN_CommandBufferData));
+		commandBufferData->commandPool = vulkanCommandPool;
+		commandBufferData->commandBuffer = commandBuffers[i];
+        commandBufferData->submitted = 0;
+
+		vulkanCommandPool->inactiveCommandBuffers[
+			vulkanCommandPool->inactiveCommandBufferCount
+		] = commandBufferData;
+		vulkanCommandPool->inactiveCommandBufferCount += 1;
+	}
+
+	SDL_stack_free(commandBuffers);
+}
+
+static VULKAN_CommandPool* VULKAN_INTERNAL_FetchCommandPool(
+	VULKAN_GpuDeviceData *deviceData,
+	SDL_threadID threadID
+) {
+	VULKAN_CommandPool *vulkanCommandPool;
+    SDL_bool foundInHash;
+	VkCommandPoolCreateInfo commandPoolCreateInfo;
+	VkResult vulkanResult;
+
+	foundInHash = SDL_FindInHashTable(
+		deviceData->commandPoolHashTable,
+		(void *) threadID,
+        (const void **) &vulkanCommandPool
+	);
+
+	if (foundInHash)
+	{
+		return vulkanCommandPool;
+	}
+
+	vulkanCommandPool = (VULKAN_CommandPool*) SDL_malloc(sizeof(VULKAN_CommandPool));
+
+	commandPoolCreateInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
+	commandPoolCreateInfo.pNext = NULL;
+	commandPoolCreateInfo.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
+	commandPoolCreateInfo.queueFamilyIndex = deviceData->queueFamilyIndex;
+
+	vulkanResult = deviceData->vkCreateCommandPool(
+		deviceData->logicalDevice,
+		&commandPoolCreateInfo,
+		NULL,
+		&vulkanCommandPool->commandPool
+	);
+    VULKAN_ERROR_CHECK(vulkanResult, vkCreateCommandPool, NULL)
+
+	vulkanCommandPool->threadID = threadID;
+
+	vulkanCommandPool->inactiveCommandBufferCapacity = 0;
+	vulkanCommandPool->inactiveCommandBufferCount = 0;
+	vulkanCommandPool->inactiveCommandBuffers = NULL;
+
+	VULKAN_INTERNAL_AllocateCommandBuffers(
+		deviceData,
+		vulkanCommandPool,
+		2
+	);
+
+    SDL_InsertIntoHashTable(
+        deviceData->commandPoolHashTable,
+        (void *) threadID,
+        vulkanCommandPool
+    );
+
+	return vulkanCommandPool;
+}
+
+static VULKAN_CommandBufferData* VULKAN_INTERNAL_GetInactiveCommandBufferFromPool(
+	VULKAN_GpuDeviceData *deviceData,
+	SDL_threadID threadID
+) {
+	VULKAN_CommandPool *commandPool =
+		VULKAN_INTERNAL_FetchCommandPool(deviceData, threadID);
+	VULKAN_CommandBufferData *commandBuffer;
+
+	if (commandPool->inactiveCommandBufferCount == 0)
+	{
+		VULKAN_INTERNAL_AllocateCommandBuffers(
+			deviceData,
+			commandPool,
+			commandPool->inactiveCommandBufferCapacity
+		);
+	}
+
+	commandBuffer = commandPool->inactiveCommandBuffers[commandPool->inactiveCommandBufferCount - 1];
+	commandPool->inactiveCommandBufferCount -= 1;
+
+	return commandBuffer;
+}
+
+/* It's much more efficient to pool command buffers and reuse them in Vulkan. */
+static int VULKAN_GpuCreateCommandBuffer(SDL_GpuCommandBuffer *cmdbuf)
+{
+    VULKAN_GpuDeviceData *deviceData = (VULKAN_GpuDeviceData*) cmdbuf->device->driverdata;
+    SDL_threadID threadID = SDL_ThreadID();
+    VULKAN_CommandBufferData *commandBufferData;
+    VkResult vulkanResult;
+    VkCommandBufferBeginInfo beginInfo;
+
+    SDL_LockMutex(deviceData->acquireCommandBufferLock);
+
+    commandBufferData = VULKAN_INTERNAL_GetInactiveCommandBufferFromPool(
+        deviceData,
+        threadID
+    );
+
+    SDL_UnlockMutex(deviceData->acquireCommandBufferLock);
+
+    commandBufferData->submitted = 0;
+
+    vulkanResult = deviceData->vkResetCommandBuffer(
+        commandBufferData->commandBuffer,
+        VK_COMMAND_BUFFER_RESET_RELEASE_RESOURCES_BIT
+    );
+    VULKAN_SET_ERROR(vulkanResult, vkResetCommandBuffer)
+
+    beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+    beginInfo.pNext = NULL;
+    beginInfo.flags = 0;
+    beginInfo.pInheritanceInfo = NULL;
+
+    vulkanResult = deviceData->vkBeginCommandBuffer(
+        commandBufferData->commandBuffer,
+        &beginInfo
+    );
+    VULKAN_SET_ERROR(vulkanResult, vkBeginCommandBuffer)
+
+    cmdbuf->driverdata = commandBufferData;
+
+    return 0;
+}
 
 static int VULKAN_GpuStartRenderPass(SDL_GpuRenderPass *pass, Uint32 num_color_attachments, const SDL_GpuColorAttachmentDescription *color_attachments, const SDL_GpuDepthAttachmentDescription *depth_attachment, const SDL_GpuStencilAttachmentDescription *stencil_attachment)
 {
@@ -724,7 +943,7 @@ static uint8_t VULKAN_INTERNAL_QuerySwapChainSupport(
 		surface,
 		&outputDetails->capabilities
 	);
-	VULKAN_ERROR_CHECK(result, vkGetPhysicalDeviceSurfaceCapabilitiesKHR, 0)
+	VULKAN_SET_ERROR(result, vkGetPhysicalDeviceSurfaceCapabilitiesKHR)
 
 	if (!(outputDetails->capabilities.supportedCompositeAlpha & VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR))
 	{
@@ -737,14 +956,14 @@ static uint8_t VULKAN_INTERNAL_QuerySwapChainSupport(
 		&outputDetails->formatsLength,
 		NULL
 	);
-	VULKAN_ERROR_CHECK(result, vkGetPhysicalDeviceSurfaceFormatsKHR, 0)
+	VULKAN_SET_ERROR(result, vkGetPhysicalDeviceSurfaceFormatsKHR)
 	result = deviceData->vkGetPhysicalDeviceSurfacePresentModesKHR(
 		physicalDevice,
 		surface,
 		&outputDetails->presentModesLength,
 		NULL
 	);
-	VULKAN_ERROR_CHECK(result, vkGetPhysicalDeviceSurfacePresentModesKHR, 0)
+	VULKAN_SET_ERROR(result, vkGetPhysicalDeviceSurfacePresentModesKHR)
 
 	/* Generate the arrays, if applicable */
 	if (outputDetails->formatsLength != 0)
@@ -978,7 +1197,7 @@ static uint8_t VULKAN_INTERNAL_DeterminePhysicalDevice(
         &physicalDeviceCount,
         NULL
     );
-    VULKAN_ERROR_CHECK(vulkanResult, vkEnumeratePhysicalDevices, 0)
+    VULKAN_SET_ERROR(vulkanResult, vkEnumeratePhysicalDevices)
 
     if (physicalDeviceCount == 0) {
         VULKAN_LogWarn("Failed to find any GPUs with Vulkan support!");
@@ -1163,7 +1382,7 @@ static uint8_t VULKAN_INTERNAL_CreateLogicalDevice(VULKAN_GpuDeviceData *deviceD
         &deviceData->logicalDevice
     );
     SDL_stack_free(deviceExtensions);
-    VULKAN_ERROR_CHECK(vulkanResult, vkCreateDevice, 0)
+    VULKAN_SET_ERROR(vulkanResult, vkCreateDevice)
 
 	/* Load vkDevice entry points */
 
@@ -1282,6 +1501,19 @@ VULKAN_GpuCreateDevice(SDL_GpuDevice *device, uint8_t debugMode)
         VULKAN_LogError("Failed to create logical device!");
         return -1;
     }
+
+    deviceData->acquireCommandBufferLock = SDL_CreateMutex();
+
+    /* Create command pool hash table */
+
+    deviceData->commandPoolHashTable = SDL_NewHashTable(
+        NULL,
+        1031,
+        HashCommandPool,
+        KeyMatchCommandPool,
+        NukeCommandPool,
+        SDL_FALSE
+    );
 
     device->driverdata = (void *) deviceData;
     device->DestroyDevice = VULKAN_GpuDestroyDevice;
