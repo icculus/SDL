@@ -141,7 +141,7 @@ static inline void CreateDeviceExtensionArray(
 typedef void (*VULKAN_LogFunc)(const char *msg);
 
 /* FIXME: Request that this become an actual log category */
-#define SDL_LOG_CATEGORY_GPU SDL_LOG_CATEGORY_RESERVED1
+#define SDL_LOG_CATEGORY_GPU SDL_LOG_CATEGORY_APPLICATION
 
 static void VULKAN_Default_LogInfo(const char *msg)
 {
