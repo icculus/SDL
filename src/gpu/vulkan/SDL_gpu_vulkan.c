@@ -1505,15 +1505,23 @@ VULKAN_GpuCreateDevice(SDL_GpuDevice *device, uint8_t debugMode)
     deviceData->acquireCommandBufferLock = SDL_CreateMutex();
 
     /* Create command pool hash table */
+    /* Vulkan only wants you to use command pools and buffers on threads they were created on */
+    /* FIXME: is there some way we can detect when a thread is no longer in play? */
 
     deviceData->commandPoolHashTable = SDL_NewHashTable(
         NULL,
-        1031,
+        512,
         HashCommandPool,
         KeyMatchCommandPool,
         NukeCommandPool,
         SDL_FALSE
     );
+
+    if (deviceData->commandPoolHashTable == NULL)
+    {
+        VULKAN_LogError("Failed to create command pool hash table!");
+        return -1;
+    }
 
     device->driverdata = (void *) deviceData;
     device->DestroyDevice = VULKAN_GpuDestroyDevice;
