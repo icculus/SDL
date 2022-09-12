@@ -1333,17 +1333,17 @@ KMSDRM_DestroyWindow(_THIS, SDL_Window *window)
            if there is a complete window, or 0 if we got here from SDL_CreateWindow()
            because KMSDRM_CreateWindow() returned an error so the window wasn't
            added to the windows list. */
+/* !!! FIXME: either let SDL_GL_UnloadLibrary handle this, or do it in video deinit */
         if (viddata->num_windows <= 1) {
 
-	    /* Unload EGL/GL library and free egl_data.  */
-	    if (_this->egl_data) {
-		SDL_EGL_UnloadLibrary(_this);
-		_this->gl_config.driver_loaded = 0;
-	    }
+            /* Unload EGL/GL library and free egl_data.  */
+            if (_this->egl_data) {
+                SDL_EGL_UnloadLibrary(_this);
+            }
 
-	    /* Free display plane, and destroy GBM device. */
-	    KMSDRM_GBMDeinit(_this, dispdata);
-	}
+            /* Free display plane, and destroy GBM device. */
+            KMSDRM_GBMDeinit(_this, dispdata);
+        }
 
     } else {
 

@@ -32,11 +32,13 @@
 int
 WIN_GLES_LoadLibrary(_THIS, const char *path) {
 
+    /* !!! FIXME: in practice this probably never hits anyone, but this is going to cause problems if you have an existing GL window and try to make a second, GLES, window */
     /* If the profile requested is not GL ES, switch over to WIN_GL functions  */
     if (_this->gl_config.profile_mask != SDL_GL_CONTEXT_PROFILE_ES) {
 #if SDL_VIDEO_OPENGL_WGL
         WIN_GLES_UnloadLibrary(_this);
         _this->GL_LoadLibrary = WIN_GL_LoadLibrary;
+        _this->GL_InitExtensions = WIN_GL_InitExtensions;
         _this->GL_GetProcAddress = WIN_GL_GetProcAddress;
         _this->GL_UnloadLibrary = WIN_GL_UnloadLibrary;
         _this->GL_CreateContext = WIN_GL_CreateContext;
@@ -69,6 +71,7 @@ WIN_GLES_CreateContext(_THIS, SDL_Window * window)
         /* Switch to WGL based functions */
         WIN_GLES_UnloadLibrary(_this);
         _this->GL_LoadLibrary = WIN_GL_LoadLibrary;
+        _this->GL_InitExtensions = WIN_GL_InitExtensions;
         _this->GL_GetProcAddress = WIN_GL_GetProcAddress;
         _this->GL_UnloadLibrary = WIN_GL_UnloadLibrary;
         _this->GL_CreateContext = WIN_GL_CreateContext;
@@ -78,7 +81,7 @@ WIN_GLES_CreateContext(_THIS, SDL_Window * window)
         _this->GL_SwapWindow = WIN_GL_SwapWindow;
         _this->GL_DeleteContext = WIN_GL_DeleteContext;
 
-        if (WIN_GL_LoadLibrary(_this, NULL) != 0) {
+         if (WIN_GL_LoadLibrary(_this, NULL) != 0) {
             return NULL;
         }
 
@@ -108,16 +111,13 @@ WIN_GLES_SetupWindow(_THIS, SDL_Window * window)
     SDL_Window *current_win = SDL_GL_GetCurrentWindow();
     SDL_GLContext current_ctx = SDL_GL_GetCurrentContext();
 
+sdfsdf
+
     if (_this->egl_data == NULL) {
-        /* !!! FIXME: commenting out this assertion is (I think) incorrect; figure out why driver_loaded is wrong for ANGLE instead. --ryan. */
-        #if 0  /* When hint SDL_HINT_OPENGL_ES_DRIVER is set to "1" (e.g. for ANGLE support), _this->gl_config.driver_loaded can be 1, while the below lines function. */
-        SDL_assert(!_this->gl_config.driver_loaded);
-        #endif
         if (SDL_EGL_LoadLibrary(_this, NULL, EGL_DEFAULT_DISPLAY, 0) < 0) {
             SDL_EGL_UnloadLibrary(_this);
             return -1;
         }
-        _this->gl_config.driver_loaded = 1;
     }
   
     /* Create the GLES window surface */

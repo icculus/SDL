@@ -488,6 +488,7 @@ SDL_EGL_GetVersion(_THIS) {
     }
 }
 
+/* !!! FIXME: SDL_EGL_LoadLibraryOnly should be SDL_EGL_LoadLibrary, and the rest of this should be SDL_EGL_InitExtensions */
 int
 SDL_EGL_LoadLibrary(_THIS, const char *egl_path, NativeDisplayType native_display, EGLenum platform)
 {
@@ -530,13 +531,11 @@ SDL_EGL_LoadLibrary(_THIS, const char *egl_path, NativeDisplayType native_displa
         _this->egl_data->egl_display = _this->egl_data->eglGetDisplay(native_display);
     }
     if (_this->egl_data->egl_display == EGL_NO_DISPLAY) {
-        _this->gl_config.driver_loaded = 0;
         *_this->gl_config.driver_path = '\0';
         return SDL_SetError("Could not get EGL display");
     }
 
     if (_this->egl_data->eglInitialize(_this->egl_data->egl_display, NULL, NULL) != EGL_TRUE) {
-        _this->gl_config.driver_loaded = 0;
         *_this->gl_config.driver_path = '\0';
         return SDL_SetError("Could not initialize EGL");
     }
@@ -558,16 +557,13 @@ SDL_EGL_LoadLibrary(_THIS, const char *egl_path, NativeDisplayType native_displa
    valid available GPU for EGL to use.
 */
 
+/* !!! FIXME: this should probably move to the "offscreen" directory. */
 int
 SDL_EGL_InitializeOffscreen(_THIS, int device)
 {
     void *egl_devices[SDL_EGL_MAX_DEVICES];
     EGLint num_egl_devices = 0;
     const char *egl_device_hint;
-
-    if (_this->gl_config.driver_loaded <= 0) {
-        return SDL_SetError("SDL_EGL_LoadLibraryOnly() has not been called or has failed.");
-    }
 
     /* Check for all extensions that are optional until used and fail if any is missing */
     if (_this->egl_data->eglQueryDevicesEXT == NULL) {

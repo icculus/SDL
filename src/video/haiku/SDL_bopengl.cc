@@ -48,19 +48,19 @@ int HAIKU_GL_LoadLibrary(_THIS, const char *path)
 {
 /* FIXME: Is this working correctly? */
     image_info info;
-            int32 cookie = 0;
+    int32 cookie = 0;
+
+    /* !!! FIXME: this code would deal with path==NULL, but this doesn't load anything if it's not already in-process */
+    /* !!! FIXME: (which is fine 99% of the time, but is strictly speaking incorrect.) */
     while (get_next_image_info(0, &cookie, &info) == B_OK) {
         void *location = NULL;
-        if( get_image_symbol(info.id, "glBegin", B_SYMBOL_TYPE_ANY,
-                &location) == B_OK) {
-
+        if (get_image_symbol(info.id, "glBegin", B_SYMBOL_TYPE_ANY, &location) == B_OK) {
             _this->gl_config.dll_handle = (void *) (addr_t) info.id;
-            _this->gl_config.driver_loaded = 1;
-            SDL_strlcpy(_this->gl_config.driver_path, "libGL.so",
-                    SDL_arraysize(_this->gl_config.driver_path));
+            SDL_strlcpy(_this->gl_config.driver_path, "libGL.so", SDL_arraysize(_this->gl_config.driver_path));
+            return 0;
         }
     }
-    return 0;
+    return -1;  /* not found. */
 }
 
 void *HAIKU_GL_GetProcAddress(_THIS, const char *proc)

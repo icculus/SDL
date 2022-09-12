@@ -3423,51 +3423,52 @@ SDL_VideoQuit(void)
 int
 SDL_GL_LoadLibrary(const char *path)
 {
-    int retval;
-
     if (!_this) {
         return SDL_UninitializedVideo();
-    }
-    if (_this->gl_config.driver_loaded) {
+    } else if (_this->gl_config.driver_loaded) {
         if (path && SDL_strcmp(path, _this->gl_config.driver_path) != 0) {
             return SDL_SetError("OpenGL library already loaded");
         }
-        retval = 0;
-    } else {
-        if (!_this->GL_LoadLibrary) {
-            return SDL_SetError("No dynamic GL support in current SDL video driver (%s)", _this->name);
-        }
-        retval = _this->GL_LoadLibrary(_this, path);
-    }
-    if (retval == 0) {
-        ++_this->gl_config.driver_loaded;
-    } else {
+    } else if (!_this->GL_LoadLibrary) {
+        return SDL_SetError("No dynamic GL support in current SDL video driver (%s)", _this->name);
+    } else if (_this->GL_LoadLibrary(_this, path) != 0) {
+        /* !!! FIXME: we have always called GL_UnloadLibrary if LoadLibrary fails here, but LoadLibrary should clean up itself if there's an error! */
         if (_this->GL_UnloadLibrary) {
             _this->GL_UnloadLibrary(_this);
         }
+        return -1;
     }
-    return (retval);
+
+    _this->gl_config.driver_loaded++;
+
+    if (_this->gl_config.driver_loaded == 1) {
+        if (_this->GL_InitExtensions && (_this->GL_InitExtensions(_this) != 0)) {
+            _this->gl_config.driver_loaded--;
+            if (_this->GL_UnloadLibrary) {
+                _this->GL_UnloadLibrary(_this);
+            }
+            return -1;
+        }
+    }
+
+    return 0;
 }
 
 void *
 SDL_GL_GetProcAddress(const char *proc)
 {
-    void *func;
+    void *func = NULL;
 
     if (!_this) {
         SDL_UninitializedVideo();
-        return NULL;
-    }
-    func = NULL;
-    if (_this->GL_GetProcAddress) {
-        if (_this->gl_config.driver_loaded) {
-            func = _this->GL_GetProcAddress(_this, proc);
-        } else {
-            SDL_SetError("No GL driver has been loaded");
-        }
-    } else {
+    } else if (!_this->GL_GetProcAddress) {
         SDL_SetError("No dynamic GL support in current SDL video driver (%s)", _this->name);
+    } else if (!_this->gl_config.driver_loaded) {
+        SDL_SetError("No GL driver has been loaded");
+    } else {
+        func = _this->GL_GetProcAddress(_this, proc);
     }
+
     return func;
 }
 
@@ -3476,14 +3477,12 @@ SDL_GL_UnloadLibrary(void)
 {
     if (!_this) {
         SDL_UninitializedVideo();
-        return;
-    }
-    if (_this->gl_config.driver_loaded > 0) {
-        if (--_this->gl_config.driver_loaded > 0) {
-            return;
-        }
-        if (_this->GL_UnloadLibrary) {
-            _this->GL_UnloadLibrary(_this);
+    } else if (_this->gl_config.driver_loaded > 0) {
+        _this->gl_config.driver_loaded--;
+        if (_this->gl_config.driver_loaded == 0) {
+            if (_this->GL_UnloadLibrary) {
+                _this->GL_UnloadLibrary(_this);
+            }
         }
     }
 }

@@ -83,11 +83,6 @@ DirectFB_GL_Initialize(_THIS)
         return -1;
     }
 
-    /* Initialize extensions */
-    /* FIXME needed?
-     * X11_GL_InitExtensions(_this);
-     */
-
     return 0;
 }
 

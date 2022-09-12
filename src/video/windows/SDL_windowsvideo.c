@@ -218,6 +218,7 @@ WIN_CreateDevice(void)
 
 #if SDL_VIDEO_OPENGL_WGL
     device->GL_LoadLibrary = WIN_GL_LoadLibrary;
+    device->GL_InitExtensions = WIN_GL_InitExtensions;
     device->GL_GetProcAddress = WIN_GL_GetProcAddress;
     device->GL_UnloadLibrary = WIN_GL_UnloadLibrary;
     device->GL_CreateContext = WIN_GL_CreateContext;

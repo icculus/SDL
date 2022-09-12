@@ -212,6 +212,7 @@ Cocoa_GL_CreateContext(_THIS, SDL_Window * window)
     int glversion_minor;
     NSOpenGLPixelFormatAttribute profile;
 
+    /* !!! FIXME: in practice this probably never hits anyone, but this is going to cause problems if you have an existing GL window and try to make a second, GLES, window */
     if (_this->gl_config.profile_mask == SDL_GL_CONTEXT_PROFILE_ES) {
 #if SDL_VIDEO_OPENGL_EGL
         /* Switch to EGL based functions */

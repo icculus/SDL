@@ -243,12 +243,8 @@ X11_GL_LoadLibrary(_THIS, const char *path)
     }
 
     /* Initialize extensions */
-    /* See lengthy comment about the inc/dec in 
-       ../windows/SDL_windowsopengl.c. */
-    ++_this->gl_config.driver_loaded;
     X11_GL_InitExtensions(_this);
-    --_this->gl_config.driver_loaded;
-    
+
     /* If we need a GL ES context and there's no  
      * GLX_EXT_create_context_es2_profile extension, switch over to X11_GLES functions  
      */
@@ -258,6 +254,7 @@ X11_GL_LoadLibrary(_THIS, const char *path)
 #if SDL_VIDEO_OPENGL_EGL
         X11_GL_UnloadLibrary(_this);
         _this->GL_LoadLibrary = X11_GLES_LoadLibrary;
+        _this->GL_InitExtensions = NULL;
         _this->GL_GetProcAddress = X11_GLES_GetProcAddress;
         _this->GL_UnloadLibrary = X11_GLES_UnloadLibrary;
         _this->GL_CreateContext = X11_GLES_CreateContext;

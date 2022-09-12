@@ -31,6 +31,7 @@
 int
 Cocoa_GLES_LoadLibrary(_THIS, const char *path)
 {
+    /* !!! FIXME: in practice this probably never hits anyone, but this is going to cause problems if you have an existing GL window and try to make a second, GLES, window */
     /* If the profile requested is not GL ES, switch over to WIN_GL functions  */
     if (_this->gl_config.profile_mask != SDL_GL_CONTEXT_PROFILE_ES) {
 #if SDL_VIDEO_OPENGL_CGL
@@ -121,17 +122,12 @@ Cocoa_GLES_SetupWindow(_THIS, SDL_Window * window)
     SDL_Window *current_win = SDL_GL_GetCurrentWindow();
     SDL_GLContext current_ctx = SDL_GL_GetCurrentContext();
 
-
+sdfsdf
     if (_this->egl_data == NULL) {
-        /* !!! FIXME: commenting out this assertion is (I think) incorrect; figure out why driver_loaded is wrong for ANGLE instead. --ryan. */
-        #if 0  /* When hint SDL_HINT_OPENGL_ES_DRIVER is set to "1" (e.g. for ANGLE support), _this->gl_config.driver_loaded can be 1, while the below lines function. */
-        SDL_assert(!_this->gl_config.driver_loaded);
-        #endif
         if (SDL_EGL_LoadLibrary(_this, NULL, EGL_DEFAULT_DISPLAY, 0) < 0) {
             SDL_EGL_UnloadLibrary(_this);
             return -1;
         }
-        _this->gl_config.driver_loaded = 1;
     }
   
     /* Create the GLES window surface */

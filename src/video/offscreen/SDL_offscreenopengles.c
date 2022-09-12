@@ -31,28 +31,9 @@
 int
 OFFSCREEN_GLES_LoadLibrary(_THIS, const char* path)
 {
-    int ret = SDL_EGL_LoadLibraryOnly(_this, path);
-    if (ret != 0) {
-        return ret;
-    }
-
-    /* driver_loaded gets incremented by SDL_GL_LoadLibrary when we return,
-       but SDL_EGL_InitializeOffscreen checks that we're loaded before then,
-       so temporarily bump it since we know that LoadLibraryOnly succeeded. */
-
-    _this->gl_config.driver_loaded++;
-    ret = SDL_EGL_InitializeOffscreen(_this, 0);
-    _this->gl_config.driver_loaded--;
-    if (ret != 0) {
-        return ret;
-    }
-
-    ret = SDL_EGL_ChooseConfig(_this);
-    if (ret != 0) {
-        return ret;
-    }
-
-    return 0;
+    return ( (SDL_EGL_LoadLibraryOnly(_this, path) == 0) &&
+             (SDL_EGL_InitializeOffscreen(_this, 0) == 0) &&
+             (SDL_EGL_ChooseConfig(_this) == 0) ) ? 0 : -1;
 }
 
 SDL_GLContext

@@ -34,12 +34,14 @@ X11_GLES_LoadLibrary(_THIS, const char *path)
 {
     SDL_VideoData *data = (SDL_VideoData *) _this->driverdata;
 
+    /* !!! FIXME: in practice this probably never hits anyone, but this is going to cause problems if you have an existing GL window and try to make a second, GLES, window */
     /* If the profile requested is not GL ES, switch over to X11_GL functions  */
     if ((_this->gl_config.profile_mask != SDL_GL_CONTEXT_PROFILE_ES) &&
         !SDL_GetHintBoolean(SDL_HINT_VIDEO_X11_FORCE_EGL, SDL_FALSE)) {
         #if SDL_VIDEO_OPENGL_GLX
         X11_GLES_UnloadLibrary(_this);
         _this->GL_LoadLibrary = X11_GL_LoadLibrary;
+        _this->GL_InitExtensions = X11_GL_InitExtensions;
         _this->GL_GetProcAddress = X11_GL_GetProcAddress;
         _this->GL_UnloadLibrary = X11_GL_UnloadLibrary;
         _this->GL_CreateContext = X11_GL_CreateContext;
