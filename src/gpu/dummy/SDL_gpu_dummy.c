@@ -104,7 +104,7 @@ static int DUMMY_GpuResetFence(SDL_GpuFence *fence) { return 0; }
 static int DUMMY_GpuWaitFence(SDL_GpuFence *fence) { return 0; }
 
 static int
-DUMMY_GpuCreateDevice(SDL_GpuDevice *device)
+DUMMY_GpuCreateDevice(SDL_GpuDevice *device, uint8_t debugMode)
 {
     device->DestroyDevice = DUMMY_GpuDestroyDevice;
     device->ClaimWindow = DUMMY_GpuClaimWindow;

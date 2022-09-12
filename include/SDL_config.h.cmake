@@ -449,6 +449,7 @@
 #cmakedefine SDL_VIDEO_RENDER_PSP @SDL_VIDEO_RENDER_PSP@
 
 #cmakedefine SDL_GPU_METAL @SDL_GPU_METAL@
+#cmakedefine SDL_GPU_VULKAN @SDL_GPU_VULKAN@
 
 /* Enable OpenGL support */
 #cmakedefine SDL_VIDEO_OPENGL @SDL_VIDEO_OPENGL@
