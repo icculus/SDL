@@ -12,6 +12,52 @@
 		00CFA89D106B4BA100758660 /* ForceFeedback.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 00CFA89C106B4BA100758660 /* ForceFeedback.framework */; };
 		00D0D08410675DD9004B05EF /* CoreFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 00D0D08310675DD9004B05EF /* CoreFoundation.framework */; };
 		00D0D0D810675E46004B05EF /* Carbon.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 007317C10858E15000B2BC32 /* Carbon.framework */; };
+		147161922967D97F000D080A /* SDL_gpu_compiler.h in Headers */ = {isa = PBXBuildFile; fileRef = 147161902967D97F000D080A /* SDL_gpu_compiler.h */; };
+		147161932967D97F000D080A /* SDL_gpu_compiler.h in Headers */ = {isa = PBXBuildFile; fileRef = 147161902967D97F000D080A /* SDL_gpu_compiler.h */; };
+		147161942967D97F000D080A /* SDL_gpu_compiler.h in Headers */ = {isa = PBXBuildFile; fileRef = 147161902967D97F000D080A /* SDL_gpu_compiler.h */; };
+		147161952967D97F000D080A /* SDL_gpu_compiler.h in Headers */ = {isa = PBXBuildFile; fileRef = 147161902967D97F000D080A /* SDL_gpu_compiler.h */; };
+		147161962967D97F000D080A /* SDL_gpu.h in Headers */ = {isa = PBXBuildFile; fileRef = 147161912967D97F000D080A /* SDL_gpu.h */; };
+		147161972967D97F000D080A /* SDL_gpu.h in Headers */ = {isa = PBXBuildFile; fileRef = 147161912967D97F000D080A /* SDL_gpu.h */; };
+		147161982967D97F000D080A /* SDL_gpu.h in Headers */ = {isa = PBXBuildFile; fileRef = 147161912967D97F000D080A /* SDL_gpu.h */; };
+		147161992967D97F000D080A /* SDL_gpu.h in Headers */ = {isa = PBXBuildFile; fileRef = 147161912967D97F000D080A /* SDL_gpu.h */; };
+		147161A22967D9AD000D080A /* SDL_gpu_dummy.c in Sources */ = {isa = PBXBuildFile; fileRef = 1471619C2967D9AD000D080A /* SDL_gpu_dummy.c */; };
+		147161A32967D9AD000D080A /* SDL_gpu_dummy.c in Sources */ = {isa = PBXBuildFile; fileRef = 1471619C2967D9AD000D080A /* SDL_gpu_dummy.c */; };
+		147161A42967D9AD000D080A /* SDL_gpu_dummy.c in Sources */ = {isa = PBXBuildFile; fileRef = 1471619C2967D9AD000D080A /* SDL_gpu_dummy.c */; };
+		147161A52967D9AD000D080A /* SDL_gpu_dummy.c in Sources */ = {isa = PBXBuildFile; fileRef = 1471619C2967D9AD000D080A /* SDL_gpu_dummy.c */; };
+		147161A62967D9AD000D080A /* SDL_sysgpu.h in Headers */ = {isa = PBXBuildFile; fileRef = 1471619D2967D9AD000D080A /* SDL_sysgpu.h */; };
+		147161A72967D9AD000D080A /* SDL_sysgpu.h in Headers */ = {isa = PBXBuildFile; fileRef = 1471619D2967D9AD000D080A /* SDL_sysgpu.h */; };
+		147161A82967D9AD000D080A /* SDL_sysgpu.h in Headers */ = {isa = PBXBuildFile; fileRef = 1471619D2967D9AD000D080A /* SDL_sysgpu.h */; };
+		147161A92967D9AD000D080A /* SDL_sysgpu.h in Headers */ = {isa = PBXBuildFile; fileRef = 1471619D2967D9AD000D080A /* SDL_sysgpu.h */; };
+		147161AA2967D9AD000D080A /* SDL_gpu.c in Sources */ = {isa = PBXBuildFile; fileRef = 1471619E2967D9AD000D080A /* SDL_gpu.c */; };
+		147161AB2967D9AD000D080A /* SDL_gpu.c in Sources */ = {isa = PBXBuildFile; fileRef = 1471619E2967D9AD000D080A /* SDL_gpu.c */; };
+		147161AC2967D9AD000D080A /* SDL_gpu.c in Sources */ = {isa = PBXBuildFile; fileRef = 1471619E2967D9AD000D080A /* SDL_gpu.c */; };
+		147161AD2967D9AD000D080A /* SDL_gpu.c in Sources */ = {isa = PBXBuildFile; fileRef = 1471619E2967D9AD000D080A /* SDL_gpu.c */; };
+		147161AE2967D9AD000D080A /* SDL_gpu_metal.m in Sources */ = {isa = PBXBuildFile; fileRef = 147161A02967D9AD000D080A /* SDL_gpu_metal.m */; };
+		147161AF2967D9AD000D080A /* SDL_gpu_metal.m in Sources */ = {isa = PBXBuildFile; fileRef = 147161A02967D9AD000D080A /* SDL_gpu_metal.m */; };
+		147161B02967D9AD000D080A /* SDL_gpu_metal.m in Sources */ = {isa = PBXBuildFile; fileRef = 147161A02967D9AD000D080A /* SDL_gpu_metal.m */; };
+		147161B12967D9AD000D080A /* SDL_gpu_metal.m in Sources */ = {isa = PBXBuildFile; fileRef = 147161A02967D9AD000D080A /* SDL_gpu_metal.m */; };
+		147161B22967D9AD000D080A /* SDL_gpu_cycle_impl.h in Headers */ = {isa = PBXBuildFile; fileRef = 147161A12967D9AD000D080A /* SDL_gpu_cycle_impl.h */; };
+		147161B32967D9AD000D080A /* SDL_gpu_cycle_impl.h in Headers */ = {isa = PBXBuildFile; fileRef = 147161A12967D9AD000D080A /* SDL_gpu_cycle_impl.h */; };
+		147161B42967D9AD000D080A /* SDL_gpu_cycle_impl.h in Headers */ = {isa = PBXBuildFile; fileRef = 147161A12967D9AD000D080A /* SDL_gpu_cycle_impl.h */; };
+		147161B52967D9AD000D080A /* SDL_gpu_cycle_impl.h in Headers */ = {isa = PBXBuildFile; fileRef = 147161A12967D9AD000D080A /* SDL_gpu_cycle_impl.h */; };
+		147161B62967DE1C000D080A /* SDL_gpu_metal.m in Sources */ = {isa = PBXBuildFile; fileRef = 147161A02967D9AD000D080A /* SDL_gpu_metal.m */; };
+		147161B72967DE1C000D080A /* SDL_gpu_metal.m in Sources */ = {isa = PBXBuildFile; fileRef = 147161A02967D9AD000D080A /* SDL_gpu_metal.m */; };
+		147161B82967DE1D000D080A /* SDL_gpu_metal.m in Sources */ = {isa = PBXBuildFile; fileRef = 147161A02967D9AD000D080A /* SDL_gpu_metal.m */; };
+		147161B92967DE1E000D080A /* SDL_gpu_metal.m in Sources */ = {isa = PBXBuildFile; fileRef = 147161A02967D9AD000D080A /* SDL_gpu_metal.m */; };
+		147161BA2967DE1E000D080A /* SDL_gpu_metal.m in Sources */ = {isa = PBXBuildFile; fileRef = 147161A02967D9AD000D080A /* SDL_gpu_metal.m */; };
+		147161BB2967DE1F000D080A /* SDL_gpu_metal.m in Sources */ = {isa = PBXBuildFile; fileRef = 147161A02967D9AD000D080A /* SDL_gpu_metal.m */; };
+		147161BE2967DE26000D080A /* SDL_gpu.c in Sources */ = {isa = PBXBuildFile; fileRef = 1471619E2967D9AD000D080A /* SDL_gpu.c */; };
+		147161C12967DE26000D080A /* SDL_gpu.c in Sources */ = {isa = PBXBuildFile; fileRef = 1471619E2967D9AD000D080A /* SDL_gpu.c */; };
+		147161C42967DE27000D080A /* SDL_gpu.c in Sources */ = {isa = PBXBuildFile; fileRef = 1471619E2967D9AD000D080A /* SDL_gpu.c */; };
+		147161C72967DE28000D080A /* SDL_gpu.c in Sources */ = {isa = PBXBuildFile; fileRef = 1471619E2967D9AD000D080A /* SDL_gpu.c */; };
+		147161CA2967DE29000D080A /* SDL_gpu.c in Sources */ = {isa = PBXBuildFile; fileRef = 1471619E2967D9AD000D080A /* SDL_gpu.c */; };
+		147161CD2967DE2A000D080A /* SDL_gpu.c in Sources */ = {isa = PBXBuildFile; fileRef = 1471619E2967D9AD000D080A /* SDL_gpu.c */; };
+		147161CE2967DE45000D080A /* SDL_gpu_dummy.c in Sources */ = {isa = PBXBuildFile; fileRef = 1471619C2967D9AD000D080A /* SDL_gpu_dummy.c */; };
+		147161CF2967DE46000D080A /* SDL_gpu_dummy.c in Sources */ = {isa = PBXBuildFile; fileRef = 1471619C2967D9AD000D080A /* SDL_gpu_dummy.c */; };
+		147161D02967DE46000D080A /* SDL_gpu_dummy.c in Sources */ = {isa = PBXBuildFile; fileRef = 1471619C2967D9AD000D080A /* SDL_gpu_dummy.c */; };
+		147161D12967DE47000D080A /* SDL_gpu_dummy.c in Sources */ = {isa = PBXBuildFile; fileRef = 1471619C2967D9AD000D080A /* SDL_gpu_dummy.c */; };
+		147161D22967DE47000D080A /* SDL_gpu_dummy.c in Sources */ = {isa = PBXBuildFile; fileRef = 1471619C2967D9AD000D080A /* SDL_gpu_dummy.c */; };
+		147161D32967DE48000D080A /* SDL_gpu_dummy.c in Sources */ = {isa = PBXBuildFile; fileRef = 1471619C2967D9AD000D080A /* SDL_gpu_dummy.c */; };
 		552673EB2546054600085751 /* GameController.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A75FDABD23E28B6200529352 /* GameController.framework */; settings = {ATTRIBUTES = (Weak, ); }; };
 		552673EC2546055000085751 /* CoreHaptics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F37DC5F225350EBC0002E6F7 /* CoreHaptics.framework */; settings = {ATTRIBUTES = (Weak, ); }; };
 		557D0CFA254586CA003913E3 /* CoreHaptics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F37DC5F225350EBC0002E6F7 /* CoreHaptics.framework */; settings = {ATTRIBUTES = (Weak, ); }; };
@@ -3514,6 +3560,13 @@
 		00794D3F09D0C461003FC8A1 /* License.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = License.txt; sourceTree = "<group>"; };
 		00CFA89C106B4BA100758660 /* ForceFeedback.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = ForceFeedback.framework; path = System/Library/Frameworks/ForceFeedback.framework; sourceTree = SDKROOT; };
 		00D0D08310675DD9004B05EF /* CoreFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreFoundation.framework; path = System/Library/Frameworks/CoreFoundation.framework; sourceTree = SDKROOT; };
+		147161902967D97F000D080A /* SDL_gpu_compiler.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SDL_gpu_compiler.h; sourceTree = "<group>"; };
+		147161912967D97F000D080A /* SDL_gpu.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SDL_gpu.h; sourceTree = "<group>"; };
+		1471619C2967D9AD000D080A /* SDL_gpu_dummy.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = SDL_gpu_dummy.c; sourceTree = "<group>"; };
+		1471619D2967D9AD000D080A /* SDL_sysgpu.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SDL_sysgpu.h; sourceTree = "<group>"; };
+		1471619E2967D9AD000D080A /* SDL_gpu.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = SDL_gpu.c; sourceTree = "<group>"; };
+		147161A02967D9AD000D080A /* SDL_gpu_metal.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SDL_gpu_metal.m; sourceTree = "<group>"; };
+		147161A12967D9AD000D080A /* SDL_gpu_cycle_impl.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SDL_gpu_cycle_impl.h; sourceTree = "<group>"; };
 		5616CA49252BB2A5005D5928 /* SDL_url.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = SDL_url.c; sourceTree = "<group>"; };
 		5616CA4A252BB2A6005D5928 /* SDL_sysurl.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SDL_sysurl.h; sourceTree = "<group>"; };
 		5616CA4B252BB2A6005D5928 /* SDL_sysurl.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SDL_sysurl.m; sourceTree = "<group>"; };
@@ -4133,6 +4186,8 @@
 		0153844A006D81B07F000001 /* Public Headers */ = {
 			isa = PBXGroup;
 			children = (
+				147161902967D97F000D080A /* SDL_gpu_compiler.h */,
+				147161912967D97F000D080A /* SDL_gpu.h */,
 				F3F7D8E72933074E00816151 /* begin_code.h */,
 				F3F7D8E52933074D00816151 /* close_code.h */,
 				F3F7D8E02933074D00816151 /* SDL_assert.h */,
@@ -4241,6 +4296,7 @@
 		08FB77ACFE841707C02AAC07 /* Library Source */ = {
 			isa = PBXGroup;
 			children = (
+				1471619A2967D9AD000D080A /* gpu */,
 				A7D8A57223E2513D00DCD162 /* atomic */,
 				A7D8A86423E2513F00DCD162 /* audio */,
 				F36C7ACF294B9F5E004D61C3 /* core */,
@@ -4283,6 +4339,34 @@
 			);
 			name = "Library Source";
 			path = ../../src;
+			sourceTree = "<group>";
+		};
+		1471619A2967D9AD000D080A /* gpu */ = {
+			isa = PBXGroup;
+			children = (
+				1471619B2967D9AD000D080A /* dummy */,
+				1471619F2967D9AD000D080A /* metal */,
+				1471619D2967D9AD000D080A /* SDL_sysgpu.h */,
+				147161A12967D9AD000D080A /* SDL_gpu_cycle_impl.h */,
+				1471619E2967D9AD000D080A /* SDL_gpu.c */,
+			);
+			path = gpu;
+			sourceTree = "<group>";
+		};
+		1471619B2967D9AD000D080A /* dummy */ = {
+			isa = PBXGroup;
+			children = (
+				1471619C2967D9AD000D080A /* SDL_gpu_dummy.c */,
+			);
+			path = dummy;
+			sourceTree = "<group>";
+		};
+		1471619F2967D9AD000D080A /* metal */ = {
+			isa = PBXGroup;
+			children = (
+				147161A02967D9AD000D080A /* SDL_gpu_metal.m */,
+			);
+			path = metal;
 			sourceTree = "<group>";
 		};
 		5616CA47252BB278005D5928 /* misc */ = {
@@ -5679,6 +5763,7 @@
 			isa = PBXHeadersBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				147161932967D97F000D080A /* SDL_gpu_compiler.h in Headers */,
 				F3F7D9822933074E00816151 /* SDL.h in Headers */,
 				A7D8B39F23E2514200DCD162 /* SDL_RLEaccel_c.h in Headers */,
 				F3F7D9C62933074E00816151 /* SDL_assert.h in Headers */,
@@ -5693,6 +5778,7 @@
 				F3F7D97E2933074E00816151 /* SDL_blendmode.h in Headers */,
 				A7D8BA0E23E2514400DCD162 /* SDL_blendpoint.h in Headers */,
 				A7D8B3B723E2514200DCD162 /* SDL_blit.h in Headers */,
+				147161A72967D9AD000D080A /* SDL_sysgpu.h in Headers */,
 				A7D8B2BB23E2514200DCD162 /* SDL_blit_auto.h in Headers */,
 				A7D8B39923E2514200DCD162 /* SDL_blit_copy.h in Headers */,
 				A7D8ADED23E2514100DCD162 /* SDL_blit_slow.h in Headers */,
@@ -5746,6 +5832,7 @@
 				F3F7D96E2933074E00816151 /* SDL_hidapi.h in Headers */,
 				A75FDBC623EA380300529352 /* SDL_hidapi_rumble.h in Headers */,
 				A7D8B55823E2514300DCD162 /* SDL_hidapijoystick_c.h in Headers */,
+				147161972967D97F000D080A /* SDL_gpu.h in Headers */,
 				F3F7D9122933074E00816151 /* SDL_hints.h in Headers */,
 				A7D8B94B23E2514400DCD162 /* SDL_hints_c.h in Headers */,
 				A7D8A99A23E2514000DCD162 /* SDL_internal.h in Headers */,
@@ -5884,6 +5971,7 @@
 				A7D8B26723E2514200DCD162 /* vk_platform.h in Headers */,
 				A7D8B2AF23E2514200DCD162 /* vk_sdk_platform.h in Headers */,
 				A7D8B26123E2514200DCD162 /* vulkan.h in Headers */,
+				147161B32967D9AD000D080A /* SDL_gpu_cycle_impl.h in Headers */,
 				A7D8B26D23E2514200DCD162 /* vulkan.hpp in Headers */,
 				A7D8B2B523E2514200DCD162 /* vulkan_android.h in Headers */,
 				A7D8B2A923E2514200DCD162 /* vulkan_core.h in Headers */,
@@ -5907,6 +5995,7 @@
 			isa = PBXHeadersBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				147161942967D97F000D080A /* SDL_gpu_compiler.h in Headers */,
 				F3F7D9832933074E00816151 /* SDL.h in Headers */,
 				A7D8B3A023E2514200DCD162 /* SDL_RLEaccel_c.h in Headers */,
 				F3F7D9C72933074E00816151 /* SDL_assert.h in Headers */,
@@ -5921,6 +6010,7 @@
 				F3F7D97F2933074E00816151 /* SDL_blendmode.h in Headers */,
 				A7D8BA0F23E2514400DCD162 /* SDL_blendpoint.h in Headers */,
 				A7D8B3B823E2514200DCD162 /* SDL_blit.h in Headers */,
+				147161A82967D9AD000D080A /* SDL_sysgpu.h in Headers */,
 				A7D8B2BC23E2514200DCD162 /* SDL_blit_auto.h in Headers */,
 				A7D8B39A23E2514200DCD162 /* SDL_blit_copy.h in Headers */,
 				A7D8ADEE23E2514100DCD162 /* SDL_blit_slow.h in Headers */,
@@ -5974,6 +6064,7 @@
 				F3F7D96F2933074E00816151 /* SDL_hidapi.h in Headers */,
 				A75FDBC723EA380300529352 /* SDL_hidapi_rumble.h in Headers */,
 				A7D8B55923E2514300DCD162 /* SDL_hidapijoystick_c.h in Headers */,
+				147161982967D97F000D080A /* SDL_gpu.h in Headers */,
 				F3F7D9132933074E00816151 /* SDL_hints.h in Headers */,
 				A7D8B94C23E2514400DCD162 /* SDL_hints_c.h in Headers */,
 				A7D8A99B23E2514000DCD162 /* SDL_internal.h in Headers */,
@@ -6112,6 +6203,7 @@
 				A7D8B26823E2514200DCD162 /* vk_platform.h in Headers */,
 				A7D8B2B023E2514200DCD162 /* vk_sdk_platform.h in Headers */,
 				A7D8B26223E2514200DCD162 /* vulkan.h in Headers */,
+				147161B42967D9AD000D080A /* SDL_gpu_cycle_impl.h in Headers */,
 				A7D8B26E23E2514200DCD162 /* vulkan.hpp in Headers */,
 				A7D8B2B623E2514200DCD162 /* vulkan_android.h in Headers */,
 				A7D8B2AA23E2514200DCD162 /* vulkan_core.h in Headers */,
@@ -6300,6 +6392,7 @@
 			isa = PBXHeadersBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				147161922967D97F000D080A /* SDL_gpu_compiler.h in Headers */,
 				F3F7D9812933074E00816151 /* SDL.h in Headers */,
 				A7D8B39E23E2514200DCD162 /* SDL_RLEaccel_c.h in Headers */,
 				F3F7D9C52933074E00816151 /* SDL_assert.h in Headers */,
@@ -6314,6 +6407,7 @@
 				F3F7D97D2933074E00816151 /* SDL_blendmode.h in Headers */,
 				A7D8BA0D23E2514400DCD162 /* SDL_blendpoint.h in Headers */,
 				A7D8B3B623E2514200DCD162 /* SDL_blit.h in Headers */,
+				147161A62967D9AD000D080A /* SDL_sysgpu.h in Headers */,
 				A7D8B2BA23E2514200DCD162 /* SDL_blit_auto.h in Headers */,
 				A7D8B39823E2514200DCD162 /* SDL_blit_copy.h in Headers */,
 				A7D8ADEC23E2514100DCD162 /* SDL_blit_slow.h in Headers */,
@@ -6367,6 +6461,7 @@
 				F3F7D96D2933074E00816151 /* SDL_hidapi.h in Headers */,
 				A75FDBC523EA380300529352 /* SDL_hidapi_rumble.h in Headers */,
 				A7D8B55723E2514300DCD162 /* SDL_hidapijoystick_c.h in Headers */,
+				147161962967D97F000D080A /* SDL_gpu.h in Headers */,
 				F3F7D9112933074E00816151 /* SDL_hints.h in Headers */,
 				A7D8B94A23E2514400DCD162 /* SDL_hints_c.h in Headers */,
 				A7D8A99923E2514000DCD162 /* SDL_internal.h in Headers */,
@@ -6505,6 +6600,7 @@
 				A7D8B26623E2514200DCD162 /* vk_platform.h in Headers */,
 				A7D8B2AE23E2514200DCD162 /* vk_sdk_platform.h in Headers */,
 				A7D8B26023E2514200DCD162 /* vulkan.h in Headers */,
+				147161B22967D9AD000D080A /* SDL_gpu_cycle_impl.h in Headers */,
 				A7D8B26C23E2514200DCD162 /* vulkan.hpp in Headers */,
 				A7D8B2B423E2514200DCD162 /* vulkan_android.h in Headers */,
 				A7D8B2A823E2514200DCD162 /* vulkan_core.h in Headers */,
@@ -6858,6 +6954,7 @@
 			isa = PBXHeadersBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				147161952967D97F000D080A /* SDL_gpu_compiler.h in Headers */,
 				F3F7D9842933074E00816151 /* SDL.h in Headers */,
 				F3F7D9C82933074E00816151 /* SDL_assert.h in Headers */,
 				F3F7D92C2933074E00816151 /* SDL_atomic.h in Headers */,
@@ -6866,10 +6963,12 @@
 				F3F7D9802933074E00816151 /* SDL_blendmode.h in Headers */,
 				F3F7D9A42933074E00816151 /* SDL_clipboard.h in Headers */,
 				F3F7D9D42933074E00816151 /* SDL_copying.h in Headers */,
+				147161992967D97F000D080A /* SDL_gpu.h in Headers */,
 				F3F7D9BC2933074E00816151 /* SDL_cpuinfo.h in Headers */,
 				F3F7D9282933074E00816151 /* SDL_egl.h in Headers */,
 				F3F7D9402933074E00816151 /* SDL_endian.h in Headers */,
 				F3F7D9382933074E00816151 /* SDL_error.h in Headers */,
+				147161A92967D9AD000D080A /* SDL_sysgpu.h in Headers */,
 				F3F7D9742933074E00816151 /* SDL_events.h in Headers */,
 				F3F7D9A02933074E00816151 /* SDL_filesystem.h in Headers */,
 				F3F7D9882933074E00816151 /* SDL_gamecontroller.h in Headers */,
@@ -6895,6 +6994,7 @@
 				F3F7D9482933074E00816151 /* SDL_opengl_glext.h in Headers */,
 				F3F7D9602933074E00816151 /* SDL_opengles.h in Headers */,
 				F3F7D9642933074E00816151 /* SDL_opengles2.h in Headers */,
+				147161B52967D9AD000D080A /* SDL_gpu_cycle_impl.h in Headers */,
 				F3F7D9002933074E00816151 /* SDL_opengles2_gl2.h in Headers */,
 				F3F7D93C2933074E00816151 /* SDL_opengles2_gl2ext.h in Headers */,
 				F3F7D96C2933074E00816151 /* SDL_opengles2_gl2platform.h in Headers */,
@@ -7328,6 +7428,7 @@
 				A75FCDF823E25AB700529352 /* SDL_rotate.c in Sources */,
 				F3973FB228A59BDD00B84553 /* SDL_crc16.c in Sources */,
 				A75FCDF923E25AB700529352 /* SDL_coremotionsensor.m in Sources */,
+				147161BA2967DE1E000D080A /* SDL_gpu_metal.m in Sources */,
 				A75FDAB123E2795C00529352 /* SDL_hidapi_steam.c in Sources */,
 				A75FCDFA23E25AB700529352 /* SDL_touch.c in Sources */,
 				A1626A452617006A003F1973 /* SDL_triangle.c in Sources */,
@@ -7393,6 +7494,7 @@
 				A75FCE3323E25AB700529352 /* SDL_cocoashape.m in Sources */,
 				A75FCE3423E25AB700529352 /* SDL_cocoamouse.m in Sources */,
 				A75FCE3523E25AB700529352 /* SDL_error.c in Sources */,
+				147161D22967DE47000D080A /* SDL_gpu_dummy.c in Sources */,
 				F3D60A8A28C16A1900788A3A /* SDL_hidapi_wii.c in Sources */,
 				A75FCE3623E25AB700529352 /* SDL_blit.c in Sources */,
 				A75FCE3723E25AB700529352 /* SDL_rwops.c in Sources */,
@@ -7471,6 +7573,7 @@
 				A75FCE8523E25AB700529352 /* SDL_quit.c in Sources */,
 				A75FCE8623E25AB700529352 /* SDL_cocoawindow.m in Sources */,
 				A1BB8B6A27F6CF330057CFA8 /* SDL_list.c in Sources */,
+				147161CA2967DE29000D080A /* SDL_gpu.c in Sources */,
 				A75FCE8723E25AB700529352 /* SDL_sysmutex.c in Sources */,
 				A75FCE8823E25AB700529352 /* SDL_syshaptic.c in Sources */,
 				F3F07D61269640160074468B /* SDL_hidapi_luna.c in Sources */,
@@ -7523,6 +7626,7 @@
 				A75FCFB123E25AC700529352 /* SDL_rotate.c in Sources */,
 				F3973FB328A59BDD00B84553 /* SDL_crc16.c in Sources */,
 				A75FCFB223E25AC700529352 /* SDL_coremotionsensor.m in Sources */,
+				147161BB2967DE1F000D080A /* SDL_gpu_metal.m in Sources */,
 				A75FDAB223E2795C00529352 /* SDL_hidapi_steam.c in Sources */,
 				A75FCFB323E25AC700529352 /* SDL_touch.c in Sources */,
 				A1626A462617006A003F1973 /* SDL_triangle.c in Sources */,
@@ -7588,6 +7692,7 @@
 				A75FCFEC23E25AC700529352 /* SDL_cocoashape.m in Sources */,
 				A75FCFED23E25AC700529352 /* SDL_cocoamouse.m in Sources */,
 				A75FCFEE23E25AC700529352 /* SDL_error.c in Sources */,
+				147161D32967DE48000D080A /* SDL_gpu_dummy.c in Sources */,
 				F3D60A8B28C16A1900788A3A /* SDL_hidapi_wii.c in Sources */,
 				A75FCFEF23E25AC700529352 /* SDL_blit.c in Sources */,
 				A75FCFF023E25AC700529352 /* SDL_rwops.c in Sources */,
@@ -7666,6 +7771,7 @@
 				A75FD03E23E25AC700529352 /* SDL_quit.c in Sources */,
 				A75FD03F23E25AC700529352 /* SDL_cocoawindow.m in Sources */,
 				A1BB8B6B27F6CF330057CFA8 /* SDL_list.c in Sources */,
+				147161CD2967DE2A000D080A /* SDL_gpu.c in Sources */,
 				A75FD04023E25AC700529352 /* SDL_sysmutex.c in Sources */,
 				A75FD04123E25AC700529352 /* SDL_syshaptic.c in Sources */,
 				F3F07D62269640160074468B /* SDL_hidapi_luna.c in Sources */,
@@ -7718,6 +7824,7 @@
 				A769B18223E259AE00872273 /* SDL_touch.c in Sources */,
 				A769B18523E259AE00872273 /* SDL_uikitmessagebox.m in Sources */,
 				A769B18623E259AE00872273 /* SDL_thread.c in Sources */,
+				147161B82967DE1D000D080A /* SDL_gpu_metal.m in Sources */,
 				A769B18723E259AE00872273 /* SDL_hidapi_xbox360w.c in Sources */,
 				A769B18823E259AE00872273 /* SDL_atomic.c in Sources */,
 				A769B18923E259AE00872273 /* SDL_displayevents.c in Sources */,
@@ -7783,6 +7890,7 @@
 				A769B1C423E259AE00872273 /* SDL_yuv_sw.c in Sources */,
 				A769B1C523E259AE00872273 /* SDL_wave.c in Sources */,
 				A769B1C623E259AE00872273 /* s_tan.c in Sources */,
+				147161D02967DE46000D080A /* SDL_gpu_dummy.c in Sources */,
 				A769B1C723E259AE00872273 /* SDL_hints.c in Sources */,
 				F3A490A32554D38600E92A8B /* SDL_hidapi_ps5.c in Sources */,
 				A769B1C823E259AE00872273 /* SDL_hidapi_ps4.c in Sources */,
@@ -7861,6 +7969,7 @@
 				A769B21123E259AE00872273 /* SDL_quit.c in Sources */,
 				A769B21223E259AE00872273 /* SDL_cocoawindow.m in Sources */,
 				A769B21323E259AE00872273 /* SDL_sysmutex.c in Sources */,
+				147161C42967DE27000D080A /* SDL_gpu.c in Sources */,
 				A769B21423E259AE00872273 /* SDL_syshaptic.c in Sources */,
 				A769B21523E259AE00872273 /* SDL_rwopsbundlesupport.m in Sources */,
 				A769B21623E259AE00872273 /* SDL_video.c in Sources */,
@@ -7912,6 +8021,7 @@
 				A7D8B9F623E2514400DCD162 /* SDL_rotate.c in Sources */,
 				A7D8A97623E2514000DCD162 /* SDL_coremotionsensor.m in Sources */,
 				F3973FAC28A59BDD00B84553 /* SDL_crc16.c in Sources */,
+				147161AF2967D9AD000D080A /* SDL_gpu_metal.m in Sources */,
 				A7D8BB8E23E2514500DCD162 /* SDL_touch.c in Sources */,
 				A7D8AC5223E2514100DCD162 /* SDL_uikitmessagebox.m in Sources */,
 				A7D8B3F323E2514300DCD162 /* SDL_thread.c in Sources */,
@@ -8031,6 +8141,7 @@
 				A7D8B56423E2514300DCD162 /* SDL_hidapi_gamecube.c in Sources */,
 				A7D8B4DD23E2514300DCD162 /* SDL_joystick.c in Sources */,
 				A7D8BA4A23E2514400DCD162 /* SDL_render_gles2.c in Sources */,
+				147161A32967D9AD000D080A /* SDL_gpu_dummy.c in Sources */,
 				A7D8AC2E23E2514100DCD162 /* SDL_surface.c in Sources */,
 				A7D8B54C23E2514300DCD162 /* SDL_hidapi_xboxone.c in Sources */,
 				A7D8AD2423E2514100DCD162 /* SDL_blit_auto.c in Sources */,
@@ -8056,6 +8167,7 @@
 				A7D8AAB123E2514100DCD162 /* SDL_syshaptic.c in Sources */,
 				A7D8B5CA23E2514300DCD162 /* SDL_rwopsbundlesupport.m in Sources */,
 				A1BB8B6427F6CF330057CFA8 /* SDL_list.c in Sources */,
+				147161AB2967D9AD000D080A /* SDL_gpu.c in Sources */,
 				A7D8AC1023E2514100DCD162 /* SDL_video.c in Sources */,
 				560572062473687700B46B66 /* SDL_syslocale.m in Sources */,
 				F3F07D5B269640160074468B /* SDL_hidapi_luna.c in Sources */,
@@ -8107,6 +8219,7 @@
 				A7D8B9F723E2514400DCD162 /* SDL_rotate.c in Sources */,
 				A7D8A97723E2514000DCD162 /* SDL_coremotionsensor.m in Sources */,
 				F3973FAD28A59BDD00B84553 /* SDL_crc16.c in Sources */,
+				147161B02967D9AD000D080A /* SDL_gpu_metal.m in Sources */,
 				A7D8BB8F23E2514500DCD162 /* SDL_touch.c in Sources */,
 				A7D8AC5323E2514100DCD162 /* SDL_uikitmessagebox.m in Sources */,
 				A7D8B3F423E2514300DCD162 /* SDL_thread.c in Sources */,
@@ -8226,6 +8339,7 @@
 				A7D8B56523E2514300DCD162 /* SDL_hidapi_gamecube.c in Sources */,
 				A7D8B4DE23E2514300DCD162 /* SDL_joystick.c in Sources */,
 				A7D8BA4B23E2514400DCD162 /* SDL_render_gles2.c in Sources */,
+				147161A42967D9AD000D080A /* SDL_gpu_dummy.c in Sources */,
 				A7D8AC2F23E2514100DCD162 /* SDL_surface.c in Sources */,
 				A7D8B54D23E2514300DCD162 /* SDL_hidapi_xboxone.c in Sources */,
 				A7D8AD2523E2514100DCD162 /* SDL_blit_auto.c in Sources */,
@@ -8251,6 +8365,7 @@
 				A7D8AAB223E2514100DCD162 /* SDL_syshaptic.c in Sources */,
 				A7D8B5CB23E2514300DCD162 /* SDL_rwopsbundlesupport.m in Sources */,
 				A1BB8B6527F6CF330057CFA8 /* SDL_list.c in Sources */,
+				147161AC2967D9AD000D080A /* SDL_gpu.c in Sources */,
 				A7D8AC1123E2514100DCD162 /* SDL_video.c in Sources */,
 				560572072473687800B46B66 /* SDL_syslocale.m in Sources */,
 				F3F07D5C269640160074468B /* SDL_hidapi_luna.c in Sources */,
@@ -8303,6 +8418,7 @@
 				A7D8BB9123E2514500DCD162 /* SDL_touch.c in Sources */,
 				A7D8AC5523E2514100DCD162 /* SDL_uikitmessagebox.m in Sources */,
 				A7D8B3F623E2514300DCD162 /* SDL_thread.c in Sources */,
+				147161B72967DE1C000D080A /* SDL_gpu_metal.m in Sources */,
 				A7D8B56123E2514300DCD162 /* SDL_hidapi_xbox360w.c in Sources */,
 				A7D8A95B23E2514000DCD162 /* SDL_atomic.c in Sources */,
 				A7D8BB2B23E2514500DCD162 /* SDL_displayevents.c in Sources */,
@@ -8368,6 +8484,7 @@
 				A7D8B9D523E2514400DCD162 /* SDL_yuv_sw.c in Sources */,
 				A7D8B76E23E2514300DCD162 /* SDL_wave.c in Sources */,
 				A7D8BAD723E2514500DCD162 /* s_tan.c in Sources */,
+				147161CF2967DE46000D080A /* SDL_gpu_dummy.c in Sources */,
 				A7D8AA6923E2514000DCD162 /* SDL_hints.c in Sources */,
 				F3A490A22554D38600E92A8B /* SDL_hidapi_ps5.c in Sources */,
 				A7D8B54323E2514300DCD162 /* SDL_hidapi_ps4.c in Sources */,
@@ -8446,6 +8563,7 @@
 				A7D8BB8523E2514500DCD162 /* SDL_quit.c in Sources */,
 				A7D8AEAA23E2514100DCD162 /* SDL_cocoawindow.m in Sources */,
 				A7D8B43E23E2514300DCD162 /* SDL_sysmutex.c in Sources */,
+				147161C12967DE26000D080A /* SDL_gpu.c in Sources */,
 				A7D8AAB423E2514100DCD162 /* SDL_syshaptic.c in Sources */,
 				A7D8B5CD23E2514300DCD162 /* SDL_rwopsbundlesupport.m in Sources */,
 				A7D8AC1323E2514100DCD162 /* SDL_video.c in Sources */,
@@ -8584,6 +8702,7 @@
 				A7D8B97A23E2514400DCD162 /* SDL_render.c in Sources */,
 				A7D8ABD323E2514100DCD162 /* SDL_stretch.c in Sources */,
 				A7D8BAFD23E2514500DCD162 /* s_floor.c in Sources */,
+				147161AE2967D9AD000D080A /* SDL_gpu_metal.m in Sources */,
 				A7D8AC3923E2514100DCD162 /* SDL_blit_copy.c in Sources */,
 				A7D8BADF23E2514500DCD162 /* e_fmod.c in Sources */,
 				A7D8B5CF23E2514300DCD162 /* SDL_syspower.m in Sources */,
@@ -8592,6 +8711,7 @@
 				A7D8BB5723E2514500DCD162 /* SDL_events.c in Sources */,
 				A7D8ADE623E2514100DCD162 /* SDL_blit_0.c in Sources */,
 				A7D8BB0923E2514500DCD162 /* k_tan.c in Sources */,
+				147161AA2967D9AD000D080A /* SDL_gpu.c in Sources */,
 				A7D8B8A823E2514400DCD162 /* SDL_diskaudio.c in Sources */,
 				566E26CF246274CC00718109 /* SDL_syslocale.m in Sources */,
 				A7D8AFC023E2514200DCD162 /* SDL_egl.c in Sources */,
@@ -8603,6 +8723,7 @@
 				F32305FF28939F6400E66D30 /* SDL_hidapi_combined.c in Sources */,
 				A7D8B79A23E2514400DCD162 /* SDL_dummyaudio.c in Sources */,
 				A7D8B3A423E2514200DCD162 /* SDL_fillrect.c in Sources */,
+				147161A22967D9AD000D080A /* SDL_gpu_dummy.c in Sources */,
 				A7D8ABDF23E2514100DCD162 /* SDL_nullframebuffer.c in Sources */,
 				A7D8A96923E2514000DCD162 /* SDL_dummysensor.c in Sources */,
 				A7D8B95C23E2514400DCD162 /* SDL_string.c in Sources */,
@@ -8685,6 +8806,7 @@
 				A7D8BAB223E2514400DCD162 /* s_atan.c in Sources */,
 				F3A490A12554D38600E92A8B /* SDL_hidapi_ps5.c in Sources */,
 				A7D8B75523E2514300DCD162 /* SDL_sysloadso.c in Sources */,
+				147161CE2967DE45000D080A /* SDL_gpu_dummy.c in Sources */,
 				A7D8B98923E2514400DCD162 /* SDL_render_metal.m in Sources */,
 				A7D8AE7923E2514100DCD162 /* SDL_clipboard.c in Sources */,
 				A7D8AEC723E2514100DCD162 /* SDL_cocoaevents.m in Sources */,
@@ -8786,6 +8908,7 @@
 				A7D8BB0C23E2514500DCD162 /* k_tan.c in Sources */,
 				A7D8BBF223E2574800DCD162 /* SDL_uikitevents.m in Sources */,
 				A7D8BBB923E2560500DCD162 /* SDL_steamcontroller.c in Sources */,
+				147161BE2967DE26000D080A /* SDL_gpu.c in Sources */,
 				A7D8B8AB23E2514400DCD162 /* SDL_diskaudio.c in Sources */,
 				A7D8AFC323E2514200DCD162 /* SDL_egl.c in Sources */,
 				A7D8AC3623E2514100DCD162 /* SDL_RLEaccel.c in Sources */,
@@ -8850,6 +8973,7 @@
 				A7D8A99623E2514000DCD162 /* SDL_sensor.c in Sources */,
 				A7D8BAAC23E2514400DCD162 /* k_sin.c in Sources */,
 				A7D8AB4C23E2514100DCD162 /* SDL_systimer.c in Sources */,
+				147161B62967DE1C000D080A /* SDL_gpu_metal.m in Sources */,
 				A7D8BA2823E2514400DCD162 /* SDL_drawpoint.c in Sources */,
 				F388C95828B5F6F700661ECF /* SDL_hidapi_ps3.c in Sources */,
 				A7D8BAFA23E2514500DCD162 /* e_sqrt.c in Sources */,
@@ -8879,6 +9003,7 @@
 				A7D8B75723E2514300DCD162 /* SDL_sysloadso.c in Sources */,
 				F3A490A42554D38600E92A8B /* SDL_hidapi_ps5.c in Sources */,
 				A7D8B98B23E2514400DCD162 /* SDL_render_metal.m in Sources */,
+				147161D12967DE47000D080A /* SDL_gpu_dummy.c in Sources */,
 				A7D8AE7B23E2514100DCD162 /* SDL_clipboard.c in Sources */,
 				A7D8AEC923E2514100DCD162 /* SDL_cocoaevents.m in Sources */,
 				A7D8B86B23E2514400DCD162 /* SDL_audiocvt.c in Sources */,
@@ -8980,6 +9105,7 @@
 				A7D8BB5C23E2514500DCD162 /* SDL_events.c in Sources */,
 				A7D8ADEB23E2514100DCD162 /* SDL_blit_0.c in Sources */,
 				A7D8BB0E23E2514500DCD162 /* k_tan.c in Sources */,
+				147161C72967DE28000D080A /* SDL_gpu.c in Sources */,
 				A7D8B8AD23E2514400DCD162 /* SDL_diskaudio.c in Sources */,
 				A7D8AFC523E2514200DCD162 /* SDL_egl.c in Sources */,
 				A7D8AC3823E2514100DCD162 /* SDL_RLEaccel.c in Sources */,
@@ -9044,6 +9170,7 @@
 				A7D8A99823E2514000DCD162 /* SDL_sensor.c in Sources */,
 				A7D8BAAE23E2514400DCD162 /* k_sin.c in Sources */,
 				A7D8AB4E23E2514100DCD162 /* SDL_systimer.c in Sources */,
+				147161B92967DE1E000D080A /* SDL_gpu_metal.m in Sources */,
 				A7D8BA2A23E2514400DCD162 /* SDL_drawpoint.c in Sources */,
 				F388C95B28B5F6F700661ECF /* SDL_hidapi_ps3.c in Sources */,
 				A7D8BAFC23E2514500DCD162 /* e_sqrt.c in Sources */,
@@ -9060,6 +9187,9 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				147161AD2967D9AD000D080A /* SDL_gpu.c in Sources */,
+				147161B12967D9AD000D080A /* SDL_gpu_metal.m in Sources */,
+				147161A52967D9AD000D080A /* SDL_gpu_dummy.c in Sources */,
 				F31A92D528D4CB39003BFD6A /* SDL_offscreenopengles.c in Sources */,
 				F36C7AD4294BA009004D61C3 /* SDL_runapp.c in Sources */,
 			);

@@ -210,7 +210,9 @@ typedef enum SDL_GpuPixelFormat
     SDL_GPUPIXELFMT_RGBA8_sRGB,
     SDL_GPUPIXELFMT_BGRA8,
     SDL_GPUPIXELFMT_BGRA8_sRGB,
-    SDL_GPUPIXELFMT_Depth24_Stencil8
+    SDL_GPUPIXELFMT_Depth24_Stencil8,       /* Not available on iOS! */
+    SDL_GPUPIXELFMT_Depth32F,
+    SDL_GPUPIXELFMT_Depth32F_Stencil8
     /* !!! FIXME: some sort of YUV format to let movies stream efficiently? */
     /* !!! FIXME: s3tc? pvrtc? other compressed formats? We'll need a query for what's supported, and/or guarantee it with a software fallback...? */
 } SDL_GpuPixelFormat;

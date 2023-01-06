@@ -157,6 +157,9 @@ typedef struct METAL_GpuFenceData
     SDL_cond *condition;
 } METAL_GpuFenceData;
 
+// MTLPixelFormatDepth24Unorm_Stencil8 is only available on macOS
+#if defined(__MACOS__) || TARGET_OS_SIMULATOR || TARGET_OS_MACCATALYST
+
 #define METAL_PIXFMT_MAPPINGS \
     METAL_MAPPIXFMT(SDL_GPUPIXELFMT_B5G6R5, MTLPixelFormatB5G6R5Unorm) \
     METAL_MAPPIXFMT(SDL_GPUPIXELFMT_BGR5A1, MTLPixelFormatBGR5A1Unorm) \
@@ -165,7 +168,25 @@ typedef struct METAL_GpuFenceData
     METAL_MAPPIXFMT(SDL_GPUPIXELFMT_BGRA8, MTLPixelFormatBGRA8Unorm) \
     METAL_MAPPIXFMT(SDL_GPUPIXELFMT_BGRA8_sRGB, MTLPixelFormatBGRA8Unorm_sRGB) \
     METAL_MAPPIXFMT(SDL_GPUPIXELFMT_Depth24_Stencil8, MTLPixelFormatDepth24Unorm_Stencil8) \
+    METAL_MAPPIXFMT(SDL_GPUPIXELFMT_Depth32F, MTLPixelFormatDepth32Float) \
+    METAL_MAPPIXFMT(SDL_GPUPIXELFMT_Depth32F_Stencil8, MTLPixelFormatDepth32Float_Stencil8) \
     METAL_MAPPIXFMT(SDL_GPUPIXELFMT_INVALID, MTLPixelFormatInvalid)
+
+#else
+
+#define METAL_PIXFMT_MAPPINGS \
+    METAL_MAPPIXFMT(SDL_GPUPIXELFMT_B5G6R5, MTLPixelFormatB5G6R5Unorm) \
+    METAL_MAPPIXFMT(SDL_GPUPIXELFMT_BGR5A1, MTLPixelFormatBGR5A1Unorm) \
+    METAL_MAPPIXFMT(SDL_GPUPIXELFMT_RGBA8, MTLPixelFormatRGBA8Unorm) \
+    METAL_MAPPIXFMT(SDL_GPUPIXELFMT_RGBA8_sRGB, MTLPixelFormatRGBA8Unorm_sRGB) \
+    METAL_MAPPIXFMT(SDL_GPUPIXELFMT_BGRA8, MTLPixelFormatBGRA8Unorm) \
+    METAL_MAPPIXFMT(SDL_GPUPIXELFMT_BGRA8_sRGB, MTLPixelFormatBGRA8Unorm_sRGB) \
+    /* METAL_MAPPIXFMT(SDL_GPUPIXELFMT_Depth24_Stencil8, MTLPixelFormatDepth24Unorm_Stencil8) */ \
+    METAL_MAPPIXFMT(SDL_GPUPIXELFMT_Depth32F, MTLPixelFormatDepth32Float) \
+    METAL_MAPPIXFMT(SDL_GPUPIXELFMT_Depth32F_Stencil8, MTLPixelFormatDepth32Float_Stencil8) \
+    METAL_MAPPIXFMT(SDL_GPUPIXELFMT_INVALID, MTLPixelFormatInvalid)
+
+#endif // MTLPixelFormatDepth24Unorm_Stencil8
 
 static MTLPixelFormat
 PixelFormatToMetal(const SDL_GpuPixelFormat fmt)
@@ -173,8 +194,10 @@ PixelFormatToMetal(const SDL_GpuPixelFormat fmt)
     switch (fmt) {
         #define METAL_MAPPIXFMT(sdlfmt, mtlfmt) case sdlfmt: return mtlfmt;
         METAL_PIXFMT_MAPPINGS
+        default: break;
         #undef METAL_MAPPIXFMT
     }
+#pragma clang diagnostic pop
 
     SDL_SetError("Unsupported pixel format");
     return MTLPixelFormatInvalid;
