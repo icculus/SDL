@@ -557,6 +557,18 @@ extern "C" {
 #define SDL_HINT_HIDAPI_IGNORE_DEVICES "SDL_HIDAPI_IGNORE_DEVICES"
 
 /**
+ *  \brief A variable controlling whether SDL promotes SDL_GPUPIXELFMT_Depth24_Stencil8 to SDL_GPUPIXELFMT_Depth32F_Stencil8 on iOS
+ *
+ *  On iOS, the 24-bit depth buffer/8-bit stencil buffer pixel format isn't available. This controls how SDL behaves when an iOS app tries to use it anyway:
+ *    "0"      - Trying to create a texture that uses SDL_GPUPIXELFMT_Depth24_Stencil8 results in an error
+ *    "1"      - Trying to create a texture that uses SDL_GPUPIXELFMT_Depth24_Stencil8 creates a SDL_GPUPIXFMT_Depth32F_Stencil8 texture instead
+ *
+ *  The default is to promote to SDL_GPUPIXFMT_Depth32F_Stencil8
+ *  This can be set at any time
+ */
+#define SDL_HINT_GPU_PROMOTE_DEPTH24_STENCIL8 "SDL_HINT_GPU_PROMOTE_DEPTH24_STENCIL8"
+
+/**
  * \brief A variable to control whether certain IMEs should handle text editing internally instead of sending SDL_TEXTEDITING events.
  *
  * The variable can be set to the following values:

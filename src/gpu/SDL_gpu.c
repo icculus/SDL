@@ -286,6 +286,19 @@ SDL_GpuCreateTexture(SDL_GpuDevice *device, const SDL_GpuTextureDescription *des
     } else if (((desc->texture_type == SDL_GPUTEXTYPE_CUBE) || (desc->texture_type == SDL_GPUTEXTYPE_CUBE_ARRAY)) && ((desc->width != desc->height))) {
         SDL_SetError("cubemaps must have the same width and height");
     } else {
+#if defined(__APPLE__) && (TARGET_OS_IOS || TARGET_OS_TV)
+        if (desc->pixel_format == SDL_GPUPIXELFMT_Depth24_Stencil8) {
+            if(SDL_GetHintBoolean(SDL_HINT_GPU_PROMOTE_DEPTH24_STENCIL8, SDL_TRUE)) {
+                SDL_GpuTextureDescription temp;
+                SDL_memcpy(&temp, desc, sizeof(temp));
+                temp.pixel_format = SDL_GPUPIXELFMT_Depth32F_Stencil8;
+                desc = &temp;
+            } else {
+                SDL_SetError("SDL_GPUPIXELFMT_Depth24_Stencil8 not available on iOS; see hint SDL_HINT_GPU_PROMOTE_DEPTH24_STENCIL8");
+                return NULL;
+            }
+        }
+#endif /* TARGET_OS_IOS || TARGET_OS_TV */
         ALLOC_OBJ_WITH_DESC(SDL_GpuTexture, texture, desc);
         if (texture != NULL) {
             texture->device = device;
