@@ -116,10 +116,13 @@ char *SDL_GetPrefPath(const char *org, const char *app)
         org = "";
     }
 
+Uint64 prevticks = SDL_GetTicks();
+#define STOPWATCH(what) { const Uint64 now = SDL_GetTicks(); SDL_Log("STOPWATCH: Step '%s' took %u ticks", what, (unsigned int) (now - prevticks)); prevticks = now; }
     if (!SUCCEEDED(SHGetFolderPathW(NULL, CSIDL_APPDATA | CSIDL_FLAG_CREATE, NULL, 0, path))) {
         WIN_SetError("Couldn't locate our prefpath");
         return NULL;
     }
+STOPWATCH("SHGetFolderPathW");
 
     worg = WIN_UTF8ToStringW(org);
     if (worg == NULL) {
