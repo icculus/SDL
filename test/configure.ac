@@ -179,7 +179,7 @@ if test x$have_opengles2 = xyes; then
     OPENGLES2_TARGETS="TARGETS"
 fi
 if test x$have_opengl = xyes; then
-    CFLAGS="$CFLAGS -DHAVE_OPENGL"
+    CFLAGS="$CFLAGS -DHAVE_OPENGL -DGL_GLEXT_PROTOTYPES"
     GLLIB="$XPATH $SYS_GL_LIBS"
     OPENGL_TARGETS="TARGETS"
 fi
