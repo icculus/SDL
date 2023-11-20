@@ -125,7 +125,9 @@ endif()
 
 if (OPENGL_FOUND)
 add_definitions(-DHAVE_OPENGL)
+add_definitions(-DGL_GLEXT_PROTOTYPES)
 endif()
+
 
 add_sdl_test_executable(checkkeys checkkeys.c)
 add_sdl_test_executable(checkkeysthreads checkkeysthreads.c)
