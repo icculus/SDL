@@ -62,8 +62,10 @@ static SDL_INLINE SDL_bool WasapiFailed(_THIS, const HRESULT err)
     }
 
     if (err == AUDCLNT_E_DEVICE_INVALIDATED) {
+SDL_Log("WASAPI: dev=%p WasapiFailed: AUDCLNT_E_DEVICE_INVALIDATED!", this);
         this->hidden->device_lost = SDL_TRUE;
     } else if (SDL_AtomicGet(&this->enabled)) {
+SDL_Log("WASAPI: dev=%p WasapiFailed: err=%u!", this, (unsigned int) err);
         IAudioClient_Stop(this->hidden->client);
         SDL_OpenedAudioDeviceDisconnected(this);
         SDL_assert(!SDL_AtomicGet(&this->enabled));
@@ -74,6 +76,8 @@ static SDL_INLINE SDL_bool WasapiFailed(_THIS, const HRESULT err)
 
 static int UpdateAudioStream(_THIS, const SDL_AudioSpec *oldspec)
 {
+SDL_Log("WASAPI: dev=%p UpdateAudioStream old=%d,%X,%d callback=%d,%X,%d, spec=%d,%X,%d", this, (int) oldspec->channels, (unsigned int) oldspec->format, (int) oldspec->freq, (int) this->callbackspec.channels, (unsigned int) this->callbackspec.format, (int) this->callbackspec.freq, (int) this->spec.channels, (unsigned int) this->spec.format, (int) this->spec.freq);
+
     /* Since WASAPI requires us to handle all audio conversion, and our
        device format might have changed, we might have to add/remove/change
        the audio stream that the higher level uses to convert data, so
@@ -128,6 +132,7 @@ static void ReleaseWasapiDevice(_THIS);
 
 static SDL_bool RecoverWasapiDevice(_THIS)
 {
+SDL_Log("WASAPI: dev=%p RecoverWasapiDevice!", this);
     ReleaseWasapiDevice(this); /* dump the lost device's handles. */
 
     if (this->hidden->default_device_generation) {
@@ -155,16 +160,19 @@ static SDL_bool RecoverWasapiIfLost(_THIS)
     SDL_bool lost = this->hidden->device_lost;
 
     if (!SDL_AtomicGet(&this->enabled)) {
+SDL_Log("WASAPI: dev=%p RecoverWasapiIfLost: already failed", this);
         return SDL_FALSE; /* already failed. */
     }
 
     if (!this->hidden->client) {
+SDL_Log("WASAPI: dev=%p RecoverWasapiIfLost: still waiting on activation", this);
         return SDL_TRUE; /* still waiting for activation. */
     }
 
     if (!lost && (generation > 0)) { /* is a default device? */
         const int newgen = SDL_AtomicGet(this->iscapture ? &SDL_IMMDevice_DefaultCaptureGeneration : &SDL_IMMDevice_DefaultPlaybackGeneration);
         if (generation != newgen) { /* the desired default device was changed, jump over to it. */
+SDL_Log("WASAPI: dev=%p RecoverWasapiIfLost: default device changed!", this);
             lost = SDL_TRUE;
         }
     }
@@ -203,7 +211,7 @@ static void WASAPI_WaitDevice(_THIS)
             const UINT32 maxpadding = this->spec.samples;
             UINT32 padding = 0;
             if (!WasapiFailed(this, IAudioClient_GetCurrentPadding(this->hidden->client, &padding))) {
-                /*SDL_Log("WASAPI EVENT! padding=%u maxpadding=%u", (unsigned int)padding, (unsigned int)maxpadding);*/
+                SDL_Log("WASAPI: dev=%p EVENT! padding=%u maxpadding=%u", this, (unsigned int)padding, (unsigned int)maxpadding);;
                 if (this->iscapture) {
                     if (padding > 0) {
                         break;
@@ -215,7 +223,7 @@ static void WASAPI_WaitDevice(_THIS)
                 }
             }
         } else if (waitResult != WAIT_TIMEOUT) {
-            /*SDL_Log("WASAPI FAILED EVENT!");*/
+            SDL_Log("WASAPI: dev=%p WAIT_TIMEOUT!", this);
             IAudioClient_Stop(this->hidden->client);
             SDL_OpenedAudioDeviceDisconnected(this);
         }
@@ -312,6 +320,7 @@ static void WASAPI_FlushCapture(_THIS)
 
 static void ReleaseWasapiDevice(_THIS)
 {
+SDL_Log("WASAPI: dev=%p ReleaseWasapiDevice!", this);
     if (this->hidden->client) {
         IAudioClient_Stop(this->hidden->client);
         IAudioClient_Release(this->hidden->client);
@@ -356,11 +365,13 @@ static void WASAPI_CloseDevice(_THIS)
 
 void WASAPI_RefDevice(_THIS)
 {
+SDL_Log("WASAPI: dev=%p WASAPI_RefDevice!", this);
     SDL_AtomicIncRef(&this->hidden->refcount);
 }
 
 void WASAPI_UnrefDevice(_THIS)
 {
+SDL_Log("WASAPI: dev=%p WASAPI_UnrefDevice!", this);
     if (!SDL_AtomicDecRef(&this->hidden->refcount)) {
         return;
     }
@@ -534,6 +545,8 @@ int WASAPI_PrepDevice(_THIS, const SDL_bool updatestream)
 static int WASAPI_OpenDevice(_THIS, const char *devname)
 {
     LPCWSTR devid = (LPCWSTR)this->handle;
+
+SDL_Log("WASAPI: dev=%p OpenDevice! devname='%s' iscapture=%d", this, devname, (int) this->iscapture);
 
     /* Initialize all variables that we clean on shutdown */
     this->hidden = (struct SDL_PrivateAudioData *) SDL_malloc(sizeof(*this->hidden));
