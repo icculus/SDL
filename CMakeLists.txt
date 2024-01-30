@@ -2726,6 +2726,13 @@ if(SDL_VIDEO)
   endif()
 endif()
 
+if (SDL_OPENGL)
+  set(SDL_GPU_OPENGL 1)
+  sdl_glob_sources("${SDL3_SOURCE_DIR}/src/gpu/opengl/*.c")
+else()
+  set(SDL_GPU_OPENGL 0)
+endif()
+
 # Dummies
 # configure.ac does it differently:
 # if not have X

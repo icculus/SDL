@@ -486,6 +486,7 @@
 #cmakedefine SDL_VIDEO_RENDER_VITA_GXM @SDL_VIDEO_RENDER_VITA_GXM@
 
 #cmakedefine SDL_GPU_METAL @SDL_GPU_METAL@
+#cmakedefine SDL_GPU_OPENGL @SDL_GPU_OPENGL@
 
 /* Enable OpenGL support */
 #cmakedefine SDL_VIDEO_OPENGL @SDL_VIDEO_OPENGL@

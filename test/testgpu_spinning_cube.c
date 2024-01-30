@@ -12,14 +12,15 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
-#include <math.h>
 
 #ifdef __EMSCRIPTEN__
 #include <emscripten/emscripten.h>
 #endif
 
-#include "SDL_test_common.h"
-#include "SDL_gpu.h"
+#include <SDL3/SDL_test.h>
+#include <SDL3/SDL_gpu.h>
+
+#include <SDL3/SDL_stdinc.h>
 
 typedef struct RenderState
 {
@@ -31,7 +32,7 @@ typedef struct WindowState
 {
     int angle_x, angle_y, angle_z;
     SDL_GpuTextureCycle *texcycle_depth;
-    SDL_GpuCpuBufferCycle *cpubufcycle_uniforms;
+    SDL_CpuBufferCycle *cpubufcycle_uniforms;
     SDL_GpuBufferCycle *gpubufcycle_uniforms;
 } WindowState;
 
@@ -48,7 +49,7 @@ static void shutdownGpu(void)
         for (i = 0; i < state->num_windows; i++) {
             WindowState *winstate = &window_states[i];
             SDL_DestroyGpuTextureCycle(winstate->texcycle_depth);
-            SDL_DestroyGpuCpuBufferCycle(winstate->cpubufcycle_uniforms);
+            SDL_DestroyCpuBufferCycle(winstate->cpubufcycle_uniforms);
             SDL_DestroyGpuBufferCycle(winstate->gpubufcycle_uniforms);
         }
         SDL_free(window_states);
@@ -73,9 +74,9 @@ quit(int rc)
     exit(rc);
 }
 
-/* 
- * Simulates desktop's glRotatef. The matrix is returned in column-major 
- * order. 
+/*
+ * Simulates desktop's glRotatef. The matrix is returned in column-major
+ * order.
  */
 static void
 rotate_matrix(float angle, float x, float y, float z, float *r)
@@ -83,7 +84,7 @@ rotate_matrix(float angle, float x, float y, float z, float *r)
     float radians, c, s, c1, u[3], length;
     int i, j;
 
-    radians = (float)(angle * M_PI) / 180.0f;
+    radians = (float)(angle * SDL_PI_F) / 180.0f;
 
     c = SDL_cosf(radians);
     s = SDL_sinf(radians);
@@ -114,10 +115,10 @@ rotate_matrix(float angle, float x, float y, float z, float *r)
     }
 }
 
-/* 
- * Simulates gluPerspectiveMatrix 
+/*
+ * Simulates gluPerspectiveMatrix
  */
-static void 
+static void
 perspective_matrix(float fovy, float aspect, float znear, float zfar, float *r)
 {
     int i;
@@ -126,18 +127,19 @@ perspective_matrix(float fovy, float aspect, float znear, float zfar, float *r)
     f = 1.0f/SDL_tanf(fovy * 0.5f);
 
     for (i = 0; i < 16; i++) {
-        r[i] = 0.0;
+        r[i] = 0.0f;
     }
 
+    // reversed depth buffer (clear depth to 0, use SDL_GPUCMPFUNC_GREATER)
+    // depth: 0=far, 1=close
     r[0] = f / aspect;
     r[5] = f;
-    r[10] = (znear + zfar) / (znear - zfar);
+    r[10] = -znear / (zfar - znear);
     r[11] = -1.0f;
-    r[14] = (2.0f * znear * zfar) / (znear - zfar);
-    r[15] = 0.0f;
+    r[14] = zfar * znear / (zfar - znear);
 }
 
-/* 
+/*
  * Multiplies lhs by rhs and writes out to r. All matrices are 4x4 and column
  * major. In-place multiplication is supported.
  */
@@ -237,16 +239,47 @@ static const VertexData vertex_data[] = {
 };
 
 static const char* shader_vert_src =
-    "struct VertexInputs { float4 position @attribute(0); float3 color @attribute(1); };"
-    "struct VertexOutputs { float4 position @position; float4 color; };"
-    "struct VertexUniforms { float4x4 mvp; };"
-    "function VertexOutputs vertex_main(VertexInputs inputs @inputs, VertexUniforms uniforms @buffer(0)) @vertex {"
-        "return VertexOutputs(mvp * inputs.position, float4(inputs.color, 1.0));"
-    "}"
-    "struct FragmentOutputs { float4 color @color; }"
-    "function FragmentOutputs fragment_main(VertexOutputs inputs @inputs) @fragment {"
-        "return FragmentOutputs(inputs.color);"
-    "}";
+    "// vert\n"
+    "#version 460\n"
+    "\n"
+    "// Vertex attributes\n"
+    "layout(location = 0) in vec3 vposition;\n"
+    "layout(location = 1) in vec3 vcolor;\n"
+    "\n"
+    "out vec4 color;\n"
+    "\n"
+    "layout(std430, binding = 0) buffer Matrices {\n"
+    "    mat4 mvp;\n"
+    "};\n"
+    "\n"
+    "void main()\n"
+    "{\n"
+    "    gl_Position = mvp * vec4(vposition, 1.0);\n"
+    "    color = vec4(vcolor, 1.0);\n"
+    "}\n";
+static const char* shader_frag_src =
+    "// frag\n"
+    "#version 460\n"
+    "//layout(origin_upper_left) in vec4 gl_FragCoord;\n"
+    "\n"
+    "in vec4 color;\n"
+    "\n"
+    "layout(location = 0) out vec4 fcolor;\n"
+    "\n"
+    "void main()\n"
+    "{\n"
+    "    fcolor = color;\n"
+    "}\n";
+    // "struct VertexInputs { float4 position @attribute(0); float3 color @attribute(1); };"
+    // "struct VertexOutputs { float4 position @position; float4 color; };"
+    // "struct VertexUniforms { float4x4 mvp; };"
+    // "function VertexOutputs vertex_main(VertexInputs inputs @inputs, VertexUniforms uniforms @buffer(0)) @vertex {"
+    //     "return VertexOutputs(mvp * inputs.position, float4(inputs.color, 1.0));"
+    // "}"
+    // "struct FragmentOutputs { float4 color @color; }"
+    // "function FragmentOutputs fragment_main(VertexOutputs inputs @inputs) @fragment {"
+    //     "return FragmentOutputs(inputs.color);"
+    // "}";
 
 static void
 Render(SDL_Window *window, const int windownum)
@@ -256,8 +289,8 @@ Render(SDL_Window *window, const int windownum)
     SDL_GpuColorAttachmentDescription color_attachment;
     SDL_GpuDepthAttachmentDescription depth_attachment;
     SDL_GpuTexture **depth_texture_ptr;
-    SDL_GpuCpuBuffer *cpubuf_uniforms = SDL_GetNextCpuBufferCycle(winstate->cpubufcycle_uniforms);
-    SDL_GpuBuffer *gpubuf_uniforms = SDL_GetNextGpuBufferCycle(winstate->gpubufcycle_uniforms);
+    SDL_CpuBuffer *cpubuf_uniforms = SDL_GetNextCpuBufferInCycle(winstate->cpubufcycle_uniforms);
+    SDL_GpuBuffer *gpubuf_uniforms = SDL_GetNextGpuBufferInCycle(winstate->gpubufcycle_uniforms);
     SDL_GpuTextureDescription texdesc;
     float matrix_rotate[16], matrix_modelview[16], matrix_perspective[16];
     Uint32 drawablew, drawableh;
@@ -275,9 +308,9 @@ Render(SDL_Window *window, const int windownum)
     drawablew = texdesc.width;
     drawableh = texdesc.height;
 
-    /* 
+    /*
     * Do some rotation with Euler angles. It is not a fixed axis as
-    * quaterions would be, but the effect is cool. 
+    * quaterions would be, but the effect is cool.
     */
     rotate_matrix((float)winstate->angle_x, 1.0f, 0.0f, 0.0f, matrix_modelview);
     rotate_matrix((float)winstate->angle_y, 0.0f, 1.0f, 0.0f, matrix_rotate);
@@ -289,7 +322,7 @@ Render(SDL_Window *window, const int windownum)
     multiply_matrix(matrix_rotate, matrix_modelview, matrix_modelview);
 
     /* Pull the camera back from the cube */
-    matrix_modelview[14] -= 2.5;
+    matrix_modelview[14] -= 2.5f;
 
     perspective_matrix(45.0f, (float)drawablew/drawableh, 0.01f, 100.0f, matrix_perspective);
 
@@ -320,7 +353,7 @@ Render(SDL_Window *window, const int windownum)
         quit(2);
     }
 
-    SDL_CopyGpuBufferToCpu(blit, cpubuf_uniforms, 0, gpubuf_uniforms, 0, sizeof (float) * 16);
+    SDL_CopyCpuBufferToGpu(blit, cpubuf_uniforms, 0, gpubuf_uniforms, 0, sizeof (float) * 16);
     SDL_EndGpuBlitPass(blit);
 
     SDL_zero(color_attachment);
@@ -349,8 +382,8 @@ Render(SDL_Window *window, const int windownum)
     SDL_SetGpuRenderPassPipeline(render, render_state.pipeline);
     SDL_SetGpuRenderPassViewport(render, 0.0, 0.0, (double) drawablew, (double) drawableh, 0.0, 1.0);  /* !!! FIXME near and far are wrong */
     SDL_SetGpuRenderPassScissor(render, 0.0, 0.0, (double) drawablew, (double) drawableh);
-    SDL_SetGpuRenderPassVertexBuffer(render, render_state.gpubuf_static, 0, 0);
-    SDL_SetGpuRenderPassVertexBuffer(render, gpubuf_uniforms, 0, 1);
+    SDL_SetGpuMesh(render, render_state.gpubuf_static, 0, 0);
+    SDL_SetGpuRenderPassVertexBuffer(render, gpubuf_uniforms, 0, 0);
     SDL_GpuDraw(render, 0, SDL_arraysize(vertex_data));
     SDL_EndGpuRenderPass(render);
 
@@ -365,11 +398,12 @@ static SDL_GpuShader *load_shader(const char *label, const char *src, const char
     Uint8 *bytecode = NULL;
     Uint32 bytecodelen = 0;
     /* !!! FIXME: this is broken right now, we need to compile this with the external tools and just keep the binary embedded in here. */
-    if (SDL_CompileGpuShader(src, -1, type, "main", &bytecode, &bytecodelen) == -1) {
-        SDL_Log("Failed to compile %s shader: %s", type, SDL_GetError());
-        quit(2);
-    }
-    retval = SDL_CreateGpuShader(label, gpu_device, bytecode, bytecodelen);
+    // if (SDL_CompileGpuShader(src, -1, type, "main", &bytecode, &bytecodelen) == -1) {
+    //     SDL_Log("Failed to compile %s shader: %s", type, SDL_GetError());
+    //     quit(2);
+    // }
+    // retval = SDL_CreateGpuShader(label, gpu_device, bytecode, bytecodelen);
+    retval = SDL_CreateGpuShader(label, gpu_device, (Uint8*)src, SDL_strlen(src));
     if (!retval) {
         SDL_Log("Failed to load %s shader bytecode: %s", type, SDL_GetError());
         quit(2);
@@ -393,7 +427,12 @@ init_render_state(void)
 
     #define CHECK_CREATE(var, thing) { if (!(var)) { SDL_Log("Failed to create %s: %s\n", thing, SDL_GetError()); quit(2); } }
 
-    gpu_device = SDL_CreateGpuDevice("The GPU device", NULL);
+    int ndriver = SDL_GetNumGpuDrivers();
+    for (int j = 0; j < ndriver; ++j) {
+        SDL_Log("gpu driver: %s\n", SDL_GetGpuDriver(j));
+    }
+
+    gpu_device = SDL_CreateGpuDevice("The GPU device", SDL_GetGpuDriver(0));
     CHECK_CREATE(gpu_device, "GPU device");
 
     vertex_shader = load_shader("Spinning cube vertex shader", shader_vert_src, "vertex_main");
@@ -405,17 +444,24 @@ init_render_state(void)
 
     SDL_GetDefaultGpuPipelineDescription(&pipelinedesc);
     pipelinedesc.label = "The spinning cube pipeline";
-    pipelinedesc.primitive = SDL_GPUPRIM_TRIANGLESTRIP;
+    pipelinedesc.primitive = SDL_GPUPRIM_TRIANGLE;
     pipelinedesc.vertex_shader = vertex_shader;
     pipelinedesc.fragment_shader = fragment_shader;
     pipelinedesc.num_vertex_attributes = 2;
     pipelinedesc.vertices[0].format = SDL_GPUVERTFMT_FLOAT3;
+    pipelinedesc.vertices[0].offset = 0;
+    pipelinedesc.vertices[0].stride = 6*sizeof(float);
     pipelinedesc.vertices[1].format = SDL_GPUVERTFMT_FLOAT3;
     pipelinedesc.vertices[1].index = 1;
+    pipelinedesc.vertices[1].offset = 3*sizeof(float);
+    pipelinedesc.vertices[1].stride = 6*sizeof(float);
     pipelinedesc.num_color_attachments = 1;
     pipelinedesc.color_attachments[0].pixel_format = SDL_GPUPIXELFMT_RGBA8;
     pipelinedesc.color_attachments[0].blending_enabled = SDL_FALSE;
     pipelinedesc.depth_format = SDL_GPUPIXELFMT_Depth24_Stencil8;
+    pipelinedesc.depth_function = SDL_GPUCMPFUNC_GREATER;
+    // pipelinedesc.depth_function = SDL_GPUCMPFUNC_ALWAYS;
+    // pipelinedesc.cull_face = SDL_GPUCULLFACE_NONE;
 
     render_state.pipeline = SDL_CreateGpuPipeline(gpu_device, &pipelinedesc);
     if (!render_state.pipeline) {
@@ -437,7 +483,7 @@ init_render_state(void)
         /* each window gets a cycle of buffers and depth textures, so we don't have to wait for them
            to finish; by the time they come around again in the cycle, they're available to use again. */
         WindowState *winstate = &window_states[i];
-        char label[32];
+        char label[64];
 
         SDL_snprintf(label, sizeof (label), "Window #%d uniform staging buffer", i);
         winstate->cpubufcycle_uniforms = SDL_CreateCpuBufferCycle(label, gpu_device, sizeof (float) * 16, NULL, 3);
@@ -491,7 +537,7 @@ main(int argc, char *argv[])
     int fsaa;
     int value;
     int i;
-    SDL_DisplayMode mode;
+    const SDL_DisplayMode *mode;
     Uint32 then, now;
     int status;
 
@@ -503,8 +549,10 @@ main(int argc, char *argv[])
     if (!state) {
         return 1;
     }
+    // SDL_LogSetAllPriority(SDL_LOG_PRIORITY_VERBOSE);
 
     state->skip_renderer = 1;
+    state->gl_debug = 1;
 
     for (i = 1; i < argc;) {
         int consumed;
@@ -533,8 +581,12 @@ main(int argc, char *argv[])
         return 0;
     }
 
-    SDL_GetCurrentDisplayMode(0, &mode);
-    SDL_Log("Screen bpp: %d\n", SDL_BITSPERPIXEL(mode.format));
+    mode = SDL_GetCurrentDisplayMode(1);
+    if (mode) {
+        SDL_Log("Screen bpp: %d\n", SDL_BITSPERPIXEL(mode->format));
+    } else {
+        SDL_Log("%s", SDL_GetError());
+    }
 
     #if 0  // !!! FIXME: report any of this through the Gpu API?
     SDL_Log("\n");
@@ -568,9 +620,9 @@ main(int argc, char *argv[])
         SDL_Log("%2.2f frames per second\n",
                ((double) frames * 1000) / (now - then));
     }
-#if !defined(__ANDROID__) && !defined(__NACL__)  
+#if !defined(__ANDROID__) && !defined(__NACL__)
     quit(0);
-#endif    
+#endif
     return 0;
 }
 

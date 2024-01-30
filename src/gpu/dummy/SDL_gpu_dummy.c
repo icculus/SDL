@@ -78,6 +78,7 @@ static int DUMMY_GpuSetRenderPassVertexTexture(SDL_GpuRenderPass *pass, SDL_GpuT
 static int DUMMY_GpuSetRenderPassFragmentBuffer(SDL_GpuRenderPass *pass, SDL_GpuBuffer *buffer, Uint32 offset, Uint32 index) { return 0; }
 static int DUMMY_GpuSetRenderPassFragmentSampler(SDL_GpuRenderPass *pass, SDL_GpuSampler *sampler, Uint32 index) { return 0; }
 static int DUMMY_GpuSetRenderPassFragmentTexture(SDL_GpuRenderPass *pass, SDL_GpuTexture *texture, Uint32 index) { return 0; }
+static int DUMMY_GpuSetMeshBuffer(SDL_GpuRenderPass *pass, SDL_GpuBuffer *buffer, Uint32 offset, Uint32 index) { return 0; }
 static int DUMMY_GpuDraw(SDL_GpuRenderPass *pass, Uint32 vertex_start, Uint32 vertex_count) { return 0; }
 static int DUMMY_GpuDrawIndexed(SDL_GpuRenderPass *pass, Uint32 index_count, SDL_GpuIndexType index_type, SDL_GpuBuffer *index_buffer, Uint32 index_offset) { return 0; }
 static int DUMMY_GpuDrawInstanced(SDL_GpuRenderPass *pass, Uint32 vertex_start, Uint32 vertex_count, Uint32 instance_count, Uint32 base_instance) { return 0; }
@@ -134,6 +135,7 @@ DUMMY_GpuCreateDevice(SDL_GpuDevice *device)
     device->SetRenderPassFragmentBuffer = DUMMY_GpuSetRenderPassFragmentBuffer;
     device->SetRenderPassFragmentSampler = DUMMY_GpuSetRenderPassFragmentSampler;
     device->SetRenderPassFragmentTexture = DUMMY_GpuSetRenderPassFragmentTexture;
+    device->SetMesh = DUMMY_GpuSetMeshBuffer;
     device->Draw = DUMMY_GpuDraw;
     device->DrawIndexed = DUMMY_GpuDrawIndexed;
     device->DrawInstanced = DUMMY_GpuDrawInstanced;

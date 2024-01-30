@@ -147,6 +147,7 @@ struct SDL_GpuDevice
     int (*SetRenderPassFragmentBuffer)(SDL_GpuRenderPass *pass, SDL_GpuBuffer *buffer, Uint32 offset, Uint32 index);
     int (*SetRenderPassFragmentSampler)(SDL_GpuRenderPass *pass, SDL_GpuSampler *sampler, Uint32 index);
     int (*SetRenderPassFragmentTexture)(SDL_GpuRenderPass *pass, SDL_GpuTexture *texture, Uint32 index);
+    int (*SetMesh)(SDL_GpuRenderPass *pass, SDL_GpuBuffer *buffer, Uint32 offset, Uint32 index);
     int (*Draw)(SDL_GpuRenderPass *pass, Uint32 vertex_start, Uint32 vertex_count);
     int (*DrawIndexed)(SDL_GpuRenderPass *pass, Uint32 index_count, SDL_GpuIndexType index_type, SDL_GpuBuffer *index_buffer, Uint32 index_offset);
     int (*DrawInstanced)(SDL_GpuRenderPass *pass, Uint32 vertex_start, Uint32 vertex_count, Uint32 instance_count, Uint32 base_instance);

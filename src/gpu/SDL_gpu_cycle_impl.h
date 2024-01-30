@@ -34,7 +34,7 @@ SDL_GPUCYCLECREATEFNSIG
 {
     /* allocate the whole thing as one block: `items` as a variable length array at the end, the label data after that. */
     const size_t labellen = label ? (SDL_strlen(label) + 1) : 0;
-    const size_t thislabellen = label ? 0 : labellen + 32;
+    const size_t thislabellen = label ? labellen + 32 : 0;
     const size_t alloclen = sizeof (SDL_GPUCYCLETYPE) + (sizeof (SDL_GPUCYCLEITEMTYPE *) * numitems) + labellen;
     SDL_GPUCYCLETYPE *retval = (SDL_GPUCYCLETYPE *) SDL_calloc(1, alloclen);
     char *thislabel = NULL;
