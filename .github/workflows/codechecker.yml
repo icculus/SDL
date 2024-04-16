@@ -1,0 +1,36 @@
+name: CodeChecker
+
+on: [push, pull_request]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.run_id }}
+  cancel-in-progress: true
+
+jobs:
+  codechecker:
+    name: CodeChecker
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+
+    steps:
+      - name: "Check out repository"
+        uses: actions/checkout@v4
+
+      - name: "Prepare build"
+        run: |
+          mkdir -pv Build
+          cd Build
+          cmake -DCMAKE_BUILD_TYPE=Debug -DSDL_STATIC=OFF -DCMAKE_EXPORT_COMPILE_COMMANDS=ON ..
+
+      - uses: whisperity/codechecker-analysis-action@v1
+        id: codechecker
+        with:
+          logfile: ${{ github.workspace }}/Build/compile_commands.json
+
+      - uses: actions/upload-artifact@v2
+        with:
+          name: "CodeChecker Bug Reports"
+          path: ${{ steps.codechecker.outputs.result-html-dir }}
+
