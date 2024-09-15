@@ -12,7 +12,6 @@
 static SDL_Window *window = NULL;
 static SDL_Renderer *renderer = NULL;
 
-
 /* This function runs once at startup. */
 SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[])
 {
@@ -25,6 +24,7 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[])
         SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Couldn't create window/renderer!", SDL_GetError(), NULL);
         return SDL_APP_FAILURE;
     }
+
     return SDL_APP_CONTINUE;  /* carry on with the program! */
 }
 
