@@ -26,6 +26,7 @@
 
 #if defined(SDL_PLATFORM_WINDOWS) && defined(NTDDI_WIN10_NI)
 #if WINAPI_FAMILY_PARTITION(WINAPI_PARTITION_APP) && NTDDI_VERSION >= NTDDI_WIN10_NI
+#error This build can use the Windows 11 IoRing API.
 #define HAVE_IORINGAPI_H
 #endif
 #endif
