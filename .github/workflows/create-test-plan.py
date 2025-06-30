@@ -55,6 +55,7 @@ class SdlPlatform(Enum):
     FreeBSD = "freebsd"
     NetBSD = "netbsd"
     NGage = "ngage"
+    DJGPP = "djgpp"
 
 
 class Msys2Platform(Enum):
@@ -141,6 +142,7 @@ JOB_SPECS = {
     "netbsd": JobSpec(name="NetBSD",                                        os=JobOs.UbuntuLatest,      platform=SdlPlatform.NetBSD,      artifact="SDL-netbsd-x64", ),
     "freebsd": JobSpec(name="FreeBSD",                                      os=JobOs.UbuntuLatest,      platform=SdlPlatform.FreeBSD,     artifact="SDL-freebsd-x64", ),
     "ngage": JobSpec(name="N-Gage",                                         os=JobOs.WindowsLatest,     platform=SdlPlatform.NGage,       artifact="SDL-ngage", ),
+    "djgpp": JobSpec(name="DOS (DJGPP)",                                    os=JobOs.UbuntuLatest,      platform=SdlPlatform.DJGPP,       artifact="SDL-djgpp", ),
 }
 
 
@@ -225,7 +227,7 @@ class JobDetails:
     check_sources: bool = False
     setup_python: bool = False
     pypi_packages: list[str] = dataclasses.field(default_factory=list)
-    setup_gage_sdk_path: str = ""
+    setup_ngage_sdk_path: str = ""
 
     def to_workflow(self, enable_artifacts: bool) -> dict[str, str|bool]:
         data = {
@@ -293,7 +295,7 @@ class JobDetails:
             "check-sources": self.check_sources,
             "setup-python": self.setup_python,
             "pypi-packages": my_shlex_join(self.pypi_packages),
-            "setup-ngage-sdk-path": self.setup_gage_sdk_path,
+            "setup-ngage-sdk-path": self.setup_ngage_sdk_path,
         }
         return {k: v for k, v in data.items() if v != ""}
 
@@ -754,9 +756,23 @@ def spec_to_job(spec: JobSpec, key: str, trackmem_symbol_names: bool) -> JobDeta
             job.werror = False  # FIXME: enable SDL_WERROR
             job.shared = False
             job.run_tests = False
-            job.setup_gage_sdk_path = "C:/ngagesdk"
+            job.setup_ngage_sdk_path = "C:/ngagesdk"
             job.cmake_toolchain_file = "C:/ngagesdk/cmake/ngage-toolchain.cmake"
             job.test_pkg_config = False
+        case SdlPlatform.DJGPP:
+            build_parallel = False
+            job.ccache = True
+            job.apt_packages = ["ccache", "libfl-dev"]  # djgpp needs libfl.so.2
+            job.cmake_build_type = "Release"
+            job.setup_ninja = True
+            job.static_lib = StaticLibType.STATIC_LIB
+            job.shared_lib = None
+            job.clang_tidy = False
+            job.werror = False  # FIXME: enable SDL_WERROR
+            job.shared = False
+            job.run_tests = False
+            job.test_pkg_config = False
+            job.cmake_toolchain_file = "$GITHUB_WORKSPACE/build-scripts/i586-pc-msdosdjgpp.cmake"
         case _:
             raise ValueError(f"Unsupported platform={spec.platform}")
 
