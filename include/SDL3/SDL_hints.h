@@ -66,6 +66,33 @@ extern "C" {
 #define SDL_HINT_ALLOW_ALT_TAB_WHILE_GRABBED "SDL_ALLOW_ALT_TAB_WHILE_GRABBED"
 
 /**
+ * A variable to control if Android will fallback to accessing the app's APK.
+ *
+ * By default, on Android, several SDL APIs will attempt to work with files
+ * and directories on the real filesystem, but if those files cannot be found,
+ * SDL will attempt to locate them inside the "assets" folder in the app's APK
+ * archive. This can cause confusion when files show up in unexpected
+ * locations, or cause an unexpected override.
+ *
+ * As of SDL 3.4.6, the APK's assets can be accessed explicitly with the
+ * "assets://" URL scheme, making the existing behavior undesirable.
+ *
+ * This hint can change the behavior so that APK assets are only accessible
+ * by prepending "assets://" to a file path. As this is a change in behavior,
+ * the hint defaults to "1" to operate as usual.
+ *
+ * The variable can be set to the following values:
+ *
+ * - "0": SDL will _not_ fall back to the APK assets.
+ * - "1": SDL will fall back to the APK assets. (default)
+ *
+ * This hint can be set anytime.
+ *
+ * \since This hint is available since SDL 3.4.6.
+ */
+#define SDL_HINT_ANDROID_ALLOW_ASSET_DIR_FALLBACK "SDL_ANDROID_ALLOW_ASSET_DIR_FALLBACK"
+
+/**
  * A variable to control whether the SDL activity is allowed to be re-created.
  *
  * If this hint is true, the activity can be recreated on demand by the OS,

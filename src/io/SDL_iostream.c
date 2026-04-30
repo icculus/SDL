@@ -1021,7 +1021,7 @@ SDL_IOStream *SDL_IOFromFile(const char *file, const char *mode)
         }
 
         return SDL_IOFromFP(fp, true);
-    } else {
+    } else if (SDL_strncmp(file, "assets://", 9) != 0) {
         // Try opening it from internal storage if it's a relative path
         char *path = NULL;
         SDL_asprintf(&path, "%s/%s", SDL_GetAndroidInternalStoragePath(), file);
@@ -1041,27 +1041,28 @@ SDL_IOStream *SDL_IOFromFile(const char *file, const char *mode)
 #endif // HAVE_STDIO_H
 
     // Try to open the file from the asset system
+    if ((SDL_strncmp(file, "assets://", 9) == 0) || SDL_GetHintBoolean(SDL_HINT_ANDROID_ALLOW_ASSET_DIR_FALLBACK, true)) {
+        void *iodata = NULL;
+        if (!Android_JNI_FileOpen(&iodata, file, mode)) {
+            return NULL;
+        }
 
-    void *iodata = NULL;
-    if (!Android_JNI_FileOpen(&iodata, file, mode)) {
-        return NULL;
-    }
+        SDL_IOStreamInterface iface;
+        SDL_INIT_INTERFACE(&iface);
+        iface.size = Android_JNI_FileSize;
+        iface.seek = Android_JNI_FileSeek;
+        iface.read = Android_JNI_FileRead;
+        iface.write = Android_JNI_FileWrite;
+        iface.close = Android_JNI_FileClose;
 
-    SDL_IOStreamInterface iface;
-    SDL_INIT_INTERFACE(&iface);
-    iface.size = Android_JNI_FileSize;
-    iface.seek = Android_JNI_FileSeek;
-    iface.read = Android_JNI_FileRead;
-    iface.write = Android_JNI_FileWrite;
-    iface.close = Android_JNI_FileClose;
-
-    iostr = SDL_OpenIO(&iface, iodata);
-    if (!iostr) {
-        iface.close(iodata);
-    } else {
-        const SDL_PropertiesID props = SDL_GetIOProperties(iostr);
-        if (props) {
-            SDL_SetPointerProperty(props, SDL_PROP_IOSTREAM_ANDROID_AASSET_POINTER, iodata);
+        iostr = SDL_OpenIO(&iface, iodata);
+        if (!iostr) {
+            iface.close(iodata);
+        } else {
+            const SDL_PropertiesID props = SDL_GetIOProperties(iostr);
+            if (props) {
+                SDL_SetPointerProperty(props, SDL_PROP_IOSTREAM_ANDROID_AASSET_POINTER, iodata);
+            }
         }
     }
 
