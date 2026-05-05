@@ -103,6 +103,7 @@ bool NGAGE_CreateTextureData(NGAGE_TextureData *data, const int width, const int
 void NGAGE_DestroyTextureData(NGAGE_TextureData *data);
 void *NGAGE_GetBitmapDataAddress(NGAGE_TextureData *data);
 int NGAGE_GetBitmapScanLineLength(NGAGE_TextureData *data);
+void NGAGE_DrawGeometry(NGAGE_Vertex *verts, const int count);
 void NGAGE_DrawLines(NGAGE_Vertex *verts, const int count);
 void NGAGE_DrawPoints(NGAGE_Vertex *verts, const int count);
 void NGAGE_FillRects(NGAGE_Vertex *verts, const int count);

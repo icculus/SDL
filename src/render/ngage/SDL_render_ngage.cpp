@@ -110,6 +110,11 @@ void NGAGE_DrawPoints(NGAGE_Vertex *verts, const int count)
     gRenderer->DrawPoints(verts, count);
 }
 
+void NGAGE_DrawGeometry(NGAGE_Vertex *verts, const int count)
+{
+    gRenderer->DrawGeometry(verts, count);
+}
+
 void NGAGE_FillRects(NGAGE_Vertex *verts, const int count)
 {
     gRenderer->FillRects(verts, count);
@@ -724,6 +729,177 @@ void CRenderer::DrawPoints(NGAGE_Vertex *aVerts, const TInt aCount)
 
             gc->SetPenColor(aColor);
             gc->Plot(TPoint(aVerts->x, aVerts->y));
+        }
+    }
+}
+
+// Gouraud-shaded triangle scanline fill directly into an EColor4K (XRGB4444) framebuffer.
+// Colors are interpolated per-scanline endpoint and per-pixel.
+static void FillTriangle(TUint16 *aPixels, TInt aStride,
+                         TInt aBmpW, TInt aBmpH,
+                         TInt aX0, TInt aY0, TInt aR0, TInt aG0, TInt aB0,
+                         TInt aX1, TInt aY1, TInt aR1, TInt aG1, TInt aB1,
+                         TInt aX2, TInt aY2, TInt aR2, TInt aG2, TInt aB2)
+{
+    // Sort vertices by Y ascending (bubble sort on 3 elements).
+    // Swap positions and colors together.
+#define SWAP3(ax, ay, ar, ag, ab, bx, by, br, bg, bb) \
+    do {                                              \
+        TInt _t;                                      \
+        _t = ax;                                      \
+        ax = bx;                                      \
+        bx = _t;                                      \
+        _t = ay;                                      \
+        ay = by;                                      \
+        by = _t;                                      \
+        _t = ar;                                      \
+        ar = br;                                      \
+        br = _t;                                      \
+        _t = ag;                                      \
+        ag = bg;                                      \
+        bg = _t;                                      \
+        _t = ab;                                      \
+        ab = bb;                                      \
+        bb = _t;                                      \
+    } while (0)
+
+    if (aY0 > aY1) {
+        SWAP3(aX0, aY0, aR0, aG0, aB0, aX1, aY1, aR1, aG1, aB1);
+    }
+    if (aY1 > aY2) {
+        SWAP3(aX1, aY1, aR1, aG1, aB1, aX2, aY2, aR2, aG2, aB2);
+    }
+    if (aY0 > aY1) {
+        SWAP3(aX0, aY0, aR0, aG0, aB0, aX1, aY1, aR1, aG1, aB1);
+    }
+#undef SWAP3
+
+    TInt totalHeight = aY2 - aY0;
+    if (totalHeight == 0) {
+        return;
+    }
+
+    // Walk upper half [y0..y1] and lower half [y1..y2].
+    for (TInt part = 0; part < 2; ++part) {
+        TInt segHeight = (part == 0) ? (aY1 - aY0) : (aY2 - aY1);
+        if (segHeight == 0) {
+            continue;
+        }
+        TInt yStart = (part == 0) ? aY0 : aY1;
+        TInt yEnd = (part == 0) ? aY1 : aY2;
+
+        for (TInt y = yStart; y <= yEnd; ++y) {
+            if (y < 0 || y >= aBmpH) {
+                continue;
+            }
+
+            // 16.16 interpolation factors for long edge (v0->v2) and short edge.
+            TInt tLong = ((y - aY0) << 16) / totalHeight;
+            TInt tShort = ((y - yStart) << 16) / segHeight;
+
+            // Interpolate X along both edges.
+            TInt xLong = aX0 + (((aX2 - aX0) * tLong) >> 16);
+            TInt xShort = (part == 0)
+                              ? aX0 + (((aX1 - aX0) * tShort) >> 16)
+                              : aX1 + (((aX2 - aX1) * tShort) >> 16);
+
+            // Interpolate color along both edges (values 0-255).
+            TInt rLong = aR0 + (((aR2 - aR0) * tLong) >> 16);
+            TInt gLong = aG0 + (((aG2 - aG0) * tLong) >> 16);
+            TInt bLong = aB0 + (((aB2 - aB0) * tLong) >> 16);
+            TInt rShort, gShort, bShort;
+            if (part == 0) {
+                rShort = aR0 + (((aR1 - aR0) * tShort) >> 16);
+                gShort = aG0 + (((aG1 - aG0) * tShort) >> 16);
+                bShort = aB0 + (((aB1 - aB0) * tShort) >> 16);
+            } else {
+                rShort = aR1 + (((aR2 - aR1) * tShort) >> 16);
+                gShort = aG1 + (((aG2 - aG1) * tShort) >> 16);
+                bShort = aB1 + (((aB2 - aB1) * tShort) >> 16);
+            }
+
+            // Determine left/right endpoints and their colors.
+            TInt xLeft, xRight;
+            TInt rLeft, gLeft, bLeft;
+            TInt rRight, gRight, bRight;
+            if (xLong < xShort) {
+                xLeft = xLong;
+                xRight = xShort;
+                rLeft = rLong;
+                gLeft = gLong;
+                bLeft = bLong;
+                rRight = rShort;
+                gRight = gShort;
+                bRight = bShort;
+            } else {
+                xLeft = xShort;
+                xRight = xLong;
+                rLeft = rShort;
+                gLeft = gShort;
+                bLeft = bShort;
+                rRight = rLong;
+                gRight = gLong;
+                bRight = bLong;
+            }
+
+            // Clamp X to bitmap width.
+            if (xLeft < 0) {
+                xLeft = 0;
+            }
+            if (xRight >= aBmpW) {
+                xRight = aBmpW - 1;
+            }
+
+            TInt spanWidth = xRight - xLeft;
+            TUint16 *row = aPixels + y * aStride;
+
+            // Compute per-pixel color deltas once per span (one division each)
+            // then step incrementally; avoids a division per pixel.
+            if (spanWidth > 0) {
+                TInt dr = ((rRight - rLeft) << 16) / spanWidth;
+                TInt dg = ((gRight - gLeft) << 16) / spanWidth;
+                TInt db = ((bRight - bLeft) << 16) / spanWidth;
+                TInt r = rLeft << 16;
+                TInt g = gLeft << 16;
+                TInt b = bLeft << 16;
+                for (TInt x = xLeft; x <= xRight; ++x) {
+                    // Pack to XRGB4444.
+                    row[x] = (TUint16)((((r >> 16) >> 4) << 8) | (((g >> 16) >> 4) << 4) | ((b >> 16) >> 4));
+                    r += dr;
+                    g += dg;
+                    b += db;
+                }
+            } else {
+                row[xLeft] = (TUint16)(((rLeft >> 4) << 8) | ((gLeft >> 4) << 4) | (bLeft >> 4));
+            }
+        }
+    }
+}
+
+void CRenderer::DrawGeometry(NGAGE_Vertex *aVerts, const TInt aCount)
+{
+    if (aCount < 3) {
+        return;
+    }
+
+    CFbsBitmap *bmp = GetCurrentBitmap();
+    if (bmp) {
+        TUint16 *pixels = reinterpret_cast<TUint16 *>(bmp->DataAddress());
+        if (pixels) {
+            TSize bmpSize = bmp->SizeInPixels();
+            TInt stride = CFbsBitmap::ScanLineLength(bmpSize.iWidth, EColor4K) / 2;
+
+            for (TInt i = 0; i + 2 < aCount; i += 3) {
+                FillTriangle(pixels, stride,
+                             bmpSize.iWidth, bmpSize.iHeight,
+                             aVerts[i].x, aVerts[i].y,
+                             aVerts[i].color.r, aVerts[i].color.g, aVerts[i].color.b,
+                             aVerts[i + 1].x, aVerts[i + 1].y,
+                             aVerts[i + 1].color.r, aVerts[i + 1].color.g, aVerts[i + 1].color.b,
+                             aVerts[i + 2].x, aVerts[i + 2].y,
+                             aVerts[i + 2].color.r, aVerts[i + 2].color.g, aVerts[i + 2].color.b);
+            }
+            return;
         }
     }
 }

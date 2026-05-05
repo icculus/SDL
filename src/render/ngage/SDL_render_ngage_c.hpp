@@ -40,6 +40,7 @@ class CRenderer : public MDirectScreenAccess
     bool CreateTextureData(NGAGE_TextureData *aTextureData, const TInt aWidth, const TInt aHeight, const TInt aAccess);
     void DrawLines(NGAGE_Vertex *aVerts, const TInt aCount);
     void DrawPoints(NGAGE_Vertex *aVerts, const TInt aCount);
+    void DrawGeometry(NGAGE_Vertex *aVerts, const TInt aCount);
     void FillRects(NGAGE_Vertex *aVerts, const TInt aCount);
     void Flip();
     void SetDrawColor(TUint32 iColor);
