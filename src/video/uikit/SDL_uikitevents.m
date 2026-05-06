@@ -47,9 +47,7 @@ static BOOL UIKit_EventPumpEnabled = YES;
     bool wants_observation = (UIKit_EventPumpEnabled || SDL_HasMainCallbacks());
     if (!wants_observation) {
         // Make sure no windows have active animation callbacks
-        int num_windows = 0;
-        SDL_free(SDL_GetWindows(&num_windows));
-        if (num_windows > 0) {
+        if (SDL_HasWindows()) {
             wants_observation = true;
         }
     }
