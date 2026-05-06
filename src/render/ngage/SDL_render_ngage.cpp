@@ -22,6 +22,7 @@
 extern "C" {
 #endif
 
+#include "../../SDL_hints_c.h"
 #include "../../events/SDL_keyboard_c.h"
 #include "../SDL_sysrender.h"
 #include "SDL_internal.h"
@@ -159,7 +160,6 @@ static void SDLCALL NGAGE_ShowFPSChanged(void *userdata, const char *name, const
     CRenderer *renderer = (CRenderer *)userdata;
     renderer->SetShowFPS(SDL_GetStringBoolean(newValue, false));
 }
-
 
 void *NGAGE_GetBackbufferAddress(void)
 {
@@ -362,8 +362,6 @@ bool CRenderer::Copy(SDL_Renderer *renderer, SDL_Texture *texture, const SDL_Rec
         return false;
     }
 
-   
-
     NGAGE_TextureData *phdata = (NGAGE_TextureData *)texture->internal;
     if (!phdata || !phdata->bitmap) {
         return false;
@@ -374,7 +372,7 @@ bool CRenderer::Copy(SDL_Renderer *renderer, SDL_Texture *texture, const SDL_Rec
 
     int sw = srcrect->w;
     int sh = srcrect->h;
-   
+
     // Fast path: render target texture with no color mod.
     // BitBlt directly from its bitmap — DataAddress() is unreliable
     // for bitmaps that have been drawn into via a CFbsBitGc.
@@ -387,8 +385,7 @@ bool CRenderer::Copy(SDL_Renderer *renderer, SDL_Texture *texture, const SDL_Rec
     SDL_GetTextureBlendMode(texture, &blend);
     bool no_color_key = (blend != SDL_BLENDMODE_BLEND);
 
-    if (phdata->gc && no_color_mod && no_scale && no_color_key)
-    {
+    if (phdata->gc && no_color_mod && no_scale && no_color_key) {
         CFbsBitGc *gc = GetCurrentGc();
         if (gc) {
             TRect aSource(TPoint(srcrect->x, srcrect->y), TSize(sw, sh));
@@ -397,7 +394,6 @@ bool CRenderer::Copy(SDL_Renderer *renderer, SDL_Texture *texture, const SDL_Rec
         }
         return true;
     }
-
 
     // Fast path: color-key with no color mod and no scale.
     // Blit directly from the source bitmap into the destination, skipping transparent pixels.
@@ -468,7 +464,6 @@ bool CRenderer::Copy(SDL_Renderer *renderer, SDL_Texture *texture, const SDL_Rec
 
     void *source = iPixelBufferA;
     void *dest = iPixelBufferB;
-
 
     if (!no_color_mod) {
         ApplyColorMod(dest, source, src_pitch, sw, sh, texture->color);
@@ -1136,16 +1131,6 @@ void CRenderer::HandleEvent(const TWsEvent &aWsEvent)
     case EEventKeyDown: /* Key events */
         timestamp = SDL_GetPerformanceCounter();
         SDL_SendKeyboardKey(timestamp, 1, aWsEvent.Key()->iCode, ConvertScancode(aWsEvent.Key()->iScanCode), true);
-
-        /*
-        commented out so it works with hints
-        if (aWsEvent.Key()->iScanCode == EStdKeyHash) {
-            if (iShowFPS) {
-                iShowFPS = EFalse;
-            } else {
-                iShowFPS = ETrue;
-            }
-        }*/
 
         break;
     case EEventKeyUp: /* Key events */
