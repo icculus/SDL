@@ -50,7 +50,7 @@ should be a simple .zip file, and unpack it.
 I unzipped this so it's sitting in `$HOME/HarmonyOS-SDK/command-line-tools`,
 but anywhere you want to put it is fine.
 
-When this document refers to this directory, it'll call it `$CTL` for short.
+When this document refers to this directory, it'll call it `$CLT` for short.
 
 
 ## Building SDL for HarmonyOS
@@ -68,7 +68,7 @@ possible to generate a real Visual Studio, Xcode, etc, project.
 cd SDL
 mkdir buildbot-ohos   # or whatever you want to call the build directory.
 cd buildbot-ohos
-$CTL/sdk/default/openharmony/native/build-tools/cmake/bin/cmake -G Ninja -DCMAKE_TOOLCHAIN_FILE=$CTL/sdk/default/openharmony/native/build/cmake/ohos.toolchain.cmake -DCMAKE_BUILD_TYPE=Release ..
+$CLT/sdk/default/openharmony/native/build-tools/cmake/bin/cmake -G Ninja -DCMAKE_TOOLCHAIN_FILE=$CLT/sdk/default/openharmony/native/build/cmake/ohos.toolchain.cmake -DCMAKE_BUILD_TYPE=Release ..
 ```
 
 (One can also add -DOHOS_ARCH=cputype, where "cputype" is "arm64-v8a" for ARM64, "armeabi-v7a" for ARM32, and "x86_64" Intel 64-bit. It defaults to ARM64 if unspecified.)
