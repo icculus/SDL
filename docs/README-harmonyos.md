@@ -98,10 +98,17 @@ Presumably users cannot override the SDL build on their phones, so the Dynamic
 API is disabled on this platform.
 
 
-# GPU support
+## GPU support
 
 OpenGL ES 2 and 3 are supported, as is Vulkan. Desktop OpenGL is supported by
 the platform, too, but for now support is disabled within SDL itself. EGL is
 used to manage GL contexts internally, and a HarmonyOS-specific Vulkan
 extension is provided to get a surface.
+
+
+## Audio
+
+HarmonyOS support OpenSL ES, but like on Android, it is deprecated. As our
+OpenSL ES backend is heavy with Android-specific code, it is not used on
+HarmonyOS. There is a new backend using HarmonyOS's OHAudio API.
 
