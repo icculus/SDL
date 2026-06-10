@@ -11,7 +11,7 @@ Huawei is a Chinese company, and HarmonyOS is largely serving the Chinese
 market at this time.
 
 The system uses some custom pieces, but also relies on open source software
-from outside of the project, such as the Linux kernel, musl, etc.
+from outside of the project, such as musl, etc.
 
 Much of the platform is open source, under the name "OpenHarmony," and Huawei's
 proprietary spin of OpenHarmony is called HarmonyOS. Huawei is the primary
@@ -87,9 +87,10 @@ Or use whatever instructs Xcode/Visual Studio/etc to build things.
 ## SDL platform defines
 
 SDL will define SDL_PLATFORM_OPENHARMONY and SDL_PLATFORM_UNIX. Do be cautioned
-that while HarmonyOS uses the Linux kernel, it is _not_ comparable to a
-"normal" Linux system in almost any way, so SDL_PLATFORM_LINUX is not defined
-(SDL for Android follows this same convention).
+that while HarmonyOS has a Linux kernel compatibility interface, it is _not_
+comparable to a "normal" Linux system in almost any way, so SDL_PLATFORM_LINUX
+is not defined (SDL for Android, which literally uses the Linux kernel,
+follows this same convention inside SDL).
 
 
 ## Dynamic API
