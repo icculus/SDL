@@ -1732,9 +1732,13 @@ elseif(OHOS)  # OpenHarmony/HarmonyOS
 #    )
 #    sdl_link_dependency(opensles LIBS ${ANDROID_DL_LIBRARY} OpenSLES)
 
-    # !!! FIXME: write an OHAudio backend
+    set(SDL_AUDIO_DRIVER_OHAUDIO 1)
+    sdl_glob_sources(
+      "${SDL3_SOURCE_DIR}/src/audio/ohaudio/*.c"
+      "${SDL3_SOURCE_DIR}/src/audio/ohaudio/*.h"
+    )
 
-#    set(HAVE_SDL_AUDIO TRUE)
+    set(HAVE_SDL_AUDIO TRUE)
   endif()
 
   set(SDL_FILESYSTEM_OPENHARMONY 1)
