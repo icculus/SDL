@@ -1718,11 +1718,12 @@ elseif(OHOS)  # OpenHarmony/HarmonyOS
 
   sdl_link_dependency(core LIBS deviceinfo_ndk.z hilog_ndk.z)
 
-  sdl_glob_sources(
-    "${SDL3_SOURCE_DIR}/src/misc/openharmony/*.c"
-    "${SDL3_SOURCE_DIR}/src/misc/openharmony/*.h"
-  )
-  set(HAVE_SDL_MISC TRUE)
+# !!! FIXME
+#  sdl_glob_sources(
+#    "${SDL3_SOURCE_DIR}/src/misc/openharmony/*.c"
+#    "${SDL3_SOURCE_DIR}/src/misc/openharmony/*.h"
+#  )
+#  set(HAVE_SDL_MISC TRUE)
 
   if(SDL_AUDIO)
 #    set(SDL_AUDIO_DRIVER_OPENSLES 1)
