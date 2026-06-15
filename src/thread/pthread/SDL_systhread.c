@@ -171,12 +171,16 @@ void SDL_SYS_SetupThread(const char *name)
     pthread_sigmask(SIG_BLOCK, &mask, NULL);
 #endif
 
+// HarmonyOS defines this, but doesn't offer pthread_setcanceltype.
+// !!! FIXME: but it looks like we shouldn't be using this on any platform!  https://clang.llvm.org/extra/clang-tidy/checks/concurrency/thread-canceltype-asynchronous.html
+#ifndef SDL_PLATFORM_OPENHARMONY
 #ifdef PTHREAD_CANCEL_ASYNCHRONOUS
     // Allow ourselves to be asynchronously cancelled
     {
         int oldstate;
         pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, &oldstate);
     }
+#endif
 #endif
 }
 

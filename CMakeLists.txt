@@ -1712,6 +1712,13 @@ if(ANDROID)
 
 elseif(OHOS)  # OpenHarmony/HarmonyOS
   sdl_glob_sources(
+    "${SDL3_SOURCE_DIR}/src/core/openharmony/*.c"
+    "${SDL3_SOURCE_DIR}/src/core/openharmony/*.h"
+  )
+
+  sdl_link_dependency(core LIBS deviceinfo_ndk.z)
+
+  sdl_glob_sources(
     "${SDL3_SOURCE_DIR}/src/misc/openharmony/*.c"
     "${SDL3_SOURCE_DIR}/src/misc/openharmony/*.h"
   )

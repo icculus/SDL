@@ -65,3 +65,8 @@ extern SDL_DECLSPEC bool SDLCALL SDL_IsChromebook(void);
 extern SDL_DECLSPEC bool SDLCALL SDL_IsDeXMode(void);
 extern SDL_DECLSPEC Sint32 SDLCALL JNI_OnLoad(JavaVM *vm, void *reserved);
 #endif /* !SDL_PLATFORM_ANDROID */
+
+#if !defined(SDL_PLATFORM_OPENHARMONY)
+extern SDL_DECLSPEC int SDLCALL SDL_GetOpenHarmonySDKVersion(void);
+#endif
+

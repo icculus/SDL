@@ -195,3 +195,11 @@ Sint32 JNI_OnLoad(JavaVM *vm, void *reserved)
     return 0x00010004; // JNI_VERSION_1_4
 }
 #endif
+
+#ifndef SDL_PLATFORM_OPENHARMONY
+int SDL_GetOpenHarmonySDKVersion(void)
+{
+    return SDL_Unsupported();
+}
+#endif
+

@@ -616,6 +616,30 @@ extern SDL_DECLSPEC bool SDLCALL SDL_SendAndroidMessage(Uint32 command, int para
 
 #endif /* SDL_PLATFORM_ANDROID */
 
+#ifdef SDL_PLATFORM_OPENHARMONY
+/**
+ * Query OpenHarmony API level of the current device.
+ *
+ * - API level 20: OpenHarmony 6.0.0
+ * - API level 18: OpenHarmony 5.1.0
+ * - API level 15: OpenHarmony 5.0.3
+ * - API level 14: OpenHarmony 5.0.2
+ * - API level 13: OpenHarmony 5.0.1
+ * - API level 12: OpenHarmony 5.0.0
+ * - API level 11: OpenHarmony 4.1.0
+ * - API level 10: OpenHarmony 4.0.0
+ * - API level 9: OpenHarmony 3.2.0
+ *
+ * \returns the OpenHarmony API level.
+ *
+ * \threadsafety It is safe to call this function from any thread.
+ *
+ * \since This function is available since SDL 3.6.0.
+ */
+extern SDL_DECLSPEC int SDLCALL SDL_GetOpenHarmonySDKVersion(void);
+#endif /* SDL_PLATFORM_OPENHARMONY */
+
+
 /**
  * Query if the current device is a phone.
  *

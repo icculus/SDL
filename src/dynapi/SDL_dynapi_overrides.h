@@ -1321,3 +1321,4 @@
 #define SDL_wcstoul SDL_wcstoul_REAL
 #define SDL_wcstoll SDL_wcstoll_REAL
 #define SDL_wcstoull SDL_wcstoull_REAL
+#define SDL_GetOpenHarmonySDKVersion SDL_GetOpenHarmonySDKVersion_REAL
