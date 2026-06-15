@@ -1716,7 +1716,7 @@ elseif(OHOS)  # OpenHarmony/HarmonyOS
     "${SDL3_SOURCE_DIR}/src/core/openharmony/*.h"
   )
 
-  sdl_link_dependency(core LIBS deviceinfo_ndk.z)
+  sdl_link_dependency(core LIBS deviceinfo_ndk.z hilog_ndk.z)
 
   sdl_glob_sources(
     "${SDL3_SOURCE_DIR}/src/misc/openharmony/*.c"

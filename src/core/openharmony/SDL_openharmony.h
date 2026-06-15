@@ -31,6 +31,7 @@ extern "C" {
 #endif
 
 int SDL_GetOpenHarmonySDKVersion(void);
+void SDL_DebugLogOpenHarmonyInfo(void);
 
 // Ends C function definitions when using C++
 #ifdef __cplusplus
