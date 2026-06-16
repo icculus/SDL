@@ -1783,16 +1783,17 @@ endif()
   )
   set(HAVE_SDL_LOADSO TRUE)
 
-if (False)   # !!! FIXME
   if(SDL_POWER)
-    set(SDL_POWER_ANDROID 1)
+    set(SDL_POWER_OPENHARMONY 1)
     sdl_glob_sources(
       "${SDL3_SOURCE_DIR}/src/power/openharmony/*.c"
       "${SDL3_SOURCE_DIR}/src/power/openharmony/*.h"
     )
+    sdl_link_dependency(openharmonypower LIBS ohbattery_info)
     set(HAVE_SDL_POWER TRUE)
   endif()
 
+if (False)   # !!! FIXME
   sdl_glob_sources(
     "${SDL3_SOURCE_DIR}/src/locale/openharmony/*.c"
     "${SDL3_SOURCE_DIR}/src/locale/openharmony/*.h"
