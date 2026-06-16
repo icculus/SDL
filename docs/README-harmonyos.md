@@ -104,7 +104,8 @@ API is disabled on this platform.
 OpenGL ES 2 and 3 are supported, as is Vulkan. Desktop OpenGL is supported by
 the platform, too, but for now support is disabled within SDL itself. EGL is
 used to manage GL contexts internally, and a HarmonyOS-specific Vulkan
-extension is provided to get a surface.
+extension is provided to get a surface. This means the SDL3 GPU API is
+available, in addition to a hardware-accelerated 2D Renderer API.
 
 
 ## Audio
@@ -112,4 +113,47 @@ extension is provided to get a surface.
 HarmonyOS support OpenSL ES, but like on Android, it is deprecated. As our
 OpenSL ES backend is heavy with Android-specific code, it is not used on
 HarmonyOS. There is a new backend using HarmonyOS's OHAudio API.
+
+
+## Power
+
+Battery percent, and whether the device is plugged in, are reported.
+
+
+## Thread
+
+OpenHarmony uses pthreads, and are fully supported.
+
+
+## LoadSO
+
+HarmonyOS uses ELF shared libraries and has a POSIX-style dlopen() mechanism,
+so SDL_LoadObject() works as expected.
+
+
+## Main
+
+HarmonyOS uses a standard ANSI C `main` function, so this uses the generic
+SDL_main implementation.
+
+
+## STILL TODO
+
+- Camera
+- Dialog
+- Haptic
+- HIDAPI
+- Package I/O?
+- Async I/O
+- Joystick
+- Locale
+- Misc
+- Process
+- Sensor
+- Render
+- Storage
+- Time
+- Timer
+- Tray
+- Video
 
