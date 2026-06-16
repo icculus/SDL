@@ -88,12 +88,12 @@ bool SDL_SYS_CreateThread(SDL_Thread *thread,
     pthread_attr_t type;
 
 // do this here before any threads exist, so there's no race condition.
-#if (defined(SDL_PLATFORM_MACOS) || defined(SDL_PLATFORM_IOS) || defined(SDL_PLATFORM_LINUX) || defined(SDL_PLATFORM_ANDROID)) && defined(HAVE_DLOPEN)
+#if (defined(SDL_PLATFORM_MACOS) || defined(SDL_PLATFORM_IOS) || defined(SDL_PLATFORM_LINUX) || defined(SDL_PLATFORM_ANDROID) || defined(SDL_PLATFORM_OPENHARMONY)) && defined(HAVE_DLOPEN)
     if (!checked_setname) {
         void *fn = dlsym(RTLD_DEFAULT, "pthread_setname_np");
 #if defined(SDL_PLATFORM_MACOS) || defined(SDL_PLATFORM_IOS)
         ppthread_setname_np = (int (*)(const char *))fn;
-#elif defined(SDL_PLATFORM_LINUX) || defined(SDL_PLATFORM_ANDROID || defined(SDL_PLATFORM_OPENHARMONY))
+#elif defined(SDL_PLATFORM_LINUX) || defined(SDL_PLATFORM_ANDROID) || defined(SDL_PLATFORM_OPENHARMONY)
         ppthread_setname_np = (int (*)(pthread_t, const char *))fn;
 #endif
         checked_setname = true;
