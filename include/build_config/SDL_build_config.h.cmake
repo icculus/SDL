@@ -530,6 +530,7 @@
 #cmakedefine SDL_FILESYSTEM_PS2 1
 #cmakedefine SDL_FILESYSTEM_N3DS 1
 #cmakedefine SDL_FILESYSTEM_DOS 1
+#cmakedefine SDL_FILESYSTEM_OPENHARMONY 1
 
 #cmakedefine SDL_FILESYSTEM_PRIVATE 1
 
