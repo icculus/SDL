@@ -60,6 +60,9 @@
 #ifdef SDL_PLATFORM_ANDROID
 #include "core/android/SDL_android.h"
 #endif
+#ifdef SDL_PLATFORM_OPENHARMONY
+#include "core/openharmony/SDL_openharmony.h"
+#endif
 
 #define SDL_ALL_SUBSYSTEM_FLAGS ~0U
 
@@ -786,6 +789,8 @@ const char *SDL_GetPlatform(void)
     return "Nokia N-Gage";
 #elif defined(SDL_PLATFORM_OPENBSD)
     return "OpenBSD";
+#elif defined(SDL_PLATFORM_OPENHARMONY)
+    return "OpenHarmony";
 #elif defined(SDL_PLATFORM_OS2)
     return "OS/2";
 #elif defined(SDL_PLATFORM_OSF)
@@ -831,9 +836,12 @@ const char *SDL_GetPlatform(void)
 
 bool SDL_IsPhone(void)
 {
-#if defined(SDL_PLATFORM_ANDROID) || \
-    (defined(SDL_PLATFORM_IOS) && !defined(SDL_PLATFORM_VISIONOS))
+#if defined(SDL_PLATFORM_ANDROID) || (defined(SDL_PLATFORM_IOS) && !defined(SDL_PLATFORM_VISIONOS))
     if (!SDL_IsTablet() && !SDL_IsTV()) {
+        return true;
+    }
+#elif defined(SDL_PLATFORM_OPENHARMONY)  // HarmonyOS might be on lots of things: watches, cars, etc, so check explicitly.
+    if (SDL_IsOpenHarmonyPhone()) {
         return true;
     }
 #endif
@@ -844,6 +852,8 @@ bool SDL_IsTablet(void)
 {
 #ifdef SDL_PLATFORM_ANDROID
     return SDL_IsAndroidTablet();
+#elif defined(SDL_PLATFORM_OPENHARMONY)
+    return SDL_IsOpenHarmonyTablet();
 #elif defined(SDL_PLATFORM_IOS)
     extern bool SDL_IsIPad(void);
     return SDL_IsIPad();
@@ -856,6 +866,8 @@ bool SDL_IsTV(void)
 {
 #ifdef SDL_PLATFORM_ANDROID
     return SDL_IsAndroidTV();
+#elif defined(SDL_PLATFORM_OPENHARMONY)
+    return SDL_IsOpenHarmonyTV();
 #elif defined(SDL_PLATFORM_IOS)
     extern bool SDL_IsAppleTV(void);
     return SDL_IsAppleTV();

@@ -30,8 +30,11 @@ extern "C" {
 /* *INDENT-ON* */
 #endif
 
-int SDL_GetOpenHarmonySDKVersion(void);
 void SDL_DebugLogOpenHarmonyInfo(void);
+
+bool SDL_IsOpenHarmonyPhone(void);
+bool SDL_IsOpenHarmonyTablet(void);
+bool SDL_IsOpenHarmonyTV(void);
 
 // Ends C function definitions when using C++
 #ifdef __cplusplus

@@ -150,6 +150,8 @@ static bool GLES_LoadFunctions(GLES_RenderData *data)
 #define __SDL_NOGETPROCADDR__
 #elif defined(SDL_VIDEO_DRIVER_ANDROID)
 #define __SDL_NOGETPROCADDR__
+#elif defined(SDL_PLATFORM_OPENHARMONY)
+#define __SDL_NOGETPROCADDR__
 #endif
 
 #ifdef __SDL_NOGETPROCADDR__

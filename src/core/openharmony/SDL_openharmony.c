@@ -43,6 +43,36 @@ int SDL_GetOpenHarmonySDKVersion(void)
     return sdk_version;
 }
 
+bool SDL_IsOpenHarmonyPhone(void)
+{
+    static int isphone = -1;
+    if (isphone == -1) {
+        const char *devtype = OH_GetDeviceType();
+        isphone = (devtype && ((SDL_strcmp(devtype, "phone") == 0) || (SDL_strcmp(devtype, "default") == 0))) ? 1 : 0;
+    }
+    return (isphone == 1);
+}
+
+bool SDL_IsOpenHarmonyTablet(void)
+{
+    static int istablet = -1;
+    if (istablet == -1) {
+        const char *devtype = OH_GetDeviceType();
+        istablet = (devtype && (SDL_strcmp(devtype, "tablet") == 0)) ? 1 : 0;
+    }
+    return (istablet == 1);
+}
+
+bool SDL_IsOpenHarmonyTV(void)
+{
+    static int istv = -1;
+    if (istv == -1) {
+        const char *devtype = OH_GetDeviceType();
+        istv = (devtype && (SDL_strcmp(devtype, "tv") == 0)) ? 1 : 0;
+    }
+    return (istv == 1);
+}
+
 void SDL_DebugLogOpenHarmonyInfo(void)
 {
     static bool already_logged = false;
