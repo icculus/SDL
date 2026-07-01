@@ -1,5 +1,7 @@
 # HarmonyOS
 
+(And also OpenHarmony.)
+
 ## What is HarmonyOS?
 
 (This is my current understanding, please correct these docs if incorrect.)
@@ -170,10 +172,12 @@ build-profile.json5, and that was good enough.
 
 ### Add SDL to your app's build.
 
+!!! FIXME: this needs a _lot_ more discussion, as several important files
+!!! FIXME:  need to replace defaults in the project directory, you need to
+!!! FIXME:  copy or symlink SDL sources in, etc.
+
 Native code in your project is compiled with CMake, so just tell CMake to
 build SDL as part of your project.
-
-TODO: write this up.
 
 
 ### SDL platform defines
@@ -192,6 +196,14 @@ make assumptions.
 
 Presumably users cannot override the SDL build on their phones, so the Dynamic
 API is disabled on this platform.
+
+
+### Main
+
+HarmonyOS has a fairly complicated startup sequence (described later in this
+document). Apps for this platform should use the "main callbacks" instead of
+an ANSI C style "main" entry point (!!! FIXME: see if we can get this working
+with SDL_main in a background thread, though!).
 
 
 ### GPU support
@@ -224,12 +236,6 @@ OpenHarmony uses pthreads, and are fully supported.
 
 HarmonyOS uses ELF shared libraries and has a POSIX-style dlopen() mechanism,
 so SDL_LoadObject() works as expected.
-
-
-### Main
-
-HarmonyOS uses a standard ANSI C `main` function, so this uses the generic
-SDL_main implementation.
 
 
 ### STILL TODO
@@ -312,10 +318,60 @@ hdc install ./entry/build/default/outputs/default/entry-default-signed.hap
 ```
 
 
+## Startup sequence
+
+(You can probably skip this section if you just want to target HarmonyOS with
+an SDL3-based app and not delve into the low-level details.)
+
+Starting an SDL app on HarmonyOS works differently than any other platform,
+but efforts have been made to _hide_ most of this from the C programmer, so
+this should mostly feel like any other SDL app they have built in C before.
+
+This is how startup works:
+
+(Exact paths might vary, and maybe this will simplify later.)
+
+- The C application _must_ use the SDL3 Main Callbacks. SDL_main.h will #error
+  out if not. (!!! FIXME: remove this limitation?).
+- The actual application entry point is in ArkTS, in the source file
+  `$PROJECT/entry/src/main/ets/entryability/EntryAbility.ets`.
+- This file defines a class, EntryAbility, that extends UIAbility.
+- EntryAbility has an overridden method named onWindowStageCreate. When this
+  runs, the system is ready for the app to display to the screen. This
+  method calls `windowStage.loadContent('pages/Index', ...)`.
+- This causes the app to load `$PROJECT/entry/src/main/ets/pages/Index.ets`.
+- Index.ets specifies a layout for the window/view/whatever. We simply have a
+  single row and column containing a single "XComponent" which is more or
+  less a UI widget backed by native code.
+- By now, libSDL3.so has been loaded. In a shared library constructor named
+  SDL_RegisterNativeInterfaces, it uses NAPI to register a native module. Once
+  this module initializes, we'll be able to call into SDL's C code from ArkTS
+  through interfaces we defined in SDL_Init_Native_Interfaces(). This is in
+  SDL/src/core/openharmony/SDL_openharmony.c. This will _also_ hook into the
+  XComponent, to register some event callbacks, and load libmain.so, which is
+  where the app's actual C code lives.
+- When the XComponent's OnSurfaceCreated callback fires (landing in
+  SDL_XComponent_OnSurfaceCreatedCallback()), we are then ready to hand control
+  to the actual C application. Here we will call libmain.so's SDL_AppInit().
+- Then, whenever the XComponent fires its OnFrame callback, we will call
+  SDL_AppIterate().
+
+
+
+
+
 ## Incomplete notes
 
 Everything below here is incomplete, in-progress, and maybe incomprehensible.
 You can stop reading now, if you like.
+
+- A lot of how to get started with native code and rendering was gleaned from
+  https://gitee.com/harmonyos_samples/ndk-opengl and then trying to find
+  various symbols used in there in the HarmonyOS documentation.
+
+- https://github.com/openharmony/app_samples/ETSUI/XComponent, seems to do
+  a lot of the native startup without the windowStage nonsense. Not clear if
+  this still works, or is safe to do, but it _would_ simplify things a little.
 
 
 ### Get a HarmonyOS Debug Certificate without DevEco Studio

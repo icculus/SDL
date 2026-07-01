@@ -1716,7 +1716,13 @@ elseif(OHOS)  # OpenHarmony/HarmonyOS
     "${SDL3_SOURCE_DIR}/src/core/openharmony/*.h"
   )
 
-  sdl_link_dependency(openharmonycore LIBS deviceinfo_ndk.z hilog_ndk.z)
+  sdl_link_dependency(openharmonycore LIBS libace_napi.z.so libace_ndk.z.so deviceinfo_ndk.z hilog_ndk.z)
+
+  sdl_glob_sources(
+    "${SDL3_SOURCE_DIR}/src/main/openharmony/*.c"
+    "${SDL3_SOURCE_DIR}/src/main/openharmony/*.h"
+  )
+  set(HAVE_SDL_MAIN_CALLBACKS TRUE)
 
 # !!! FIXME
 #  sdl_glob_sources(

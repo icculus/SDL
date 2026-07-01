@@ -107,9 +107,7 @@ SDL_AppResult SDL_InitMainCallbacks(int argc, char *argv[], SDL_AppInit_func app
         if (!SDL_InitSubSystem(SDL_INIT_EVENTS)) {
             SDL_SetAtomicInt(&apprc, SDL_APP_FAILURE);
             return SDL_APP_FAILURE;
-        }
-
-        if (!SDL_AddEventWatch(SDL_MainCallbackEventWatcher, NULL)) {
+        } else if (!SDL_AddEventWatch(SDL_MainCallbackEventWatcher, NULL)) {
             SDL_SetAtomicInt(&apprc, SDL_APP_FAILURE);
             return SDL_APP_FAILURE;
         }
