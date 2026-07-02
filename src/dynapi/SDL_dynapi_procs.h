@@ -1330,3 +1330,4 @@ SDL_DYNAPI_PROC(unsigned long,SDL_wcstoul,(const wchar_t *a,wchar_t **b,int c),(
 SDL_DYNAPI_PROC(long long,SDL_wcstoll,(const wchar_t *a,wchar_t **b,int c),(a,b,c),return)
 SDL_DYNAPI_PROC(unsigned long long,SDL_wcstoull,(const wchar_t *a,wchar_t **b,int c),(a,b,c),return)
 SDL_DYNAPI_PROC(int,SDL_GetOpenHarmonySDKVersion,(void),(),return)
+SDL_DYNAPI_PROC(const char*,SDL_GetOpenHarmonyInternalStoragePath,(void),(),return)

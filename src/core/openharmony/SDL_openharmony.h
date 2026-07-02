@@ -36,6 +36,18 @@ bool SDL_IsOpenHarmonyPhone(void);
 bool SDL_IsOpenHarmonyTablet(void);
 bool SDL_IsOpenHarmonyTV(void);
 
+bool SDL_OpenHarmonyRawFileOpen(void **puserdata, const char *fileName, const char *mode);
+Sint64 SDL_OpenHarmonyRawFileSize(void *userdata);
+Sint64 SDL_OpenHarmonyRawFileSeek(void *userdata, Sint64 offset, SDL_IOWhence whence);
+size_t SDL_OpenHarmonyRawFileRead(void *userdata, void *buffer, size_t size, SDL_IOStatus *status);
+bool SDL_OpenHarmonyRawFileClose(void *userdata);
+bool SDL_OpenHarmonyEnumerateAssetDirectory(const char *path, SDL_EnumerateDirectoryCallback cb, void *userdata);
+bool SDL_OpenHarmonyGetAssetPathInfo(const char *path, SDL_PathInfo *info);
+
+#define SDL_PlatformEnumerateAssetDirectory SDL_OpenHarmonyEnumerateAssetDirectory
+#define SDL_GetPlatformInternalStoragePath SDL_GetOpenHarmonyInternalStoragePath
+#define SDL_PlatformGetAssetPathInfo SDL_OpenHarmonyGetAssetPathInfo
+
 // Ends C function definitions when using C++
 #ifdef __cplusplus
 /* *INDENT-OFF* */

@@ -22,6 +22,28 @@
 
 #ifdef SDL_PLATFORM_OPENHARMONY
 
+// !!! FIXME: work around some C++isms that leaked into OpenHarmony headers.
+// !!! FIXME: HACK to prevent <AbilityKit/ability_runtime/start_options.h> from including. It has '&' instead of '*' for some args, which suggests it's only been tested with C++.
+#define ABILITY_RUNTIME_START_OPTIONS_H
+typedef enum AbilityRuntime_StartOptions AbilityRuntime_StartOptions;
+
+
+// <rawfile/raw_file.h> has functions with C++ references. Prevent raw_file_manager.h from including it, and define the parts we need here.
+#define GLOBAL_RAW_FILE_H
+typedef struct RawFile RawFile;
+typedef struct RawFile64 RawFile64;
+typedef struct { int fd; long start; long length; } RawFileDescriptor;
+typedef struct { int fd; int64_t start; int64_t length; } RawFileDescriptor64;
+int64_t OH_ResourceManager_GetRawFileSize64(RawFile64 *rawFile) __attribute__((__availability__(ohos, introduced=11.0.0)));
+int OH_ResourceManager_SeekRawFile64(const RawFile64 *rawFile, int64_t offset, int whence) __attribute__((__availability__(ohos, introduced=11.0.0)));
+int64_t OH_ResourceManager_ReadRawFile64(const RawFile64 *rawFile, void *buf, int64_t length) __attribute__((__availability__(ohos, introduced=11.0.0)));
+int64_t OH_ResourceManager_GetRawFileRemainingLength64(const RawFile64 *rawFile) __attribute__((__availability__(ohos, introduced=11.0.0)));
+int64_t OH_ResourceManager_GetRawFileOffset64(const RawFile64 *rawFile) __attribute__((__availability__(ohos, introduced=11.0.0)));
+void OH_ResourceManager_CloseRawFile64(RawFile64 *rawFile) __attribute__((__availability__(ohos, introduced=11.0.0)));
+bool OH_ResourceManager_GetRawFileDescriptor64(const RawFile64 *rawFile, RawFileDescriptor64 *descriptor) __attribute__((__availability__(ohos, introduced=11.0.0)));
+bool OH_ResourceManager_ReleaseRawFileDescriptor64(const RawFileDescriptor64 *descriptor) __attribute__((__availability__(ohos, introduced=11.0.0)));
+
+
 // !!! FIXME: which of these headers do we actually need?
 #include <js_native_api.h>
 #include <js_native_api_types.h>
@@ -31,6 +53,8 @@
 #include <AbilityKit/ability_runtime/application_context.h>
 #include <napi/native_api.h>
 #include <deviceinfo.h>
+#include <rawfile/raw_file_manager.h>
+#include <hilog/log.h>
 
 #include "SDL_openharmony.h"
 
@@ -106,8 +130,151 @@ void SDL_DebugLogOpenHarmonyInfo(void)
         SDL_LogDebug(SDL_LOG_CATEGORY_SYSTEM, " - Distribution OS version: %s", OH_GetDistributionOSVersion());
         SDL_LogDebug(SDL_LOG_CATEGORY_SYSTEM, " - Distribution OS API version: %d", OH_GetDistributionOSApiVersion());
         SDL_LogDebug(SDL_LOG_CATEGORY_SYSTEM, " - Distribution OS release type: %s", OH_GetDistributionOSReleaseType());
-        SDL_LogDebug(SDL_LOG_CATEGORY_SYSTEM, "");
     }
+}
+
+const char *SDL_GetOpenHarmonyInternalStoragePath(void)
+{
+    static char *files_path = NULL;
+    if (!files_path) {
+        char *path = NULL;
+        int32_t writelen = 0;
+        size_t slen = 128;
+        while (true) {
+            void *ptr = SDL_realloc(path, slen + 1);  // +1 to save space for null terminator.
+            if (!ptr) {
+                SDL_free(path);
+                return NULL;
+            }
+            path = (char *) ptr;
+
+            const AbilityRuntime_ErrorCode rc = OH_AbilityRuntime_ApplicationContextGetFilesDir(path, slen, &writelen);
+            if (rc == ABILITY_RUNTIME_ERROR_CODE_NO_ERROR) {
+                break;
+            } else if (rc != ABILITY_RUNTIME_ERROR_CODE_PARAM_INVALID) {
+                SDL_SetError("OH_AbilityRuntime_ApplicationContextGetBundleName failed: %d", (int) rc);
+                SDL_free(path);
+                return NULL;
+            }
+            slen *= 2;  // try again with a bigger buffer.
+        }
+
+        files_path = (char *) SDL_realloc(path, SDL_strlen(path) + 1);  // shrink it down.
+        if (!files_path) {
+            files_path = path;  // oh well, _don't_ shrink it down...
+        }
+    }
+
+    return files_path;
+}
+
+
+// Filesystem stuff...
+
+static NativeResourceManager *native_resource_mgr = NULL;
+
+bool SDL_OpenHarmonyRawFileOpen(void **puserdata, const char *fileName, const char *mode)
+{
+    if (SDL_strncmp(fileName, "assets://", 9) == 0) {
+        fileName += 9;
+    }
+
+    SDL_assert(native_resource_mgr != NULL);   // ArkTS should have sent us this at startup.
+    SDL_assert(puserdata != NULL);
+
+    if (mode && (SDL_strcmp(mode, "r") != 0) && (SDL_strcmp(mode, "rb") != 0)) {
+        return SDL_SetError("RawFile access is read-only");
+    }
+
+    RawFile64 *rf64 = OH_ResourceManager_OpenRawFile64(native_resource_mgr, fileName);
+    if (!rf64) {
+        return SDL_SetError("Failed to open RawFile");
+    }
+
+    *puserdata = rf64;
+    return true;
+}
+
+Sint64 SDL_OpenHarmonyRawFileSize(void *userdata)
+{
+    return (Sint64) OH_ResourceManager_GetRawFileSize64((RawFile64 *) userdata);
+}
+
+Sint64 SDL_OpenHarmonyRawFileSeek(void *userdata, Sint64 offset, SDL_IOWhence whence)
+{
+    const int ohwhence = (int) whence;  // these values happen to match.
+    if (OH_ResourceManager_SeekRawFile64((const RawFile64 *) userdata, (int64_t) offset, ohwhence) < 0) {
+        SDL_SetError("RawFile seek failed");
+        return -1;
+    }
+    return (Sint64) OH_ResourceManager_GetRawFileOffset64((const RawFile64 *) userdata);
+}
+
+size_t SDL_OpenHarmonyRawFileRead(void *userdata, void *buffer, size_t size, SDL_IOStatus *status)
+{
+    const size_t br = (size_t) OH_ResourceManager_ReadRawFile64((const RawFile64 *) userdata, buffer, (int64_t) size);  // this returns 0 on eof/error, not a negative, so just cast to size_t.
+    if (br < size) {
+        if (OH_ResourceManager_GetRawFileRemainingLength64((const RawFile64 *) userdata) == 0) {
+            *status = SDL_IO_STATUS_EOF;
+        } else {
+            *status = SDL_IO_STATUS_ERROR;
+            SDL_SetError("RawFile read failed");
+        }
+    }
+    return br;
+}
+
+bool SDL_OpenHarmonyRawFileClose(void *userdata)
+{
+    OH_ResourceManager_CloseRawFile64((RawFile64 *) userdata);
+    return true;
+}
+
+bool SDL_OpenHarmonyEnumerateAssetDirectory(const char *path, SDL_EnumerateDirectoryCallback cb, void *userdata)
+{
+    const char *origpath = path;
+    if (SDL_strncmp(path, "assets://", 9) == 0) {
+        path += 9;
+    }
+
+    SDL_assert(native_resource_mgr != NULL);   // ArkTS should have sent us this at startup.
+    RawDir *rawdir = OH_ResourceManager_OpenRawDir(native_resource_mgr, path);
+    if (!rawdir) {
+        return SDL_SetError("RawDir open failed");
+    }
+
+    SDL_EnumerationResult result = SDL_ENUM_CONTINUE;
+    const int total = OH_ResourceManager_GetRawFileCount(rawdir);
+    for (int i = 0; (i < total) && (result == SDL_ENUM_CONTINUE); i++) {
+        const char *fname = OH_ResourceManager_GetRawFileName(rawdir, i);
+        result = cb(userdata, origpath, fname);
+    }
+
+    OH_ResourceManager_CloseRawDir(rawdir);
+
+    return (result != SDL_ENUM_FAILURE);
+}
+
+bool SDL_OpenHarmonyGetAssetPathInfo(const char *path, SDL_PathInfo *info)
+{
+    if (SDL_strncmp(path, "assets://", 9) == 0) {
+        path += 9;
+    }
+
+    SDL_assert(native_resource_mgr != NULL);   // ArkTS should have sent us this at startup.
+    SDL_zerop(info);
+    if (OH_ResourceManager_IsRawDir(native_resource_mgr, path)) {
+        info->type = SDL_PATHTYPE_DIRECTORY;
+    } else {
+        RawFile64 *rf64 = OH_ResourceManager_OpenRawFile64(native_resource_mgr, path);
+        if (!rf64) {
+            return SDL_SetError("No such file or directory");
+        }
+        info->type = SDL_PATHTYPE_FILE;
+        info->size = (Uint64) OH_ResourceManager_GetRawFileSize64(rf64);
+        OH_ResourceManager_CloseRawFile64(rf64);
+    }
+    return true;
 }
 
 
@@ -116,6 +283,7 @@ void SDL_DebugLogOpenHarmonyInfo(void)
 // Callbacks into our custom XComponent.
 static void SDL_XComponent_OnSurfaceCreatedCallback(OH_NativeXComponent* component, void* window)
 {
+    SDL_assert(native_resource_mgr != NULL);   // ArkTS should have sent us this at startup. Are you using our startup scripts?
     extern void SDL_OpenHarmonyMainSurfaceCreated(void);  // this is in src/main/openharmony/SDL_sysmain_runapp.c
     SDL_OpenHarmonyMainSurfaceCreated();  // start the actual native code app if this is the first surface.
 }
@@ -132,18 +300,32 @@ static void SDL_XComponent_OnSurfaceDestroyedCallback(OH_NativeXComponent* compo
 static void SDL_XComponent_DispatchTouchEventCallback(OH_NativeXComponent* component, void* window) {}
 
 
+// ArkTS calls this once near startup to pass us the ResourceManager.
+static napi_value SDL_NAPI_SetResourceManager(napi_env env, napi_callback_info info)
+{
+    if (native_resource_mgr) {
+        OH_ResourceManager_ReleaseNativeResourceManager(native_resource_mgr);  // in case we called this more than once.
+    }
+
+    size_t argc = 1;
+    napi_value argv[1] = { NULL };
+    napi_get_cb_info(env, info, &argc, argv, NULL, NULL);
+    native_resource_mgr = OH_ResourceManager_InitNativeResourceManager(env, argv[0]);
+
+    return NULL;
+}
+
+
 // This is called by SDL_RegisterNativeInterfaces when the library is loaded, which sets up the entry points where
 //  ArkTS code can call into our native code.
 static napi_value SDL_Init_Native_Interfaces(napi_env env, napi_value exports)
 {
     // Functions that we want to be able to call from ArkTS go here.
     // (declare them in C as `napi_value MyFunctionName(napi_env env, napi_callback_info info);`)
-#if 0
     napi_property_descriptor desc[] = {
-        { "myFunctionName", NULL, MyFunctionName, NULL, NULL, NULL, napi_default, NULL },
+        { "setResourceManager", NULL, SDL_NAPI_SetResourceManager, NULL, NULL, NULL, napi_default, NULL },
     };
     napi_define_properties(env, exports, SDL_arraysize(desc), desc);
-#endif
 
 
     // Wire into our XComponent, so we can take control from C code. If any of this fails, I assume the app will either blow up or do nothing.

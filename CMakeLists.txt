@@ -1716,7 +1716,7 @@ elseif(OHOS)  # OpenHarmony/HarmonyOS
     "${SDL3_SOURCE_DIR}/src/core/openharmony/*.h"
   )
 
-  sdl_link_dependency(openharmonycore LIBS libace_napi.z.so libace_ndk.z.so deviceinfo_ndk.z hilog_ndk.z)
+  sdl_link_dependency(openharmonycore LIBS libace_napi.z.so libace_ndk.z.so deviceinfo_ndk.z rawfile.z hilog_ndk.z)
 
   sdl_glob_sources(
     "${SDL3_SOURCE_DIR}/src/main/openharmony/*.c"
@@ -1756,7 +1756,7 @@ elseif(OHOS)  # OpenHarmony/HarmonyOS
   sdl_link_dependency(openharmonyfs LIBS ability_runtime)
   set(HAVE_SDL_FILESYSTEM TRUE)
 
-  set(SDL_FSOPS_POSIX 1)  # !!! FIXME: this might need something else for package data?
+  set(SDL_FSOPS_POSIX 1)
   sdl_sources("${SDL3_SOURCE_DIR}/src/filesystem/posix/SDL_sysfsops.c")
   set(HAVE_SDL_FSOPS TRUE)
 

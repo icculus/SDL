@@ -38,35 +38,7 @@ typedef enum AbilityRuntime_StartOptions AbilityRuntime_StartOptions;
 
 char *SDL_SYS_GetBasePath(void)
 {
-    int32_t writelen = 0;
-    size_t slen = 128;
-    char *retval = NULL;
-    while (true) {
-        void *ptr = SDL_realloc(retval, slen + 1);
-        if (!ptr) {
-            SDL_free(retval);
-            return NULL;
-        }
-        retval = (char *) ptr;
-
-        const AbilityRuntime_ErrorCode rc = OH_AbilityRuntime_ApplicationContextGetFilesDir(retval, slen, &writelen);
-        if (rc == ABILITY_RUNTIME_ERROR_CODE_NO_ERROR) {
-            break;
-        } else if (rc != ABILITY_RUNTIME_ERROR_CODE_PARAM_INVALID) {
-            SDL_SetError("OH_AbilityRuntime_ApplicationContextGetBundleName failed: %d", (int) rc);
-            SDL_free(retval);
-            return NULL;
-        }
-        slen *= 2;  // try again with a bigger buffer.
-    }
-
-    void *ptr = SDL_realloc(retval, writelen + 2);  // try to shrink the buffer.
-    if (ptr) {
-        retval = (char *) ptr;
-    }
-    retval[writelen] = '/';
-    retval[writelen] = '\0';
-    return retval;
+    return SDL_strdup("assets://");
 }
 
 char *SDL_SYS_GetExeName(void)
@@ -83,44 +55,23 @@ char *SDL_SYS_GetExeName(void)
 
 char *SDL_SYS_GetPrefPath(const char *org, const char *app)
 {
-    int32_t writelen = 0;
-    size_t slen = 128;
-    char *prefdir = NULL;
-    while (true) {
-        void *ptr = SDL_realloc(prefdir, slen + 1);
-        if (!ptr) {
-            SDL_free(prefdir);
-            return NULL;
-        }
-        prefdir = (char *) ptr;
-
-        const AbilityRuntime_ErrorCode rc = OH_AbilityRuntime_ApplicationContextGetPreferencesDir(prefdir, slen, &writelen);
-        if (rc == ABILITY_RUNTIME_ERROR_CODE_NO_ERROR) {
-            break;
-        } else if (rc != ABILITY_RUNTIME_ERROR_CODE_PARAM_INVALID) {
-            SDL_SetError("OH_AbilityRuntime_ApplicationContextGetBundleName failed: %d", (int) rc);
-            SDL_free(prefdir);
-            return NULL;
-        }
-        slen *= 2;  // try again with a bigger buffer.
-    }
-
+    const char *prefdir = SDL_GetOpenHarmonyInternalStoragePath();
     char *retval = NULL;
-    if (SDL_asprintf(&retval, "%s/%s/", prefdir, app) < 0) {
-        retval = NULL;
+    if (prefdir) {
+        if (SDL_asprintf(&retval, "%s/%s/", prefdir, app) < 0) {
+            retval = NULL;
+        }
     }
 
     mkdir(prefdir, 0755);
     mkdir(retval, 0755);
-
-    SDL_free(prefdir);
 
     return retval;
 }
 
 char *SDL_SYS_GetUserFolder(SDL_Folder folder)
 {
-    SDL_Unsupported();
+    SDL_Unsupported();  // !!! FIXME: Can we support _any_ of this?
     return NULL;
 }
 

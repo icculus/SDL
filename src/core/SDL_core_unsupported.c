@@ -197,6 +197,12 @@ Sint32 JNI_OnLoad(JavaVM *vm, void *reserved)
 #endif
 
 #ifndef SDL_PLATFORM_OPENHARMONY
+const char *SDL_GetOpenHarmonyInternalStoragePath(void)
+{
+    SDL_Unsupported();
+    return NULL;
+}
+
 int SDL_GetOpenHarmonySDKVersion(void)
 {
     return SDL_Unsupported();

@@ -637,6 +637,22 @@ extern SDL_DECLSPEC bool SDLCALL SDL_SendAndroidMessage(Uint32 command, int para
  * \since This function is available since SDL 3.6.0.
  */
 extern SDL_DECLSPEC int SDLCALL SDL_GetOpenHarmonySDKVersion(void);
+
+/**
+ * Get the path used for internal storage for this OpenHarmony application.
+ *
+ * This path is unique to your application and cannot be written to by other
+ * applications.
+ *
+ * Your internal storage path is typically:
+ * `/data/storage/el2/base/files`.
+ *
+ * \returns the path used for internal storage or NULL on failure; call
+ *          SDL_GetError() for more information.
+ *
+ * \since This function is available since SDL 3.6.0.
+ */
+extern SDL_DECLSPEC const char * SDLCALL SDL_GetOpenHarmonyInternalStoragePath(void);
 #endif /* SDL_PLATFORM_OPENHARMONY */
 
 
