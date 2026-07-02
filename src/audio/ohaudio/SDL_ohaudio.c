@@ -125,12 +125,12 @@ static void ErrorCallbackRenderer(OH_AudioRenderer *renderer, void *userData, OH
     ErrorCallback(userData, error);
 }
 
-static void ReadDataCallback(OH_AudioCapturer *capturer, void *userData, void *audioData, int32_t numFrames)
+static void ReadDataCallback(OH_AudioCapturer *capturer, void *userData, void *audioData, int32_t numBytes)
 {
     SDL_AudioDevice *device = (SDL_AudioDevice *) userData;
     struct SDL_PrivateAudioData *hidden = device->hidden;
     const size_t framesize = SDL_AUDIO_FRAMESIZE(device->spec);
-    const size_t callback_bytes = numFrames * framesize;
+    const size_t callback_bytes = (size_t) numBytes;
     size_t old_buffer_index = hidden->callback_bytes / device->buffer_size;
     const Uint8 *input = (const Uint8 *)audioData;
     const size_t available_bytes = hidden->mixbuf_bytes - (hidden->callback_bytes - hidden->processed_bytes);
@@ -165,12 +165,12 @@ static void ReadDataCallback(OH_AudioCapturer *capturer, void *userData, void *a
     }
 }
 
-static OH_AudioData_Callback_Result WriteDataCallback(OH_AudioRenderer *renderer, void *userData, void *audioData, int32_t numFrames)
+static OH_AudioData_Callback_Result WriteDataCallback(OH_AudioRenderer *renderer, void *userData, void *audioData, int32_t numBytes)
 {
     SDL_AudioDevice *device = (SDL_AudioDevice *) userData;
     struct SDL_PrivateAudioData *hidden = device->hidden;
     const size_t framesize = SDL_AUDIO_FRAMESIZE(device->spec);
-    const size_t callback_bytes = numFrames * framesize;
+    const size_t callback_bytes = (size_t) numBytes;
     size_t old_buffer_index = hidden->callback_bytes / device->buffer_size;
     Uint8 *output = (Uint8 *)audioData;
     const size_t available_bytes = (hidden->processed_bytes - hidden->callback_bytes);
@@ -197,7 +197,7 @@ static OH_AudioData_Callback_Result WriteDataCallback(OH_AudioRenderer *renderer
     }
 
     // tell the audio thread to generate more data, so we're ready to memcpy it when this callback runs again.
-    size_t new_buffer_index = hidden->callback_bytes / device->buffer_size;
+    const size_t new_buffer_index = hidden->callback_bytes / device->buffer_size;
     while (old_buffer_index < new_buffer_index) {
         // Trigger audio processing
         SDL_SignalSemaphore(hidden->semaphore);
