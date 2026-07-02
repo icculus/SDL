@@ -183,19 +183,39 @@ build SDL as part of your project.
 ### SDL platform defines
 
 SDL will define SDL_PLATFORM_OPENHARMONY and SDL_PLATFORM_UNIX. Do be cautioned
-that while HarmonyOS has a Linux kernel compatibility interface, it is _not_
-comparable to a "normal" Linux system in almost any way, so SDL_PLATFORM_LINUX
-is not defined (SDL for Android, which literally uses the Linux kernel,
-follows this same convention inside SDL). HarmonyOS devices don't use the
-actual Linux kernel (they use a microkernel named "HongMeng"), but OpenHarmony
-devices that aren't specifically HarmonyOS _might_ use a Linux kernel. Don't
-make assumptions.
+that while HarmonyOS has some Linux kernel compatibility interfaces, it is
+_not_ comparable to a "normal" Linux system in almost any way, so
+SDL_PLATFORM_LINUX is not defined (SDL for Android, which literally uses the
+Linux kernel, follows this same convention inside SDL). HarmonyOS devices
+don't use the actual Linux kernel (they use a microkernel named "HongMeng"),
+but OpenHarmony devices that aren't specifically HarmonyOS _might_ use a Linux
+kernel. Don't make assumptions.
 
 
 ### Dynamic API
 
-Presumably users cannot override the SDL build on their phones, so the Dynamic
-API is disabled on this platform.
+Presumably users cannot override the SDL build in their phone's apps, so the
+Dynamic API is disabled on this platform.
+
+
+### Log
+
+SDL_Log() and friends will push through hilog, so you can view the output
+from the `hdc hilog` command. Note that logs are preformatted strings by the
+time they hit hilog, so things like "%s" are already processed, and thus
+there is no `{public}` and `{private}` format modifiers available like there
+would be if calling into hilog's APIs directly.
+
+Output from `hdc hilog` for `SDL_Log("Hello world!");` will look something like:
+
+```
+06-29 22:22:02.953 25275 25275 I A00000/org.libsdl.loopwave/SDL/APP: Hello world!
+```
+
+This is kind of chatty, but not unlike Android's `adc logcat` output.
+
+These logs are viewable to end-users, even in release builds, if they have a
+phone in Developer Mode that can talk to `hdc`, so be careful what you log!
 
 
 ### Main
@@ -204,6 +224,49 @@ HarmonyOS has a fairly complicated startup sequence (described later in this
 document). Apps for this platform should use the "main callbacks" instead of
 an ANSI C style "main" entry point (!!! FIXME: see if we can get this working
 with SDL_main in a background thread, though!).
+
+
+### Filesystem
+
+HarmonyOS uses '/' as a path separator, like Unix-style (etc) systems.
+
+SDL_GetBasePath() returns "assets://" unconditionally (see IOStream section,
+below). SDL_GetPrefPath() returns a path under the string returned from
+OH_AbilityRuntime_ApplicationContextGetFilesDir(), which in practice looks
+like "/data/storage/el2/base/files/APPNAME" ... this looks like an absolute
+path, but HarmonyOS maps this to a specific app-and-user-specific path behind
+the scenes. The prefpath is readable/writable with both SDL_IOStream and
+"normal" APIs like fopen().
+
+There is SDL_GetOpenHarmonyInternalStoragePath(), which returns the base
+directory used for SDL_GetPrefPath() without extra subdirs appended to it
+or mkdir() calls issued.
+
+
+### IOStream
+
+This works like Android: some files are accessible like normal filesystem
+things, and can be accessed with fopen(), open(), etc. Other things are
+installed with the application (the "HAP"), and they need special APIs to
+access, that sort of map to Android's AAssetManager, but a little more
+powerful (these are called "RawFile" APIs on HarmonyOS).
+
+Both types of files can be accessed as SDL_IOStreams through SDL_IOFromFile().
+SDL uses the same conventions as Android here: if the file path is a relative
+path or prefixed with "assets://", it'll use the RawFile APIs. Absolute paths
+will use "normal" filesystem APIs. SDL_GetBasePath() returns "assets://", so
+one can access files installed with the app with SDL_IOFromFile().
+
+"assets://" is entirely an SDL3 construct; it will not work with fopen(), and
+is not understood by the system itself.
+
+
+### Async I/O
+
+SDL uses the "generic" asyncio backend here (a thread pool that uses
+SDL_IOStreams). Not only is there no sort of io_uring-style interface (afaik),
+but this also means you can async-load stuff from "assets://" paths without
+problems.
 
 
 ### GPU support
@@ -240,12 +303,11 @@ so SDL_LoadObject() works as expected.
 
 ### STILL TODO
 
+- Assert
 - Camera
 - Dialog
 - Haptic
 - HIDAPI
-- Package I/O?
-- Async I/O
 - Joystick
 - Locale
 - Misc
