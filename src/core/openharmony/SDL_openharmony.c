@@ -44,19 +44,25 @@ bool OH_ResourceManager_GetRawFileDescriptor64(const RawFile64 *rawFile, RawFile
 bool OH_ResourceManager_ReleaseRawFileDescriptor64(const RawFileDescriptor64 *descriptor) __attribute__((__availability__(ohos, introduced=11.0.0)));
 
 
+// !!! FIXME: these are defined as "const uint32_t VARNAME = VALUE;" in native_interface_xcomponent.h, which becomes a global variable in _our_ C code! Maybe C++ handles this differently...?
+#define OH_XCOMPONENT_ID_LEN_MAX sdl_core_ohos_OH_XCOMPONENT_ID_LEN_MAX
+#define OH_MAX_TOUCH_POINTS_NUMBER sdl_core_ohos_OH_MAX_TOUCH_POINTS_NUMBER
+#include <ace/xcomponent/native_interface_xcomponent.h>
+
+#include <AbilityKit/ability_runtime/application_context.h>
+#include <deviceinfo.h>
+#include <rawfile/raw_file_manager.h>
+#include <hilog/log.h>
+
 // !!! FIXME: which of these headers do we actually need?
 #include <js_native_api.h>
 #include <js_native_api_types.h>
 #include <node_api.h>
 #include <node_api_types.h>
-#include <ace/xcomponent/native_interface_xcomponent.h>
-#include <AbilityKit/ability_runtime/application_context.h>
 #include <napi/native_api.h>
-#include <deviceinfo.h>
-#include <rawfile/raw_file_manager.h>
-#include <hilog/log.h>
 
 #include "SDL_openharmony.h"
+#include "../../video/openharmony/SDL_openharmonyvideo.h"
 
 int SDL_GetOpenHarmonySDKVersion(void)
 {
@@ -285,6 +291,7 @@ static void SDL_XComponent_OnSurfaceCreatedCallback(OH_NativeXComponent* compone
 {
     SDL_assert(native_resource_mgr != NULL);   // ArkTS should have sent us this at startup. Are you using our startup scripts?
     extern void SDL_OpenHarmonyMainSurfaceCreated(void);  // this is in src/main/openharmony/SDL_sysmain_runapp.c
+    SDL_OpenHarmonyVideoSurfaceCreated(component, window);  // this is in src/video/openharmony/SDL_openharmonyvideo.c
     SDL_OpenHarmonyMainSurfaceCreated();  // start the actual native code app if this is the first surface.
 }
 
@@ -294,9 +301,16 @@ static void SDL_XComponent_OnFrameCallback(OH_NativeXComponent* component, uint6
     SDL_OpenHarmonyOnFrameCallback();  // This fires SDL_AppInterate.
 }
 
-// !!! FIXME: write these.
-static void SDL_XComponent_OnSurfaceChangedCallback(OH_NativeXComponent* component, void* window) {}
-static void SDL_XComponent_OnSurfaceDestroyedCallback(OH_NativeXComponent* component, void* window) {}
+static void SDL_XComponent_OnSurfaceChangedCallback(OH_NativeXComponent* component, void* window)
+{
+    SDL_OpenHarmonyVideoSurfaceChanged(component, window);  // this is in src/video/openharmony/SDL_openharmonyvideo.c
+}
+
+static void SDL_XComponent_OnSurfaceDestroyedCallback(OH_NativeXComponent* component, void* window)
+{
+    SDL_OpenHarmonyVideoSurfaceDestroyed(component, window);  // this is in src/video/openharmony/SDL_openharmonyvideo.c
+}
+
 static void SDL_XComponent_DispatchTouchEventCallback(OH_NativeXComponent* component, void* window) {}
 
 

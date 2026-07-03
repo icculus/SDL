@@ -403,6 +403,7 @@
 
 /* Enable various video drivers */
 #cmakedefine SDL_VIDEO_DRIVER_ANDROID 1
+#cmakedefine SDL_VIDEO_DRIVER_OPENHARMONY 1
 #cmakedefine SDL_VIDEO_DRIVER_COCOA 1
 #cmakedefine SDL_VIDEO_DRIVER_DUMMY 1
 #cmakedefine SDL_VIDEO_DRIVER_EMSCRIPTEN 1
