@@ -115,7 +115,7 @@ bool OPENHARMONY_VideoInit(SDL_VideoDevice *_this)
     mode.w = (int) dispinfo->physicalWidth;
     mode.h = (int) dispinfo->physicalHeight;
     mode.refresh_rate = (float) dispinfo->refreshRate;
-    mode.pixel_density = dispinfo->scaledDensity;
+    mode.pixel_density = 1.0f;
 
     const NativeDisplayManager_Rotation rotation = dispinfo->rotation;
     const NativeDisplayManager_Orientation orientation = dispinfo->orientation;
