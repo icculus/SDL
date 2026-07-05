@@ -1864,7 +1864,7 @@ endif()
       set(HAVE_OPENGLES TRUE)
       set(SDL_VIDEO_OPENGL_ES2 1)
       set(SDL_VIDEO_RENDER_OGL_ES2 1)
-      sdl_link_dependency(opengles LIBS GLESv2)
+      #sdl_link_dependency(opengles LIBS GLESv3)
     endif()
 
     if(SDL_VULKAN)
