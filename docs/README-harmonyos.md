@@ -143,26 +143,64 @@ continually drop and reconnect on my VirtualBox Windows 10 VM. But YMMV!)
 
 ## HarmonyOS App Development with SDL
 
-### Create a project in DevEco Studio
+### Create a new project
 
-While basic C/C++ code can just be compiled for HarmonyOS without a lot of
-drama, there is a fairly complex directory tree needed for an actual app that
-will run on a phone, and currently you need DevEco Studio to create and manage
-this for you.
+Copy the "openharmony-project" directory out of the root of SDL's source tree
+to where you want your project to live, and name it appropriately
+("mygame-openharmony" or whatever). Then, in that new directory:
 
-Go into DevEco Studio, and either click the big Plus button to create a new
-project, or find the menu bar and click "File", "New", "Create Project".
+- in AppScope/app.json5, change at least "bundleName" and "vendor" to match
+  your project.
+- in AppScope/resources/base/element/string.json, change "app_name"'s value to
+  the name of your app.
+- in build-profile.json5, you need to add a signingConfig (this is probably
+  doable without the GUI, but I have not entirely solved how to do this outside
+  of DevEco Studio yet).
 
-Choose the "Native C++" template. You can still use C instead of C++, and also
-write pieces in ArkTS. Choose a unique package name, other important settings.
+Do not create a new project in DevEco Studio, since there are pieces of ArkTS
+scripting that need to be set up correctly for SDL, and that code is already
+present in openharmony-project. You _should_ be able to open the project in
+DevEco Studio once you've set it up.
+
+
+### Add source code to your new project.
+
+Native code building uses CMake, whether you use DevEco Studio or not. This
+makes integrating SDL into your project easy!
+
+Edit the text file entry/src/main/cpp/CMakeLists.txt inside your new project
+directory and change this line:
+
+```cmake
+add_library(main SHARED myapp.c)
+```
+
+"myapp.c" should be replaced with any source files that comprise your app.
+This is a standard CMake project file, so you can get as fancy as you want
+or just have a list of files separated by spaces.
+
+These files do not have to be in this directory; they can live outside of
+the project directory entirely, as long as you specify the correct directory
+to reach them.
+
+You must either copy the SDL source tree into entry/src/main/cpp, or make a
+symlink to it, or edit the `add_subdirectory("SDL")` line to point to it.
+This line makes SDL's source compile with the rest of the project. The
+directory you point to must be the root of an SDL clone, the one that holds
+CMakeLists.txt, src, and include.
+
+Your app _must_ compile to a shared library named "libmain.so" ... the
+"add_library" line does this. Do not build an executable! It must be a
+shared library, due to how HarmonyOS deals with apps. When you're done
+building, you should have a libmain.so and an libSDL3.so file.
 
 
 ### Get a HarmonyOS Debug Certificate
 
 You need to sign apps to run them on a real device, even for local debugging
-and testing and not deployment and release.
+and testing and not just deployment and release.
 
-For now, just create your project in DevEco Studio, then in the menu bar, go
+For now, just open your project in DevEco Studio, then in the menu bar, go
 to "File", "Project Structure", "Signing Configs", "Automatically generate
 signature". Log in to your Huawei developer account if needed. Let it do the
 work. Later, I copied the project's directory and ".ohos" dir in my home
@@ -170,14 +208,44 @@ directory to a Linux system, adjusted a few Windows absolute paths in
 build-profile.json5, and that was good enough.
 
 
-### Add SDL to your app's build.
+### Build your app from the command line
 
-!!! FIXME: this needs a _lot_ more discussion, as several important files
-!!! FIXME:  need to replace defaults in the project directory, you need to
-!!! FIXME:  copy or symlink SDL sources in, etc.
+Building your project from DevEco Studio is just a single click, but you
+can also build from the command line on macOS, Windows, or Linux.
 
-Native code in your project is compiled with CMake, so just tell CMake to
-build SDL as part of your project.
+If you have everything (signing certs, the entire project structure, etc) in
+place, you can build an app from the command line. Go to the root folder of
+the project and run:
+
+```bash
+hvigorw assembleHap
+```
+
+If everything went well (AND IT OFTEN DOES NOT, READ THE OUTPUT!), you'll have
+a signed HarmonyOS app bundle (a ".hap" file) you can install to a device.
+
+
+### Install on real hardware from the command line.
+
+Make sure the phone is connected (run `hdc list targets -v` to verify).
+
+```bash
+# (or whatever the directory and .hap file are named.)
+hdc install ./entry/build/default/outputs/default/entry-default-signed.hap
+```
+
+### Debugging
+
+!!! FIXME: write me! I confess, I mostly used "printf debugging" with
+SDL_Log() calls. DevEco Studio, of course, has a GUI that can debug software
+running on real hardware, and I'm pretty sure I saw a document on Huawei's
+website about setting up remote GDB debugging from the command line, but I
+have not explored either option further at the moment.
+
+
+## SDL/HarmonyOS subsystem details
+
+Specifics of actually using SDL on HarmonyOS follow.
 
 
 ### SDL platform defines
@@ -217,6 +285,9 @@ This is kind of chatty, but not unlike Android's `adc logcat` output.
 These logs are viewable to end-users, even in release builds, if they have a
 phone in Developer Mode that can talk to `hdc`, so be careful what you log!
 
+Also plan to use "grep" to find relevant logs; `hdc hilog` is an endless
+waterfall of unrelated data that you _will_ get lost in immediately.
+
 
 ### Main
 
@@ -238,9 +309,10 @@ path, but HarmonyOS maps this to a specific app-and-user-specific path behind
 the scenes. The prefpath is readable/writable with both SDL_IOStream and
 "normal" APIs like fopen().
 
-There is SDL_GetOpenHarmonyInternalStoragePath(), which returns the base
-directory used for SDL_GetPrefPath() without extra subdirs appended to it
-or mkdir() calls issued.
+There is also SDL_GetOpenHarmonyInternalStoragePath(), which returns the base
+directory used for SDL_GetPrefPath() without extra subdirs appended to it or
+mkdir() calls issued, but generally SDL_GetPrefPath() is preferred as the
+more-portable option.
 
 
 ### IOStream
@@ -269,20 +341,30 @@ but this also means you can async-load stuff from "assets://" paths without
 problems.
 
 
-### GPU support
+### Render/GPU
 
-OpenGL ES 2 and 3 are supported, as is Vulkan. Desktop OpenGL is supported by
-the platform, too, but for now support is disabled within SDL itself. EGL is
-used to manage GL contexts internally, and a HarmonyOS-specific Vulkan
-extension is provided to get a surface. This means the SDL3 GPU API is
-available, in addition to a hardware-accelerated 2D Renderer API.
+OpenGL ES 3 is supported, as is Vulkan. Desktop OpenGL is supported by
+the platform, too, but for now support is disabled within SDL itself as likely
+superfluous (until it is not, open an issue if you need it). EGL is used to
+manage GL contexts internally, and a HarmonyOS-specific Vulkan extension is
+provided to get a surface.
+
+Like other platforms, we favor OpenGL ES 2 for the 2D renderer; Vulkan and "GPU"
+also works, but SDL's GLES is assumed to be more trusted at the current moment,
+and historically GLES has been more solid on mobile devices than Vulkan, but
+HarmonyOS-based phones might have significantly better Vulkan support than
+other comparable smart phones; this is yet to be determined.
+
+Since Vulkan works, the SDL3 GPU API is available and operational, in addition
+to the hardware-accelerated 2D Renderer API.
 
 
 ### Audio
 
 HarmonyOS support OpenSL ES, but like on Android, it is deprecated. As our
 OpenSL ES backend is heavy with Android-specific code, it is not used on
-HarmonyOS. There is a new backend using HarmonyOS's OHAudio API.
+HarmonyOS. There is a new backend using HarmonyOS's OHAudio API. This is
+almost exactly like Android's AAudio API.
 
 
 ### Power
@@ -356,30 +438,6 @@ Or use whatever instructs Xcode/Visual Studio/etc to build things.
 
 
 
-## Build an app on the command line
-
-If you have everything (signing certs, the entire project structure, etc) in
-place from DevEco Studio, you can build an app from the command line. Go to
-the root folder of the project and run:
-
-```bash
-hvigorw assembleHap
-```
-
-If everything went well (AND IT OFTEN DOES NOT, READ THE OUTPUT!), you'll have
-a signed HarmonyOS app bundle (a ".hap" file) you can install to a device.
-
-
-## Install on real hardware from the command line.
-
-Make sure the phone is connected (run `hdc list targets -v` to verify).
-
-```bash
-# (or whatever the directory and .hap file are named.)
-hdc install ./entry/build/default/outputs/default/entry-default-signed.hap
-```
-
-
 ## Startup sequence
 
 (You can probably skip this section if you just want to target HarmonyOS with
@@ -434,6 +492,15 @@ You can stop reading now, if you like.
 - https://github.com/openharmony/app_samples/ETSUI/XComponent, seems to do
   a lot of the native startup without the windowStage nonsense. Not clear if
   this still works, or is safe to do, but it _would_ simplify things a little.
+
+
+### Android mappings
+
+These are not direct mappings (the command lines are not identical, etc).
+
+- "adc" command line tool: "hdc"
+- "adc logcat": "hdc hilog"
+- "gradlew": "hvigorw"
 
 
 ### Get a HarmonyOS Debug Certificate without DevEco Studio
@@ -517,13 +584,4 @@ Click "Submit".
 If everything went okay, you'll have a certificate listed for download. This
 should be an immediate thing, it doesn't need approval on Huawei's side.
 Download the .cer file and save it for later.
-
-
-### Android mappings
-
-These are not direct mappings (the command lines are not identical, etc).
-
-- "adc" command line tool: "hdc"
-- "adc logcat": "hdc hilog"
-- "gradlew": "hvigorw"
 
