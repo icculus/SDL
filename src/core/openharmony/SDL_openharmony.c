@@ -63,6 +63,7 @@ bool OH_ResourceManager_ReleaseRawFileDescriptor64(const RawFileDescriptor64 *de
 
 #include "SDL_openharmony.h"
 #include "../../video/openharmony/SDL_openharmonyvideo.h"
+#include "../../video/openharmony/SDL_openharmonyevents.h"
 
 int SDL_GetOpenHarmonySDKVersion(void)
 {
@@ -311,7 +312,10 @@ static void SDL_XComponent_OnSurfaceDestroyedCallback(OH_NativeXComponent* compo
     SDL_OpenHarmonyVideoSurfaceDestroyed(component, window);  // this is in src/video/openharmony/SDL_openharmonyvideo.c
 }
 
-static void SDL_XComponent_DispatchTouchEventCallback(OH_NativeXComponent* component, void* window) {}
+static void SDL_XComponent_DispatchTouchEventCallback(OH_NativeXComponent* component, void* window)
+{
+    SDL_OpenHarmonyDispatchTouchEvent(component, window);  // this is in src/video/openharmony/SDL_openharmonyvideo.c
+}
 
 
 // ArkTS calls this once near startup to pass us the ResourceManager.

@@ -22,6 +22,9 @@
 
 #include "../SDL_sysvideo.h"
 
+// src/core/openharmony/SDL_openharmony.c calls this when it gets events from the system.
+extern void SDL_OpenHarmonyDispatchTouchEvent(void *component, void *window);
+
 extern void OPENHARMONY_InitEvents(void);
 extern void OPENHARMONY_PumpEvents(SDL_VideoDevice *_this);
 extern void OPENHARMONY_QuitEvents(void);

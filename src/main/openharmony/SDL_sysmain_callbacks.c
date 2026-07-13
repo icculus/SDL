@@ -34,7 +34,6 @@ void SDL_OpenHarmonyOnFrameCallback(void)   // src/core/openharmony calls this w
             SDL_QuitMainCallbacks(rc);
             exit((rc == SDL_APP_FAILURE) ? 1 : 0);
         }
-        SDL_Log("SDL_AppIterate said continue!");
     }
 }
 
