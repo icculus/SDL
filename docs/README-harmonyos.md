@@ -292,9 +292,17 @@ waterfall of unrelated data that you _will_ get lost in immediately.
 ### Main
 
 HarmonyOS has a fairly complicated startup sequence (described later in this
-document). Apps for this platform should use the "main callbacks" instead of
-an ANSI C style "main" entry point (!!! FIXME: see if we can get this working
-with SDL_main in a background thread, though!).
+document). Apps for this platform should use the "main callbacks" (with
+`#define SDL_USE_MAIN_CALLBACKS`) instead of an ANSI C style "main" entry
+point, as that fits the app design paradigm of OpenHarmony.
+
+However, if you build an app with a standard "main" function, SDL will notice
+this, spin a thread, and attempt to call that function from the new background
+thread, and call exit() when it returns. This _happens_ to work, at least for
+simple test cases that do rendering and touch input, but one uses this path at
+their own risk, as several important things might result unexpected race
+conditions and unexpected behavior, possibly in a later version of the OS. It
+is strongly recommended that you migrate to the Main Callbacks!
 
 
 ### Filesystem
@@ -480,11 +488,20 @@ This is how startup works:
   where the app's actual C code lives.
 - When the XComponent's OnSurfaceCreated callback fires (landing in
   SDL_XComponent_OnSurfaceCreatedCallback()), we are then ready to hand control
-  to the actual C application. Here we will call libmain.so's SDL_AppInit().
-- Then, whenever the XComponent fires its OnFrame callback, we will call
-  SDL_AppIterate().
-
-
+  to the actual C application. This starts in
+  SDL_OpenHarmonyMainSurfaceCreated(), which eventually lands in
+  RunAppOpenHarmonyMain().
+- Here we see if libmain contains a symbol named "SDL_main", and if so, we
+  spin a thread and call into that symbol from the new thread as a standard
+  ANSI C "main" entry point, and exit() the process when it returns (which
+  looks like a crash on HarmonyOS, so please don't return.)
+- If there was no symbol called "SDL_main", we look for the Main Callbacks
+  symbols in libmain.so: SDL_AppInit, SDL_AppIterate, etc. If found, we will
+  call libmain.so's SDL_AppInit() and respond appropriately. If not found, we
+  panic and terminate the process, since we're out of options and something
+  was obviously built incorrectly.
+- Later, whenever the XComponent fires its OnFrame callback, we will call
+  SDL_OpenHarmonyOnFrameCallback(), which calls libmain.so's SDL_AppIterate().
 
 
 

@@ -25,12 +25,27 @@
 
 #include <hilog/log.h>
 #include <dlfcn.h>
+#include <string.h>
+#include <errno.h>
+#include <pthread.h>
 
 #include "../SDL_main_callbacks.h"
 
+static int SDL_main_argc = 0;
+static char **SDL_main_argv = NULL;
+static void *ThreadEntry__SDL_main(void *userdata)
+{
+    SDL_main_func pMain = (SDL_main_func) userdata;
+    pthread_setname_np(pthread_self(), "SDL_main");
+    OH_LOG_Print(LOG_APP, LOG_FATAL, LOG_DOMAIN, "SDL/STARTUP", "Calling SDL_main!");
+    const int rc = pMain(SDL_main_argc, SDL_main_argv);
+    OH_LOG_Print(LOG_APP, LOG_FATAL, LOG_DOMAIN, "SDL/STARTUP", "SDL_main returned %{public}d! Now terminating the process...", rc);
+    exit(rc);
+    return NULL;
+}
+
 // This is passed to SDL_RunApp. It decides whether libmain.so has the main callbacks or SDL_main,
 //  and either calls SDL_EnterAppMainCallbacks or spins a thread and attempts to work with SDL_main().
-//  (!!! FIXME i don't know if the thread attempt will work at all, so I might drop this.)
 // This will log something and attempt to terminate the process if things go wrong.
 static int RunAppOpenHarmonyMain(int argc, char **argv)
 {
@@ -45,10 +60,17 @@ static int RunAppOpenHarmonyMain(int argc, char **argv)
 
     SDL_main_func pMain = (SDL_main_func) dlsym(lib, "SDL_main");
     if (pMain) {
-        // !!! FIXME: spin a thread, etc.
-        //return pMain(argc, argv);
-        OH_LOG_Print(LOG_APP, LOG_FATAL, LOG_DOMAIN, "SDL/STARTUP", "Found SDL_main in %{public}s, but support for this is unimplemented. Can't start app!", sofile);
-        exit(1);
+        SDL_main_argc = argc;
+        SDL_main_argv = argv;
+        pthread_t thread;
+        const int rc = pthread_create(&thread, NULL, ThreadEntry__SDL_main, pMain);
+        if (rc != 0) {
+            OH_LOG_Print(LOG_APP, LOG_FATAL, LOG_DOMAIN, "SDL/STARTUP", "Failed to create thread to run SDL_main from %{public}s, can't start app! (%{public}%s)", sofile, strerror(rc));
+            exit(1);
+        }
+
+        pthread_detach(thread);  // we won't be waiting on this.
+        return 0;  // SDL_main is running in another thread, and this thread returns to the app's core loop thing.
     }
 
     #define FINDCBFN(nam) \
