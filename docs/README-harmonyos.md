@@ -341,6 +341,15 @@ but this also means you can async-load stuff from "assets://" paths without
 problems.
 
 
+### Video
+
+One SDL_Window is allowed at a time and it takes the entire available display
+(like Android). Currently we only report a single display (the phone/tablet's
+screen).
+
+Touch events work. More events to come soon.
+
+
 ### Render/GPU
 
 OpenGL ES 3 is supported, as is Vulkan. Desktop OpenGL is supported by
@@ -400,8 +409,7 @@ so SDL_LoadObject() works as expected.
 - Time
 - Timer
 - Tray
-- Video
-
+- Pen
 
 ## Building SDL for HarmonyOS
 
