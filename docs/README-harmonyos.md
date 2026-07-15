@@ -400,6 +400,17 @@ HarmonyOS uses ELF shared libraries and has a POSIX-style dlopen() mechanism,
 so SDL_LoadObject() works as expected.
 
 
+### Tray
+
+The Tray API uses the "dummy" backend as this functionality doesn't make sense
+on a phone.
+
+
+### Time
+
+The Time and Timer subsystems use the usual Unix implementations and work fine.
+
+
 ### STILL TODO
 
 - Assert
@@ -412,12 +423,9 @@ so SDL_LoadObject() works as expected.
 - Misc
 - Process
 - Sensor
-- Render
 - Storage
-- Time
-- Timer
-- Tray
 - Pen
+
 
 ## Building SDL for HarmonyOS
 
