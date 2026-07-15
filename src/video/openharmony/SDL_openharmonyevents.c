@@ -102,13 +102,11 @@ void SDL_OpenHarmonyDispatchTouchEvent(void *component, void *window)
     }
 
     if (touchidx >= event.numPoints) {
-SDL_Log("TOUCH EVENT WITH NO touchPoint ENTRY!");
         return;  // uh...we don't have this touch...?
     }
 
     OH_NativeXComponent_TouchPointToolType tooltype;
     if (OH_NativeXComponent_GetTouchPointToolType(xcomponent, touchidx, &tooltype) != OH_NATIVEXCOMPONENT_RESULT_SUCCESS) {
-SDL_Log("TOUCH EVENT GETPOINTTOOLTYPE FAILED");
         return;   // bad bad bad
     }
 
