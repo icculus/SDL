@@ -7,7 +7,7 @@ const DOMAIN = 0x0000;
 
 export default class EntryAbility extends UIAbility {
   onCreate(want: Want, launchParam: AbilityConstant.LaunchParam): void {
-    sdl.setResourceManager(this.context.resourceManager);  // have to get this through ArkTS, apparently.  :/
+    sdl.setAbilityObject(this);
     try {
       this.context.getApplicationContext().setColorMode(ConfigurationConstant.ColorMode.COLOR_MODE_NOT_SET);
     } catch (err) {

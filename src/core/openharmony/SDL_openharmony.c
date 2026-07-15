@@ -65,6 +65,9 @@ bool OH_ResourceManager_ReleaseRawFileDescriptor64(const RawFileDescriptor64 *de
 #include "../../video/openharmony/SDL_openharmonyvideo.h"
 #include "../../video/openharmony/SDL_openharmonyevents.h"
 
+static napi_ref ability_object_ref = NULL;
+static NativeResourceManager *native_resource_mgr = NULL;
+
 int SDL_GetOpenHarmonySDKVersion(void)
 {
     static int sdk_version;
@@ -177,8 +180,6 @@ const char *SDL_GetOpenHarmonyInternalStoragePath(void)
 
 
 // Filesystem stuff...
-
-static NativeResourceManager *native_resource_mgr = NULL;
 
 bool SDL_OpenHarmonyRawFileOpen(void **puserdata, const char *fileName, const char *mode)
 {
@@ -318,8 +319,8 @@ static void SDL_XComponent_DispatchTouchEventCallback(OH_NativeXComponent* compo
 }
 
 
-// ArkTS calls this once near startup to pass us the ResourceManager.
-static napi_value SDL_NAPI_SetResourceManager(napi_env env, napi_callback_info info)
+// ArkTS calls this once near startup to pass us the Ability, so we can call back into Javascript as necessary.
+static napi_value SDL_NAPI_SetAbilityObject(napi_env env, napi_callback_info info)
 {
     if (native_resource_mgr) {
         OH_ResourceManager_ReleaseNativeResourceManager(native_resource_mgr);  // in case we called this more than once.
@@ -328,7 +329,14 @@ static napi_value SDL_NAPI_SetResourceManager(napi_env env, napi_callback_info i
     size_t argc = 1;
     napi_value argv[1] = { NULL };
     napi_get_cb_info(env, info, &argc, argv, NULL, NULL);
-    native_resource_mgr = OH_ResourceManager_InitNativeResourceManager(env, argv[0]);
+
+    napi_value ability = argv[0];
+    napi_value context = NULL; napi_get_named_property(env, ability, "context", &context);
+    napi_value resourceManager = NULL; napi_get_named_property(env, context, "resourceManager", &resourceManager);
+    native_resource_mgr = OH_ResourceManager_InitNativeResourceManager(env, resourceManager);
+
+    napi_create_reference(env, ability, 1, &ability_object_ref);
+    //napi_value ability = NULL; napi_get_reference_value(env, ability_object_ref, &ability);
 
     return NULL;
 }
@@ -341,7 +349,7 @@ static napi_value SDL_Init_Native_Interfaces(napi_env env, napi_value exports)
     // Functions that we want to be able to call from ArkTS go here.
     // (declare them in C as `napi_value MyFunctionName(napi_env env, napi_callback_info info);`)
     napi_property_descriptor desc[] = {
-        { "setResourceManager", NULL, SDL_NAPI_SetResourceManager, NULL, NULL, NULL, napi_default, NULL },
+        { "setAbilityObject", NULL, SDL_NAPI_SetAbilityObject, NULL, NULL, NULL, napi_default, NULL },
     };
     napi_define_properties(env, exports, SDL_arraysize(desc), desc);
 
