@@ -1331,3 +1331,4 @@ SDL_DYNAPI_PROC(long long,SDL_wcstoll,(const wchar_t *a,wchar_t **b,int c),(a,b,
 SDL_DYNAPI_PROC(unsigned long long,SDL_wcstoull,(const wchar_t *a,wchar_t **b,int c),(a,b,c),return)
 SDL_DYNAPI_PROC(int,SDL_GetOpenHarmonySDKVersion,(void),(),return)
 SDL_DYNAPI_PROC(const char*,SDL_GetOpenHarmonyInternalStoragePath,(void),(),return)
+SDL_DYNAPI_PROC(bool,SDL_RequestOpenHarmonyPermission,(const char *a,SDL_RequestOpenHarmonyPermissionCallback b,void *c),(a,b,c),return)

@@ -2,15 +2,28 @@
   "string": [
     {
       "name": "module_desc",
-      "value": "module description"
+      "value": "SDL Application"
     },
     {
       "name": "EntryAbility_desc",
-      "value": "description"
+      "value": "SDL Application"
     },
     {
       "name": "EntryAbility_label",
-      "value": "label"
+      "value": "SDL App"
+    },
+    {
+      "name": "perm_reason_MICROPHONE",
+      "value": "Used to record audio"
+    },
+    {
+      "name": "perm_reason_CAMERA",
+      "value": "Used to record video"
+    },
+    {
+      "name": "perm_reason_INTERNET",
+      "value": "Used to download additional content"
     }
   ]
 }
+

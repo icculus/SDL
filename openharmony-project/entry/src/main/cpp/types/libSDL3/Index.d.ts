@@ -1,1 +1,1 @@
-export const setResourceManager: (resMgr: resourceManager.ResourceManager) => void;
+export const provideArkTSObjects: (ability: UIAbility, atManager: abilityAccessCtrl.AtManager) => void;

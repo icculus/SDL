@@ -67,6 +67,8 @@ extern SDL_DECLSPEC Sint32 SDLCALL JNI_OnLoad(JavaVM *vm, void *reserved);
 #endif /* !SDL_PLATFORM_ANDROID */
 
 #if !defined(SDL_PLATFORM_OPENHARMONY)
+typedef void *SDL_RequestOpenHarmonyPermissionCallback;
 extern SDL_DECLSPEC int SDLCALL SDL_GetOpenHarmonySDKVersion(void);
+extern SDL_DECLSPEC bool SDLCALL SDL_RequestOpenHarmonyPermission(const char *permission, SDL_RequestOpenHarmonyPermissionCallback cb, void *userdata);
 #endif
 

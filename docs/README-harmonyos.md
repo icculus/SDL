@@ -195,6 +195,31 @@ shared library, due to how HarmonyOS deals with apps. When you're done
 building, you should have a libmain.so and an libSDL3.so file.
 
 
+### Customize your project
+
+If you need some specific permissions (microphone/camera access, internet
+access, etc), you must list them in
+openharmony-project/entry/src/main/module.json5 ...some of these are
+automatically granted on installation, some will require the user to
+approve them on first use at runtime, but all of them must be listed. See
+the "requestPermissions" section of this file for examples. There are more
+permissions available than are listed there!
+
+You must set up some basic strings, before publishing your app, or you will
+either have an app icon with name "label" or fail certification because you
+didn't explain clearly why you need various permissions.
+
+These are in a JSON file in:
+
+openharmony-project/entry/src/main/resources/base/element/string.json
+
+You can do localizations of these strings by making a second copy of the
+file, where "base" is replaced with the proper localization ("en_GB" or
+whatever). See the documentation at:
+
+https://developer.huawei.com/consumer/en/doc/harmonyos-guides/resource-categories-and-access
+
+
 ### Get a HarmonyOS Debug Certificate
 
 You need to sign apps to run them on a real device, even for local debugging

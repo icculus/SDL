@@ -522,7 +522,7 @@ extern SDL_DECLSPEC const char * SDLCALL SDL_GetAndroidExternalStoragePath(void)
 extern SDL_DECLSPEC const char * SDLCALL SDL_GetAndroidCachePath(void);
 
 /**
- * Callback that presents a response from a SDL_RequestAndroidPermission call.
+ * Callback that presents SDL_RequestAndroidPermission() results.
  *
  * \param userdata an app-controlled pointer that is passed to the callback.
  * \param permission the Android-specific permission name that was requested.
@@ -653,6 +653,58 @@ extern SDL_DECLSPEC int SDLCALL SDL_GetOpenHarmonySDKVersion(void);
  * \since This function is available since SDL 3.6.0.
  */
 extern SDL_DECLSPEC const char * SDLCALL SDL_GetOpenHarmonyInternalStoragePath(void);
+
+/**
+ * Callback that presents SDL_RequestOpenHarmonyPermission() results.
+ *
+ * \param userdata an app-controlled pointer that is passed to the callback.
+ * \param permission the OpenHarmony-specific permission name that was requested.
+ * \param granted true if permission is granted, false if denied.
+ *
+ * \since This datatype is available since SDL 3.6.0.
+ *
+ * \sa SDL_RequestOpenHarmonyPermission
+ */
+typedef void (SDLCALL *SDL_RequestOpenHarmonyPermissionCallback)(void *userdata, const char *permission, bool granted);
+
+/**
+ * Request permissions at runtime, asynchronously.
+ *
+ * You do not need to call this for built-in functionality of SDL; recording
+ * from a microphone or reading images from a camera, using standard SDL APIs,
+ * will manage permission requests for you.
+ *
+ * This function never blocks. Instead, the app-supplied callback will be
+ * called when a decision has been made. This callback may happen on a
+ * different thread, and possibly much later, as it might wait on a user to
+ * respond to a system dialog. If permission has already been granted for a
+ * specific entitlement, the callback will still fire, probably on the current
+ * thread and before this function returns.
+ *
+ * If the request submission fails, this function returns false and the
+ * callback will NOT be called, but this should only happen in catastrophic
+ * conditions, like memory running out. Normally there will be a yes or no to
+ * the request through the callback.
+ *
+ * For the `permission` parameter, choose a value from here:
+ *
+ * https://developer.huawei.com/consumer/en/doc/harmonyos-guides/app-permissions
+ *
+ * Strings should be in the form of "ohos.permission.PERMISSION_NAME".
+ *
+ * \param permission the permission to request.
+ * \param cb the callback to trigger when the request has a response.
+ * \param userdata an app-controlled pointer that is passed to the callback.
+ * \returns true if the request was submitted, false if there was an error
+ *          submitting. The result of the request is only ever reported
+ *          through the callback, not this return value.
+ *
+ * \threadsafety It is safe to call this function from any thread.
+ *
+ * \since This function is available since SDL 3.6.0.
+ */
+extern SDL_DECLSPEC bool SDLCALL SDL_RequestOpenHarmonyPermission(const char *permission, SDL_RequestOpenHarmonyPermissionCallback cb, void *userdata);
+
 #endif /* SDL_PLATFORM_OPENHARMONY */
 
 

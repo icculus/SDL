@@ -53,6 +53,7 @@ bool OH_ResourceManager_ReleaseRawFileDescriptor64(const RawFileDescriptor64 *de
 #include <deviceinfo.h>
 #include <rawfile/raw_file_manager.h>
 #include <hilog/log.h>
+#include <stdlib.h>
 
 // !!! FIXME: which of these headers do we actually need?
 #include <js_native_api.h>
@@ -66,7 +67,9 @@ bool OH_ResourceManager_ReleaseRawFileDescriptor64(const RawFileDescriptor64 *de
 #include "../../video/openharmony/SDL_openharmonyevents.h"
 
 static napi_ref ability_object_ref = NULL;
+static napi_ref atmanager_ref = NULL;
 static NativeResourceManager *native_resource_mgr = NULL;
+static napi_threadsafe_function req_permissions_threadsafefn = NULL;
 
 int SDL_GetOpenHarmonySDKVersion(void)
 {
@@ -288,6 +291,80 @@ bool SDL_OpenHarmonyGetAssetPathInfo(const char *path, SDL_PathInfo *info)
 
 // ArkTS/C bridging...
 
+typedef struct RequestPermissionData
+{
+    char *permission;
+    SDL_RequestOpenHarmonyPermissionCallback callback;
+    void *callback_userdata;
+} RequestPermissionData;
+
+// AsyncCallback when CallJSRequestPermissions() finishes its work.
+static napi_value SDL_NAPI_RequestPermissionResult(napi_env env, napi_callback_info info)
+{
+    RequestPermissionData *data = NULL;
+    size_t argc = 2;
+    napi_value argv[2];
+    napi_get_cb_info(env, info, &argc, argv, NULL, (void **) &data);
+
+    napi_value authResults = NULL; napi_get_named_property(env, argv[1], "authResults", &authResults);  // Array<number>
+    napi_value result = NULL; napi_get_element(env, authResults, 0, &result);
+    int32_t result32 = -1; napi_get_value_int32(env, result, &result32);
+
+    const bool granted = (result32 == 0);
+    data->callback(data->callback_userdata, data->permission, granted);
+
+    SDL_free(data->permission);
+    SDL_free(data);
+
+    napi_value retval = NULL; napi_get_undefined(env, &retval);
+    return retval;
+}
+
+// this function is called from the main Javascript thread when it's convenient to fire it.
+static void CallJSRequestPermissions(napi_env env, napi_value js_callback, void *context, void *userdata)
+{
+    RequestPermissionData *data = (RequestPermissionData *) userdata;
+
+    //atmanager.requestPermissionsFromUser(context: Context, permissionList: Array<Permissions>, requestCallback: AsyncCallback<PermissionRequestResult>): void;
+    napi_value ability = NULL; napi_get_reference_value(env, ability_object_ref, &ability);
+    napi_value atmanager = NULL; napi_get_reference_value(env, atmanager_ref, &atmanager);
+    napi_value fn = NULL;
+    napi_get_named_property(env, atmanager, "requestPermissionsFromUser", &fn);
+    napi_value args[3];
+    napi_get_named_property(env, ability, "context", &args[0]);
+    napi_create_array_with_length(env, 1, &args[1]);
+    napi_value str = NULL; napi_create_string_utf8(env, data->permission, NAPI_AUTO_LENGTH, &str);
+    napi_set_element(env, args[1], 0, str);
+    napi_create_function(env, NULL, 0, SDL_NAPI_RequestPermissionResult, data, &args[2]);
+    napi_value rc = NULL; napi_call_function(env, NULL, fn, 3, args, &rc);
+    // okay, assuming this worked out, we'll get a callback to SDL_NAPI_RequestPermissionResult() at some point in the future (if we haven't already).
+}
+
+bool SDL_RequestOpenHarmonyPermission(const char *permission, SDL_RequestOpenHarmonyPermissionCallback cb, void *userdata)
+{
+    RequestPermissionData *data = NULL;
+
+    if (!permission) {
+        return SDL_InvalidParamError("permission");
+    } else if (!cb) {
+        return SDL_InvalidParamError("cb");
+    } else if (!atmanager_ref) {
+        return SDL_SetError("atManager not initialized");
+    } else if ((data = (RequestPermissionData *) SDL_calloc(1, sizeof (*data))) == NULL) {
+        return false;
+    } else if ((data->permission = SDL_strdup(permission)) == NULL) {
+        SDL_free(data);
+        return false;
+    }
+
+    data->callback = cb;
+    data->callback_userdata = userdata;
+
+    return (napi_call_threadsafe_function(req_permissions_threadsafefn, data, napi_tsfn_nonblocking) == napi_ok);
+}
+
+
+
 // Callbacks into our custom XComponent.
 static void SDL_XComponent_OnSurfaceCreatedCallback(OH_NativeXComponent* component, void* window)
 {
@@ -320,23 +397,33 @@ static void SDL_XComponent_DispatchTouchEventCallback(OH_NativeXComponent* compo
 
 
 // ArkTS calls this once near startup to pass us the Ability, so we can call back into Javascript as necessary.
-static napi_value SDL_NAPI_SetAbilityObject(napi_env env, napi_callback_info info)
+static napi_value SDL_NAPI_ProvideArkTSObjects(napi_env env, napi_callback_info info)
 {
-    if (native_resource_mgr) {
-        OH_ResourceManager_ReleaseNativeResourceManager(native_resource_mgr);  // in case we called this more than once.
-    }
+    SDL_assert(!native_resource_mgr);  // don't call this more than once!
 
-    size_t argc = 1;
-    napi_value argv[1] = { NULL };
+    // we don't bother cleaning up most things in this function, because they are intended to live as long as the process.
+    #define expected_argc 2
+    size_t argc = expected_argc;
+    napi_value argv[expected_argc] = { NULL };
     napi_get_cb_info(env, info, &argc, argv, NULL, NULL);
+    if (argc != expected_argc) {
+        // if you hit this, we probably changed either this C code or the ArkTS code in EntryAbility.ets and you need to update one or both to get the back in sync.
+        OH_LOG_Print(LOG_APP, LOG_FATAL, LOG_DOMAIN, "SDL/STARTUP", "ProvideArkTSObjects: expected %{public}d objects, but got %{public}d! Script is out of sync? Aborting!", (int) expected_argc, (int) argc);
+        exit(1);
+    }
+    #undef expected_argc
 
     napi_value ability = argv[0];
+    napi_value atmanager = argv[1];
+    napi_create_reference(env, ability, 1, &ability_object_ref);
+    napi_create_reference(env, atmanager, 1, &atmanager_ref);
+
     napi_value context = NULL; napi_get_named_property(env, ability, "context", &context);
     napi_value resourceManager = NULL; napi_get_named_property(env, context, "resourceManager", &resourceManager);
     native_resource_mgr = OH_ResourceManager_InitNativeResourceManager(env, resourceManager);
 
-    napi_create_reference(env, ability, 1, &ability_object_ref);
-    //napi_value ability = NULL; napi_get_reference_value(env, ability_object_ref, &ability);
+    napi_value name = NULL; napi_create_string_utf8(env, "SDL_RequestOpenHarmonyPermission", NAPI_AUTO_LENGTH, &name);
+    napi_create_threadsafe_function(env, NULL, NULL, name, 0, 1, NULL, NULL, NULL, CallJSRequestPermissions, &req_permissions_threadsafefn);
 
     return NULL;
 }
@@ -349,10 +436,9 @@ static napi_value SDL_Init_Native_Interfaces(napi_env env, napi_value exports)
     // Functions that we want to be able to call from ArkTS go here.
     // (declare them in C as `napi_value MyFunctionName(napi_env env, napi_callback_info info);`)
     napi_property_descriptor desc[] = {
-        { "setAbilityObject", NULL, SDL_NAPI_SetAbilityObject, NULL, NULL, NULL, napi_default, NULL },
+        { "provideArkTSObjects", NULL, SDL_NAPI_ProvideArkTSObjects, NULL, NULL, NULL, napi_default, NULL },
     };
     napi_define_properties(env, exports, SDL_arraysize(desc), desc);
-
 
     // Wire into our XComponent, so we can take control from C code. If any of this fails, I assume the app will either blow up or do nothing.
     napi_value exportInstance = NULL;

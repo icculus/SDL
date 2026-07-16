@@ -207,5 +207,13 @@ int SDL_GetOpenHarmonySDKVersion(void)
 {
     return SDL_Unsupported();
 }
+
+bool SDL_RequestOpenHarmonyPermission(const char *permission, SDL_RequestOpenHarmonyPermissionCallback cb, void *userdata)
+{
+    (void)permission;
+    (void)cb;
+    (void)userdata;
+    return SDL_Unsupported();
+}
 #endif
 

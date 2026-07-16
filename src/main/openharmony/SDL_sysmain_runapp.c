@@ -65,7 +65,7 @@ static int RunAppOpenHarmonyMain(int argc, char **argv)
         pthread_t thread;
         const int rc = pthread_create(&thread, NULL, ThreadEntry__SDL_main, pMain);
         if (rc != 0) {
-            OH_LOG_Print(LOG_APP, LOG_FATAL, LOG_DOMAIN, "SDL/STARTUP", "Failed to create thread to run SDL_main from %{public}s, can't start app! (%{public}%s)", sofile, strerror(rc));
+            OH_LOG_Print(LOG_APP, LOG_FATAL, LOG_DOMAIN, "SDL/STARTUP", "Failed to create thread to run SDL_main from %{public}s, can't start app! (%{public}s)", sofile, strerror(rc));
             exit(1);
         }
 

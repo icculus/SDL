@@ -1296,3 +1296,4 @@ _SDL_wcstoll
 _SDL_wcstoull
 _SDL_GetOpenHarmonySDKVersion
 _SDL_GetOpenHarmonyInternalStoragePath
+_SDL_RequestOpenHarmonyPermission
