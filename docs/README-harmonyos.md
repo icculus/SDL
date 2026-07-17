@@ -13,7 +13,7 @@ Huawei is a Chinese company, and HarmonyOS is largely serving the Chinese
 market at this time.
 
 The system uses some custom pieces, but also relies on open source software
-from outside of the project, such as musl, etc.
+from outside of the project, such as NodeJS, musl, etc.
 
 Much of the platform is open source, under the name "OpenHarmony," and Huawei's
 proprietary spin of OpenHarmony is called HarmonyOS. Huawei is the primary
@@ -29,8 +29,28 @@ with intent to only target HarmonyOS on Huawei-produced phones.
 
 ## Some basic target platform truths
 
-The C/C++ compiler is Clang. The platform triplet is "aarch64-linux-ohos"
-(other CPU architectures are possible, but this is likely the most common. The
+More or less, an app on HarmonyOS is a NodeJS process, in the same way that
+an app on Android is a Java virtual machine process. While one generally
+writes apps in Java or Kotlin for Android, HarmonyOS uses a TypeScript
+variant called ArkTS. However, like SDL on Android, we will be focusing on
+native code in C or C++, so SDL makes moves similar to its Android strategy,
+migrating from ArkTS to native code as quickly as possible and handing control
+over to a (presumably C or C++) native code app, and making it so the app can
+entirely opt out of interacting with the ArkTS layer directly.
+
+The equivalent of the Android "JNI" layer is NodeJS's NAPI interfaces. A large
+portion of the system APIs are accessible directly from OS-provided native
+libraries, so there is a lot less reason to dip back down into the ArkTS layer
+for most tasks, whereas lots of things on Android need to talk to Java-only
+interfaces to accomplish common and important tasks, even in an
+otherwise-entirely native program.
+
+The C/C++ compiler is based on Clang (you might end up using a compiler called
+"BiSheng", which is Clang with some custom optimization techniques developed
+by Huawei, but the binary is still called "clang").
+
+The platform triplet is "aarch64-linux-ohos" (other CPU architectures are
+possible, but this is likely the most common. The
 devtools mention 32-bit ARM and x86-64, too). The CMake toolchain file sets
 the variable `OHOS` (OpenHarmony OS) to "OHOS", so `if(OHOS)` works. Further,
 `CMAKE_SYSTEM_NAME` is set to "OHOS". The C preprocessor defines `__OHOS__`.
@@ -192,7 +212,7 @@ CMakeLists.txt, src, and include.
 Your app _must_ compile to a shared library named "libmain.so" ... the
 "add_library" line does this. Do not build an executable! It must be a
 shared library, due to how HarmonyOS deals with apps. When you're done
-building, you should have a libmain.so and an libSDL3.so file.
+building, you should have a libmain.so and a libSDL3.so file.
 
 
 ### Customize your project
@@ -239,8 +259,9 @@ Building your project from DevEco Studio is just a single click, but you
 can also build from the command line on macOS, Windows, or Linux.
 
 If you have everything (signing certs, the entire project structure, etc) in
-place, you can build an app from the command line. Go to the root folder of
-the project and run:
+place, you can build an app from the command line. The HarmonyOS equivalent of
+Android's `gradlew` command is `hvigorw`. Go to the root folder of the project
+and run:
 
 ```bash
 hvigorw assembleHap
@@ -325,7 +346,7 @@ However, if you build an app with a standard "main" function, SDL will notice
 this, spin a thread, and attempt to call that function from the new background
 thread, and call exit() when it returns. This _happens_ to work, at least for
 simple test cases that do rendering and touch input, but one uses this path at
-their own risk, as several important things might result unexpected race
+their own risk, as several important things might result in unexpected race
 conditions and unexpected behavior, possibly in a later version of the OS. It
 is strongly recommended that you migrate to the Main Callbacks!
 
@@ -380,7 +401,7 @@ One SDL_Window is allowed at a time and it takes the entire available display
 (like Android). Currently we only report a single display (the phone/tablet's
 screen).
 
-Touch events work. More events to come soon.
+Touch events work, and multitouch is supported. More events to come soon.
 
 
 ### Render/GPU
@@ -500,8 +521,6 @@ This is how startup works:
 
 (Exact paths might vary, and maybe this will simplify later.)
 
-- The C application _must_ use the SDL3 Main Callbacks. SDL_main.h will #error
-  out if not. (!!! FIXME: remove this limitation?).
 - The actual application entry point is in ArkTS, in the source file
   `$PROJECT/entry/src/main/ets/entryability/EntryAbility.ets`.
 - This file defines a class, EntryAbility, that extends UIAbility.
@@ -517,24 +536,25 @@ This is how startup works:
   this module initializes, we'll be able to call into SDL's C code from ArkTS
   through interfaces we defined in SDL_Init_Native_Interfaces(). This is in
   SDL/src/core/openharmony/SDL_openharmony.c. This will _also_ hook into the
-  XComponent, to register some event callbacks, and load libmain.so, which is
-  where the app's actual C code lives.
+  XComponent, to register some event callbacks.
 - When the XComponent's OnSurfaceCreated callback fires (landing in
   SDL_XComponent_OnSurfaceCreatedCallback()), we are then ready to hand control
   to the actual C application. This starts in
   SDL_OpenHarmonyMainSurfaceCreated(), which eventually lands in
   RunAppOpenHarmonyMain().
-- Here we see if libmain contains a symbol named "SDL_main", and if so, we
-  spin a thread and call into that symbol from the new thread as a standard
-  ANSI C "main" entry point, and exit() the process when it returns (which
-  looks like a crash on HarmonyOS, so please don't return.)
+- Here we load libmain.so, which is where the app's actual C code lives.
+  If we see if libmain contains a symbol named "SDL_main", we spin a thread
+  and call into that symbol from the new thread as a standard ANSI C "main"
+  entry point, and exit() the process when it returns (which looks like a
+  crash on HarmonyOS, so please don't return.)
 - If there was no symbol called "SDL_main", we look for the Main Callbacks
   symbols in libmain.so: SDL_AppInit, SDL_AppIterate, etc. If found, we will
   call libmain.so's SDL_AppInit() and respond appropriately. If not found, we
   panic and terminate the process, since we're out of options and something
   was obviously built incorrectly.
 - Later, whenever the XComponent fires its OnFrame callback, we will call
-  SDL_OpenHarmonyOnFrameCallback(), which calls libmain.so's SDL_AppIterate().
+  SDL_OpenHarmonyOnFrameCallback(), which calls libmain.so's SDL_AppIterate(),
+  if we ended up using the Main Callbacks.
 
 
 
