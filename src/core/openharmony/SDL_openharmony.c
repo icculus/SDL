@@ -28,7 +28,7 @@
 typedef enum AbilityRuntime_StartOptions AbilityRuntime_StartOptions;
 
 
-// <rawfile/raw_file.h> has functions with C++ references. Prevent raw_file_manager.h from including it, and define the parts we need here.
+// !!! FIXME: <rawfile/raw_file.h> has functions with C++ references. Prevent raw_file_manager.h from including it, and define the parts we need here.
 #define GLOBAL_RAW_FILE_H
 typedef struct RawFile RawFile;
 typedef struct RawFile64 RawFile64;
@@ -70,6 +70,7 @@ static napi_ref ability_object_ref = NULL;
 static napi_ref atmanager_ref = NULL;
 static NativeResourceManager *native_resource_mgr = NULL;
 static napi_threadsafe_function req_permissions_threadsafefn = NULL;
+static char *system_locale = NULL;
 
 int SDL_GetOpenHarmonySDKVersion(void)
 {
@@ -144,6 +145,11 @@ void SDL_DebugLogOpenHarmonyInfo(void)
         SDL_LogDebug(SDL_LOG_CATEGORY_SYSTEM, " - Distribution OS API version: %d", OH_GetDistributionOSApiVersion());
         SDL_LogDebug(SDL_LOG_CATEGORY_SYSTEM, " - Distribution OS release type: %s", OH_GetDistributionOSReleaseType());
     }
+}
+
+const char *SDL_GetOpenHarmonySystemLocale(void)
+{
+    return system_locale;
 }
 
 const char *SDL_GetOpenHarmonyInternalStoragePath(void)
@@ -395,6 +401,20 @@ static void SDL_XComponent_DispatchTouchEventCallback(OH_NativeXComponent* compo
     SDL_OpenHarmonyDispatchTouchEvent(component, window);  // this is in src/video/openharmony/SDL_openharmonyvideo.c
 }
 
+static char *CreateSDLStringFromNAPIValue(napi_env env, napi_value val)
+{
+    char *retval = NULL;
+    size_t buflen = 0;
+    if (napi_get_value_string_utf8(env, val, NULL, 0, &buflen) != napi_ok) {
+        return NULL;
+    } else if ((retval = (char *) SDL_malloc(buflen + 1)) == NULL) {
+        return NULL;
+    } else if (napi_get_value_string_utf8(env, val, retval, buflen + 1, &buflen) != napi_ok) {
+        SDL_free(retval);
+        return NULL;
+    }
+    return retval;
+}
 
 // ArkTS calls this once near startup to pass us the Ability, so we can call back into Javascript as necessary.
 static napi_value SDL_NAPI_ProvideArkTSObjects(napi_env env, napi_callback_info info)
@@ -402,7 +422,7 @@ static napi_value SDL_NAPI_ProvideArkTSObjects(napi_env env, napi_callback_info 
     SDL_assert(!native_resource_mgr);  // don't call this more than once!
 
     // we don't bother cleaning up most things in this function, because they are intended to live as long as the process.
-    #define expected_argc 2
+    #define expected_argc 3
     size_t argc = expected_argc;
     napi_value argv[expected_argc] = { NULL };
     napi_get_cb_info(env, info, &argc, argv, NULL, NULL);
@@ -415,12 +435,26 @@ static napi_value SDL_NAPI_ProvideArkTSObjects(napi_env env, napi_callback_info 
 
     napi_value ability = argv[0];
     napi_value atmanager = argv[1];
+    napi_value locale = argv[2];
     napi_create_reference(env, ability, 1, &ability_object_ref);
     napi_create_reference(env, atmanager, 1, &atmanager_ref);
 
     napi_value context = NULL; napi_get_named_property(env, ability, "context", &context);
     napi_value resourceManager = NULL; napi_get_named_property(env, context, "resourceManager", &resourceManager);
     native_resource_mgr = OH_ResourceManager_InitNativeResourceManager(env, resourceManager);
+
+    napi_value language = NULL; napi_get_named_property(env, locale, "language", &language);
+    napi_value region = NULL; napi_get_named_property(env, locale, "region", &region);
+    char *language_sdl = CreateSDLStringFromNAPIValue(env, language);
+    char *region_sdl = CreateSDLStringFromNAPIValue(env, region);
+
+    if (language_sdl && region_sdl) {
+        if (SDL_asprintf(&system_locale, "%s_%s", language_sdl, region_sdl) < 0) {
+            system_locale = NULL;
+        }
+    }
+    SDL_free(language_sdl);
+    SDL_free(region_sdl);
 
     napi_value name = NULL; napi_create_string_utf8(env, "SDL_RequestOpenHarmonyPermission", NAPI_AUTO_LENGTH, &name);
     napi_create_threadsafe_function(env, NULL, NULL, name, 0, 1, NULL, NULL, NULL, CallJSRequestPermissions, &req_permissions_threadsafefn);

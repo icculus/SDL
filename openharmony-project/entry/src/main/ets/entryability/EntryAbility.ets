@@ -1,6 +1,7 @@
 import { abilityAccessCtrl, AbilityConstant, ConfigurationConstant, UIAbility, Want } from '@kit.AbilityKit';
 import { hilog } from '@kit.PerformanceAnalysisKit';
 import { window } from '@kit.ArkUI';
+import { intl } from '@kit.LocalizationKit';
 import sdl from 'libSDL3.so';
 
 const DOMAIN = 0x0000;
@@ -13,8 +14,7 @@ export default class EntryAbility extends UIAbility {
     //  out of sync.
     //
     // ONLY EVER ADD PARAMETERS TO THIS FUNCTION CALL. THE C CODE WILL ABORT IF IT DOESN'T GET THE EXACT NUMBER IT EXPECTS.
-    sdl.provideArkTSObjects(this, abilityAccessCtrl.createAtManager());
-
+    sdl.provideArkTSObjects(this, abilityAccessCtrl.createAtManager(), new intl.Locale());
 
     try {
       this.context.getApplicationContext().setColorMode(ConfigurationConstant.ColorMode.COLOR_MODE_NOT_SET);

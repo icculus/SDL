@@ -457,6 +457,13 @@ on a phone.
 The Time and Timer subsystems use the usual Unix implementations and work fine.
 
 
+### Locale
+
+SDL_GetPreferredLocales() returns a single locale, as specified in System
+Preferences -> "System" -> "Language & Region". In my case, I have it set to
+English/United States, so SDL reports "en_US".
+
+
 ### STILL TODO
 
 - Assert
@@ -465,7 +472,6 @@ The Time and Timer subsystems use the usual Unix implementations and work fine.
 - Haptic
 - HIDAPI
 - Joystick
-- Locale
 - Misc
 - Process
 - Sensor

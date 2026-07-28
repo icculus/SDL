@@ -1800,13 +1800,11 @@ endif()
     set(HAVE_SDL_POWER TRUE)
   endif()
 
-if (False)   # !!! FIXME
   sdl_glob_sources(
     "${SDL3_SOURCE_DIR}/src/locale/openharmony/*.c"
     "${SDL3_SOURCE_DIR}/src/locale/openharmony/*.h"
   )
   set(HAVE_SDL_LOCALE TRUE)
-endif()
 
   set(SDL_TIME_UNIX 1)
   sdl_glob_sources(
