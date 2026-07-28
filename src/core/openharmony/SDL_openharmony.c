@@ -401,6 +401,16 @@ static void SDL_XComponent_DispatchTouchEventCallback(OH_NativeXComponent* compo
     SDL_OpenHarmonyDispatchTouchEvent(component, window);  // this is in src/video/openharmony/SDL_openharmonyvideo.c
 }
 
+static void SDL_XComponent_DispatchMouseEventCallback(OH_NativeXComponent* component, void* window)
+{
+    SDL_OpenHarmonyDispatchMouseEvent(component, window);  // this is in src/video/openharmony/SDL_openharmonyvideo.c
+}
+
+static void SDL_XComponent_DispatchHoverEventCallback(OH_NativeXComponent* component, bool isHover)
+{
+    // !!! FIXME: use this?
+}
+
 static char *CreateSDLStringFromNAPIValue(napi_env env, napi_value val)
 {
     char *retval = NULL;
@@ -493,6 +503,12 @@ static napi_value SDL_Init_Native_Interfaces(napi_env env, napi_value exports)
     };
     OH_NativeXComponent_RegisterCallback(nativeXComponent, &xcomp_callbacks);
     OH_NativeXComponent_RegisterOnFrameCallback(nativeXComponent, SDL_XComponent_OnFrameCallback);
+
+    static OH_NativeXComponent_MouseEvent_Callback xcomp_mouse_callbacks = {
+        .DispatchMouseEvent = SDL_XComponent_DispatchMouseEventCallback,
+        .DispatchHoverEvent = SDL_XComponent_DispatchHoverEventCallback
+    };
+    OH_NativeXComponent_RegisterMouseEventCallback(nativeXComponent, &xcomp_mouse_callbacks);
 
     return exports;
 }

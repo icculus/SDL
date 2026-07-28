@@ -124,10 +124,8 @@ void SDL_OpenHarmonyDispatchTouchEvent(void *component, void *window)
         return;
     }
 
-#if 0
-wefrewr
+#if 0  // !!! FIXME: see if Pen events are useful here.
     switch (tooltype) {
-
     /** Indicates invalid tool type. */
     OH_NATIVEXCOMPONENT_TOOL_TYPE_UNKNOWN = 0,
     /** Indicates a finger. */
@@ -146,13 +144,46 @@ wefrewr
     OH_NATIVEXCOMPONENT_TOOL_TYPE_MOUSE,
     /** Indicates a lens. */
     OH_NATIVEXCOMPONENT_TOOL_TYPE_LENS,
-
-    OH_NativeXComponent* component, uint32_t pointIndex, OH_NativeXComponent_TouchPointToolType* toolType)
-wefwef
+    }
 #endif
-
 }
 
+void SDL_OpenHarmonyDispatchMouseEvent(void *component, void *window)
+{
+    OH_NativeXComponent *xcomponent = (OH_NativeXComponent *) component;
+    OH_NativeXComponent_MouseEvent event;
+    if (OH_NativeXComponent_GetMouseEvent(xcomponent, window, &event) != OH_NATIVEXCOMPONENT_RESULT_SUCCESS) {
+        return;  // oh well.
+    }
+
+#if 1
+    SDL_Log("MOUSE EVENT! screenX=%f screenY=%f x=%f y=%f timestamp=%lld action=%d button=0x%X", event.screenX, event.screenY, event.x, event.y, (long long) event.timestamp, (int) event.action, (unsigned int) event.button);
+#endif
+
+    const SDL_MouseID mouseid = SDL_DEFAULT_MOUSE_ID;  // !!! FIXME: should this be SDL_GLOBAL_MOUSE_ID or SDL_DEFAULT_MOUSE_ID?
+    bool down = false;
+    switch (event.action) {
+        case OH_NATIVEXCOMPONENT_MOUSE_PRESS:
+            down = true;
+            SDL_FALLTHROUGH;
+        case OH_NATIVEXCOMPONENT_MOUSE_RELEASE:
+            // these are bitmasks, so while I _assume_ you won't see more than one button per event, check them all separately, just in case.
+            #define CHECK_BUTTON(ohos, sdl) if (event.button & OH_NATIVEXCOMPONENT_##ohos##_BUTTON) { SDL_SendMouseButton((Uint64) event.timestamp, OPENHARMONY_Window, mouseid, SDL_BUTTON_##sdl, down); }
+            CHECK_BUTTON(LEFT, LEFT);
+            CHECK_BUTTON(RIGHT, RIGHT);
+            CHECK_BUTTON(MIDDLE, MIDDLE);
+            CHECK_BUTTON(BACK, X1);
+            CHECK_BUTTON(FORWARD, X2);
+            #undef CHECK_BUTTON
+            break;
+
+        case OH_NATIVEXCOMPONENT_MOUSE_MOVE:
+            SDL_SendMouseMotion((Uint64) event.timestamp, OPENHARMONY_Window, mouseid, false, event.x, event.y);
+            break;
+
+        default: break;  // nothing to do?
+    }
+}
 
 void OPENHARMONY_InitEvents(void)
 {

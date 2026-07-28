@@ -401,7 +401,8 @@ One SDL_Window is allowed at a time and it takes the entire available display
 (like Android). Currently we only report a single display (the phone/tablet's
 screen).
 
-Touch events work, and multitouch is supported. More events to come soon.
+Touch events work, and multitouch is supported. Mouse events (from an external,
+physical mouse) are supported. More events to come soon.
 
 
 ### Render/GPU
