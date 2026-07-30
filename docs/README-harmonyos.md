@@ -465,6 +465,13 @@ Preferences -> "System" -> "Language & Region". In my case, I have it set to
 English/United States, so SDL reports "en_US".
 
 
+### Misc
+
+SDL_OpenURL() works, and will launch the appropriate app ("ability") for
+whatever protocol is specified: "https://", etc, URLs will bring up a web
+browser, custom URL schemes can launch specific apps, etc.
+
+
 ### STILL TODO
 
 - Assert
@@ -473,7 +480,6 @@ English/United States, so SDL reports "en_US".
 - Haptic
 - HIDAPI
 - Joystick
-- Misc
 - Process
 - Sensor
 - Storage

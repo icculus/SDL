@@ -70,6 +70,7 @@ static napi_ref ability_object_ref = NULL;
 static napi_ref atmanager_ref = NULL;
 static NativeResourceManager *native_resource_mgr = NULL;
 static napi_threadsafe_function req_permissions_threadsafefn = NULL;
+static napi_threadsafe_function open_url_threadsafefn = NULL;
 static char *system_locale = NULL;
 
 int SDL_GetOpenHarmonySDKVersion(void)
@@ -342,7 +343,7 @@ static void CallJSRequestPermissions(napi_env env, napi_value js_callback, void 
     napi_value str = NULL; napi_create_string_utf8(env, data->permission, NAPI_AUTO_LENGTH, &str);
     napi_set_element(env, args[1], 0, str);
     napi_create_function(env, NULL, 0, SDL_NAPI_RequestPermissionResult, data, &args[2]);
-    napi_value rc = NULL; napi_call_function(env, NULL, fn, 3, args, &rc);
+    napi_value rc = NULL; napi_call_function(env, atmanager, fn, SDL_arraysize(args), args, &rc);
     // okay, assuming this worked out, we'll get a callback to SDL_NAPI_RequestPermissionResult() at some point in the future (if we haven't already).
 }
 
@@ -369,6 +370,47 @@ bool SDL_RequestOpenHarmonyPermission(const char *permission, SDL_RequestOpenHar
     return (napi_call_threadsafe_function(req_permissions_threadsafefn, data, napi_tsfn_nonblocking) == napi_ok);
 }
 
+// AsyncCallback when CallJSOpenURL() finishes its work.
+static napi_value SDL_NAPI_OpenURLResult(napi_env env, napi_callback_info info)
+{
+SDL_Log("OpenURL result called!");
+    char **url = NULL;
+    size_t argc = 1;
+    napi_value argv[1];
+    napi_get_cb_info(env, info, &argc, argv, NULL, (void **) &url);
+    SDL_free(url);
+    napi_value retval = NULL; napi_get_undefined(env, &retval);
+    return retval;
+}
+
+// this function is called from the main Javascript thread when it's convenient to fire it.
+static void CallJSOpenURL(napi_env env, napi_value js_callback, void *context, void *userdata)
+{
+    char *url = (char *) userdata;
+    napi_value ability = NULL; napi_get_reference_value(env, ability_object_ref, &ability);
+    napi_value abcontext = NULL; napi_get_named_property(env, ability, "context", &abcontext);
+    napi_value startAbility = NULL; napi_get_named_property(env, abcontext, "startAbility", &startAbility);
+    napi_value want = NULL; napi_create_object(env, &want);
+    napi_value uri = NULL; napi_create_string_utf8(env, url, NAPI_AUTO_LENGTH, &uri);
+    napi_set_named_property(env, want, "uri", uri);
+    SDL_free(url);
+    napi_value fn = NULL; napi_create_function(env, NULL, 0, SDL_NAPI_OpenURLResult, url, &fn);
+    napi_value args[2] = { want, fn };
+    napi_value rc = NULL; napi_call_function(env, abcontext, startAbility, SDL_arraysize(args), args, &rc);
+}
+
+bool SDL_OpenHarmonyOpenURL(const char *url)
+{
+    char *data = NULL;
+    if (!url) {
+        return SDL_InvalidParamError("url");
+    } else if (!ability_object_ref) {
+        return SDL_SetError("Ability not initialized");
+    } else if ((data = SDL_strdup(url)) == NULL) {
+        return false;
+    }
+    return (napi_call_threadsafe_function(open_url_threadsafefn, data, napi_tsfn_nonblocking) == napi_ok);
+}
 
 
 // Callbacks into our custom XComponent.
@@ -466,8 +508,11 @@ static napi_value SDL_NAPI_ProvideArkTSObjects(napi_env env, napi_callback_info 
     SDL_free(language_sdl);
     SDL_free(region_sdl);
 
-    napi_value name = NULL; napi_create_string_utf8(env, "SDL_RequestOpenHarmonyPermission", NAPI_AUTO_LENGTH, &name);
-    napi_create_threadsafe_function(env, NULL, NULL, name, 0, 1, NULL, NULL, NULL, CallJSRequestPermissions, &req_permissions_threadsafefn);
+    napi_value permname = NULL; napi_create_string_utf8(env, "SDL_RequestOpenHarmonyPermission", NAPI_AUTO_LENGTH, &permname);
+    napi_create_threadsafe_function(env, NULL, NULL, permname, 0, 1, NULL, NULL, NULL, CallJSRequestPermissions, &req_permissions_threadsafefn);
+
+    napi_value urlname = NULL; napi_create_string_utf8(env, "SDL_OpenHarmonyOpenURL", NAPI_AUTO_LENGTH, &urlname);
+    napi_create_threadsafe_function(env, NULL, NULL, urlname, 0, 1, NULL, NULL, NULL, CallJSOpenURL, &open_url_threadsafefn);
 
     return NULL;
 }

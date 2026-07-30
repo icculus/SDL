@@ -20,14 +20,14 @@
 */
 #include "SDL_internal.h"
 
-#if defined(SDL_PLATFORM_ANDROID)
+#if defined(SDL_PLATFORM_OPENHARMONY)
 
 #include "../SDL_sysurl.h"
-#include "../../core/android/SDL_android.h"
+#include "../../core/openharmony/SDL_openharmony.h"
 
 bool SDL_SYS_OpenURL(const char *url)
 {
-    return Android_JNI_OpenURL(url);
+    return SDL_OpenHarmonyOpenURL(url);
 }
 
 #endif

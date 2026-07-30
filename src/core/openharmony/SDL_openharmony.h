@@ -33,6 +33,8 @@ extern "C" {
 void SDL_DebugLogOpenHarmonyInfo(void);
 const char *SDL_GetOpenHarmonySystemLocale(void);
 
+bool SDL_OpenHarmonyOpenURL(const char *url);
+
 bool SDL_IsOpenHarmonyPhone(void);
 bool SDL_IsOpenHarmonyTablet(void);
 bool SDL_IsOpenHarmonyTV(void);
