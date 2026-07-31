@@ -73,6 +73,7 @@ static NativeResourceManager *native_resource_mgr = NULL;
 static napi_threadsafe_function req_permissions_threadsafefn = NULL;
 static napi_threadsafe_function open_url_threadsafefn = NULL;
 static napi_threadsafe_function change_sysbars_threadsafefn = NULL;
+static napi_threadsafe_function change_screensaver_threadsafefn = NULL;
 static char *system_locale = NULL;
 
 int SDL_GetOpenHarmonySDKVersion(void)
@@ -458,6 +459,32 @@ bool SDL_OpenHarmonyToggleSystemBars(bool status_bar, bool navigation_bar)
     return (napi_call_threadsafe_function(change_sysbars_threadsafefn, (void *) flags, napi_tsfn_nonblocking) == napi_ok);
 }
 
+// AsyncCallback when CallJSChangeScreenSaver() finishes its work.
+static napi_value SDL_NAPI_ChangeScreenSaverResult(napi_env env, napi_callback_info info)
+{
+    napi_value retval = NULL; napi_get_undefined(env, &retval);
+    return retval;
+}
+
+// this function is called from the main Javascript thread when it's convenient to fire it.
+static void CallJSChangeScreenSaver(napi_env env, napi_value js_callback, void *context, void *userdata)
+{
+    napi_value enable = NULL; napi_get_boolean(env, (userdata != NULL), &enable);
+    napi_value fn = NULL; napi_create_function(env, NULL, 0, SDL_NAPI_ChangeScreenSaverResult, NULL, &fn);
+    napi_value window = NULL; napi_get_reference_value(env, window_ref, &window);
+    napi_value setWindowKeepScreenOn = NULL; napi_get_named_property(env, window, "setWindowKeepScreenOn", &setWindowKeepScreenOn);
+    napi_value args[2] = { enable, fn };
+    napi_value rc = NULL; napi_call_function(env, window, setWindowKeepScreenOn, SDL_arraysize(args), args, &rc);
+}
+
+bool SDL_OpenHarmonyChangeScreenSaver(bool enable)
+{
+    if (!window_ref) {
+        return SDL_SetError("Window not initialized");
+    }
+    return (napi_call_threadsafe_function(change_screensaver_threadsafefn, (void *) (enable ? 0x1 : 0x0), napi_tsfn_nonblocking) == napi_ok);
+}
+
 
 // Callbacks into our custom XComponent.
 static void SDL_XComponent_OnSurfaceCreatedCallback(OH_NativeXComponent* component, void* window)
@@ -564,6 +591,9 @@ static napi_value SDL_NAPI_ProvideArkTSObjects(napi_env env, napi_callback_info 
 
     napi_value sysbarsname = NULL; napi_create_string_utf8(env, "SDL_OpenHarmonyChangeSystemBars", NAPI_AUTO_LENGTH, &sysbarsname);
     napi_create_threadsafe_function(env, NULL, NULL, sysbarsname, 0, 1, NULL, NULL, NULL, CallJSChangeSysBars, &change_sysbars_threadsafefn);
+
+    napi_value screensavername = NULL; napi_create_string_utf8(env, "SDL_OpenHarmonyChangeScreenSaver", NAPI_AUTO_LENGTH, &screensavername);
+    napi_create_threadsafe_function(env, NULL, NULL, screensavername, 0, 1, NULL, NULL, NULL, CallJSChangeScreenSaver, &change_screensaver_threadsafefn);
 
     return NULL;
 }

@@ -91,8 +91,12 @@ void SDL_OpenHarmonyVideoSurfaceCreated(void *component, void *window)
     native_window = window;
 }
 
+static bool OPENHARMONY_SuspendScreenSaver(SDL_VideoDevice *_this)
+{
+    return SDL_OpenHarmonyChangeScreenSaver(!_this->suspend_screensaver);
+}
 
-bool OPENHARMONY_VideoInit(SDL_VideoDevice *_this)
+static bool OPENHARMONY_VideoInit(SDL_VideoDevice *_this)
 {
     SDL_VideoData *videodata = _this->internal;
 
@@ -240,10 +244,8 @@ static SDL_VideoDevice *OPENHARMONY_CreateDevice(void)
     device->Vulkan_DestroySurface = OPENHARMONY_Vulkan_DestroySurface;
 #endif
 
-#if 0  // !!! FIXME
     // Screensaver
     device->SuspendScreenSaver = OPENHARMONY_SuspendScreenSaver;
-#endif
 
     device->PumpEvents = OPENHARMONY_PumpEvents;
 
