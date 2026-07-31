@@ -131,57 +131,15 @@ void OPENHARMONY_SetWindowTitle(SDL_VideoDevice *_this, SDL_Window *window)
 
 SDL_FullscreenResult OPENHARMONY_SetWindowFullscreen(SDL_VideoDevice *_this, SDL_Window *window, SDL_VideoDisplay *display, SDL_FullscreenOp fullscreen)
 {
-#if 0  // !!! FIXME
-    Android_LockActivityMutex();
-
     if (window == OPENHARMONY_Window) {
-        SDL_WindowData *data;
-        int old_w, old_h, new_w, new_h;
-
-        // If the window is being destroyed don't change visible state
-        if (!window->is_destroying) {
-            Android_JNI_SetWindowStyle(fullscreen);
+        const bool show_bars = (fullscreen == SDL_FULLSCREEN_OP_LEAVE);
+        if (!SDL_OpenHarmonyToggleSystemBars(show_bars, show_bars)) {
+            return SDL_FULLSCREEN_FAILED;
         }
-
-        /* Ensure our size matches reality after we've executed the window style change.
-         *
-         * It is possible that we've set width and height to the full-size display, but on
-         * Samsung DeX or Chromebooks or other windowed Android environments, our window may
-         * still not be the full display size.
-         */
-        if (!SDL_IsDeXMode() && !SDL_IsChromebook()) {
-            goto endfunction;
-        }
-
-        data = window->internal;
-        if (!data || !data->native_window) {
-            if (data && !data->native_window) {
-                SDL_SetError("Missing native window");
-            }
-            goto endfunction;
-        }
-
-        old_w = window->w;
-        old_h = window->h;
-
-        new_w = ANativeWindow_getWidth(data->native_window);
-        new_h = ANativeWindow_getHeight(data->native_window);
-
-        if (new_w < 0 || new_h < 0) {
-            SDL_SetError("ANativeWindow_getWidth/Height() fails");
-        }
-
-        if (old_w != new_w || old_h != new_h) {
-            SDL_SendWindowEvent(window, SDL_EVENT_WINDOW_RESIZED, new_w, new_h);
-        }
+        // !!! FIXME: make sure this causes an XComponent resize event, that we can pick up later.
+        return SDL_FULLSCREEN_PENDING;
     }
-
-endfunction:
-
-    Android_UnlockActivityMutex();
-#endif
-
-    return SDL_FULLSCREEN_SUCCEEDED;
+    return SDL_FULLSCREEN_FAILED;
 }
 
 void OPENHARMONY_MinimizeWindow(SDL_VideoDevice *_this, SDL_Window *window)

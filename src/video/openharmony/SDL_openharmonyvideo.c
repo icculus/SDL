@@ -78,6 +78,10 @@ void SDL_OpenHarmonyVideoSurfaceDestroyed(void *component, void *window)
 
 void SDL_OpenHarmonyVideoSurfaceChanged(void *component, void *window)
 {
+    SDL_assert(native_xcomponent == ((OH_NativeXComponent *) component));  // right now we assume one surface, one window.
+    uint64_t w, h;
+    OH_NativeXComponent_GetXComponentSize(native_xcomponent, native_window, &w, &h);
+    SDL_SendWindowEvent(OPENHARMONY_Window, SDL_EVENT_WINDOW_RESIZED, (int) w, (int) h);
 }
 
 void SDL_OpenHarmonyVideoSurfaceCreated(void *component, void *window)
