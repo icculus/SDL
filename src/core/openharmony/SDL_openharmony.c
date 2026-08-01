@@ -515,11 +515,8 @@ static void CallJSOpenURL(napi_env env, napi_value js_callback, void *context, v
     char *url = (char *) userdata;
     napi_value ability = GetNapiRefValue(env, ability_object_ref);
     napi_value abcontext = GetNapiObjField(env, ability, "context");
-    napi_value want = CreateNapiObject(env);
-    SetNapiObjField(env, want, "uri", CreateNapiString(env, url));
-    napi_value args[] = { want, CreateNapiFunction(env, NULL, SDL_JS_OpenURLResult, url) };
-    CallNapiMethod(env, abcontext, "startAbility", SDL_arraysize(args), args);
-    SDL_free(url);
+    napi_value args[] = { CreateNapiString(env, url), CreateNapiFunction(env, NULL, SDL_JS_OpenURLResult, url) };
+    CallNapiMethod(env, abcontext, "openLink", SDL_arraysize(args), args);
 }
 
 bool SDL_OpenHarmonyOpenURL(const char *url)
