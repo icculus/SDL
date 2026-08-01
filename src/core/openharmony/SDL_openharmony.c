@@ -567,6 +567,9 @@ static napi_value SDL_NAPI_LoadContentResult(napi_env env, napi_callback_info in
 static napi_value SDL_NAPI_UIAbilityOnDestroy(napi_env env, napi_callback_info info)
 {
     OH_LOG_Print(LOG_APP, LOG_FATAL, LOG_DOMAIN, "SDL/STARTUP", "%{public}s", SDL_FUNCTION);
+    SDL_FlushEvents(SDL_EVENT_FIRST, SDL_EVENT_LAST);
+    SDL_SendQuit();
+    SDL_OnApplicationWillTerminate();
     napi_value retval = NULL; napi_get_undefined(env, &retval);
     return retval;
 }
@@ -575,6 +578,8 @@ static napi_value SDL_NAPI_UIAbilityOnDestroy(napi_env env, napi_callback_info i
 static napi_value SDL_NAPI_UIAbilityOnForeground(napi_env env, napi_callback_info info)
 {
     OH_LOG_Print(LOG_APP, LOG_FATAL, LOG_DOMAIN, "SDL/STARTUP", "%{public}s", SDL_FUNCTION);
+    SDL_OnApplicationWillEnterForeground();
+    SDL_OnApplicationDidEnterForeground();
     napi_value retval = NULL; napi_get_undefined(env, &retval);
     return retval;
 }
@@ -583,6 +588,8 @@ static napi_value SDL_NAPI_UIAbilityOnForeground(napi_env env, napi_callback_inf
 static napi_value SDL_NAPI_UIAbilityOnBackground(napi_env env, napi_callback_info info)
 {
     OH_LOG_Print(LOG_APP, LOG_FATAL, LOG_DOMAIN, "SDL/STARTUP", "%{public}s", SDL_FUNCTION);
+    SDL_OnApplicationWillEnterBackground();
+    SDL_OnApplicationDidEnterBackground();
     napi_value retval = NULL; napi_get_undefined(env, &retval);
     return retval;
 }
@@ -619,6 +626,24 @@ static napi_value SDL_NAPI_UIAbilityOnWindowStageDestroy(napi_env env, napi_call
     return retval;
 }
 
+// Our native version of UIAbility.onMemoryLevel().
+static napi_value SDL_NAPI_UIAbilityOnMemoryLevel(napi_env env, napi_callback_info info)
+{
+    OH_LOG_Print(LOG_APP, LOG_FATAL, LOG_DOMAIN, "SDL/STARTUP", "%{public}s", SDL_FUNCTION);
+
+    size_t argc = 1;
+    napi_value level = NULL;
+    napi_get_cb_info(env, info, &argc, &level, NULL, NULL);
+    int32_t level32 = -1; napi_get_value_int32(env, level, &level32);
+
+    if (level == 2 /*MEMORY_LEVEL_CRITICAL*/) {
+        SDL_OnApplicationDidReceiveMemoryWarning();
+    }
+
+    napi_value retval = NULL; napi_get_undefined(env, &retval);
+    return retval;
+}
+
 static void TakeOverUIAbility(napi_env env, napi_value ability)
 {
     napi_value constructor = NULL; napi_get_named_property(env, ability, "constructor", &constructor);
@@ -629,6 +654,7 @@ static void TakeOverUIAbility(napi_env env, napi_value ability)
     fn = NULL; napi_create_function(env, "onBackground", NAPI_AUTO_LENGTH, SDL_NAPI_UIAbilityOnBackground, NULL, &fn); napi_set_named_property(env, prototype, "onBackground", fn);
     fn = NULL; napi_create_function(env, "onWindowStageCreate", NAPI_AUTO_LENGTH, SDL_NAPI_UIAbilityOnWindowStageCreate, NULL, &fn); napi_set_named_property(env, prototype, "onWindowStageCreate", fn);
     fn = NULL; napi_create_function(env, "onWindowStageDestroy", NAPI_AUTO_LENGTH, SDL_NAPI_UIAbilityOnWindowStageDestroy, NULL, &fn); napi_set_named_property(env, prototype, "onWindowStageDestroy", fn);
+    fn = NULL; napi_create_function(env, "onMemoryLevel", NAPI_AUTO_LENGTH, SDL_NAPI_UIAbilityOnMemoryLevel, NULL, &fn); napi_set_named_property(env, prototype, "onMemoryLevel", fn);
 }
 
 // ArkTS calls this once near startup to pass us the Ability, so we can call back into Javascript as necessary.
