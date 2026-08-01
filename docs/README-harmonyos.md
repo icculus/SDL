@@ -536,20 +536,31 @@ This is how startup works:
 
 - The actual application entry point is in ArkTS, in the source file
   `$PROJECT/entry/src/main/ets/entryability/EntryAbility.ets`.
-- This file defines a class, EntryAbility, that extends UIAbility.
-- EntryAbility has an overridden method named onWindowStageCreate. When this
-  runs, the system is ready for the app to display to the screen. This
-  method calls `windowStage.loadContent('pages/Index', ...)`.
-- This causes the app to load `$PROJECT/entry/src/main/ets/pages/Index.ets`.
-- Index.ets specifies a layout for the window/view/whatever. We simply have a
-  single row and column containing a single "XComponent" which is more or
-  less a UI widget backed by native code.
+- This file defines a class, EntryAbility, that extends UIAbility, and
+  also imports the native SDL library.
 - By now, libSDL3.so has been loaded. In a shared library constructor named
   SDL_RegisterNativeInterfaces, it uses NAPI to register a native module. Once
   this module initializes, we'll be able to call into SDL's C code from ArkTS
   through interfaces we defined in SDL_Init_Native_Interfaces(). This is in
-  SDL/src/core/openharmony/SDL_openharmony.c. This will _also_ hook into the
-  XComponent, to register some event callbacks.
+  SDL/src/core/openharmony/SDL_openharmony.c. This will _also_ hook into
+  XComponent's API, to register some event callbacks.
+- EntryAbility has an overridden method named onCreate. When this
+  runs, the app ("Ability" in HarmonyOS terms) is starting up. This function
+  calls into the sdl module we registered to hand it a few objects (including
+  the EntryAbility instance, and some small things that are trivial to create
+  in ArkTS.
+- SDL, now in native code, will save off those objects as appropriate, and
+  also monkey-patch EntryAbility, so that it now has several overridden
+  methods that only exist in native code. This lets us deal with ArkTS-only
+  interfaces on EntryAbility that the system intends to interact with, without
+  providing any ArkTS scripting for them.
+- EntryAbility now has an overridden method named onWindowStageCreate. When this
+  runs, the system is ready for the app to display to the screen. This
+  method, in C, calls `windowStage.loadContent('pages/Index', ...)`.
+- This causes the app to load `$PROJECT/entry/src/main/ets/pages/Index.ets`.
+- Index.ets specifies a layout for the window/view/whatever. We simply have a
+  single row and column containing a single "XComponent" which is more or
+  less a UI widget backed by native code.
 - When the XComponent's OnSurfaceCreated callback fires (landing in
   SDL_XComponent_OnSurfaceCreatedCallback()), we are then ready to hand control
   to the actual C application. This starts in

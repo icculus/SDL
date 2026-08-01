@@ -22,6 +22,8 @@
 
 #ifdef SDL_PLATFORM_OPENHARMONY
 
+#include "../../events/SDL_events_c.h"
+
 // !!! FIXME: work around some C++isms that leaked into OpenHarmony headers.
 // !!! FIXME: HACK to prevent <AbilityKit/ability_runtime/start_options.h> from including. It has '&' instead of '*' for some args, which suggests it's only been tested with C++.
 #define ABILITY_RUNTIME_START_OPTIONS_H
@@ -541,13 +543,101 @@ static char *CreateSDLStringFromNAPIValue(napi_env env, napi_value val)
     return retval;
 }
 
+// Called when windowStage.loadContent finishes.
+static napi_value SDL_NAPI_LoadContentResult(napi_env env, napi_callback_info info)
+{
+    OH_LOG_Print(LOG_APP, LOG_FATAL, LOG_DOMAIN, "SDL/STARTUP", "%{public}s", SDL_FUNCTION);
+    size_t argc = 1;
+    napi_value err = NULL;
+    napi_get_cb_info(env, info, &argc, &err, NULL, NULL);
+    napi_value code = NULL; napi_get_named_property(env, err, "code", &code);
+    int32_t code32 = -1; napi_get_value_int32(env, code, &code32);
+    
+    if (code32 != 0) {
+        OH_LOG_Print(LOG_APP, LOG_FATAL, LOG_DOMAIN, "SDL/STARTUP", "Failed to load the content page! Aborting!");
+        exit(1);
+    }
+    OH_LOG_Print(LOG_APP, LOG_FATAL, LOG_DOMAIN, "SDL/STARTUP", "Succeeded in loading the content page. Startup may now continue.");
+
+    napi_value retval = NULL; napi_get_undefined(env, &retval);
+    return retval;
+}
+
+// Our native version of UIAbility.onDestroy().
+static napi_value SDL_NAPI_UIAbilityOnDestroy(napi_env env, napi_callback_info info)
+{
+    OH_LOG_Print(LOG_APP, LOG_FATAL, LOG_DOMAIN, "SDL/STARTUP", "%{public}s", SDL_FUNCTION);
+    napi_value retval = NULL; napi_get_undefined(env, &retval);
+    return retval;
+}
+
+// Our native version of UIAbility.onForeground().
+static napi_value SDL_NAPI_UIAbilityOnForeground(napi_env env, napi_callback_info info)
+{
+    OH_LOG_Print(LOG_APP, LOG_FATAL, LOG_DOMAIN, "SDL/STARTUP", "%{public}s", SDL_FUNCTION);
+    napi_value retval = NULL; napi_get_undefined(env, &retval);
+    return retval;
+}
+
+// Our native version of UIAbility.onBackround().
+static napi_value SDL_NAPI_UIAbilityOnBackground(napi_env env, napi_callback_info info)
+{
+    OH_LOG_Print(LOG_APP, LOG_FATAL, LOG_DOMAIN, "SDL/STARTUP", "%{public}s", SDL_FUNCTION);
+    napi_value retval = NULL; napi_get_undefined(env, &retval);
+    return retval;
+}
+
+// Our native version of UIAbility.onWindowStageCreate().
+static napi_value SDL_NAPI_UIAbilityOnWindowStageCreate(napi_env env, napi_callback_info info)
+{
+    // grab the window object, load "pages/Index" to continue startup.
+    OH_LOG_Print(LOG_APP, LOG_FATAL, LOG_DOMAIN, "SDL/STARTUP", "%{public}s", SDL_FUNCTION);
+    size_t argc = 1;
+    napi_value self = NULL;
+    napi_value windowStage = NULL;
+    napi_get_cb_info(env, info, &argc, &windowStage, &self, NULL);
+
+    napi_value getMainWindowSync = NULL; napi_get_named_property(env, windowStage, "getMainWindowSync", &getMainWindowSync);
+    napi_value window = NULL; napi_call_function(env, windowStage, getMainWindowSync, 0, NULL, &window);
+    napi_create_reference(env, window, 1, &window_ref);
+
+    napi_value loadContent = NULL; napi_get_named_property(env, windowStage, "loadContent", &loadContent);
+    napi_value pagesIndexStr = NULL; napi_create_string_utf8(env, "pages/Index", NAPI_AUTO_LENGTH, &pagesIndexStr);
+    napi_value cb = NULL; napi_create_function(env, NULL, 0,  SDL_NAPI_LoadContentResult, NULL, &cb);
+    napi_value args[2] = { pagesIndexStr, cb };
+    napi_value rc = NULL; napi_call_function(env, windowStage, loadContent, SDL_arraysize(args), args, &rc);
+
+    napi_value retval = NULL; napi_get_undefined(env, &retval);
+    return retval;
+}
+
+// Our native version of UIAbility.onWindowStageDestroy().
+static napi_value SDL_NAPI_UIAbilityOnWindowStageDestroy(napi_env env, napi_callback_info info)
+{
+    OH_LOG_Print(LOG_APP, LOG_FATAL, LOG_DOMAIN, "SDL/STARTUP", "%{public}s", SDL_FUNCTION);
+    napi_value retval = NULL; napi_get_undefined(env, &retval);
+    return retval;
+}
+
+static void TakeOverUIAbility(napi_env env, napi_value ability)
+{
+    napi_value constructor = NULL; napi_get_named_property(env, ability, "constructor", &constructor);
+    napi_value prototype = NULL; napi_get_named_property(env, constructor, "prototype", &prototype);
+    napi_value fn;
+    fn = NULL; napi_create_function(env, "onDestroy", NAPI_AUTO_LENGTH, SDL_NAPI_UIAbilityOnDestroy, NULL, &fn); napi_set_named_property(env, prototype, "onDestroy", fn);
+    fn = NULL; napi_create_function(env, "onForeground", NAPI_AUTO_LENGTH, SDL_NAPI_UIAbilityOnForeground, NULL, &fn); napi_set_named_property(env, prototype, "onForeground", fn);
+    fn = NULL; napi_create_function(env, "onBackground", NAPI_AUTO_LENGTH, SDL_NAPI_UIAbilityOnBackground, NULL, &fn); napi_set_named_property(env, prototype, "onBackground", fn);
+    fn = NULL; napi_create_function(env, "onWindowStageCreate", NAPI_AUTO_LENGTH, SDL_NAPI_UIAbilityOnWindowStageCreate, NULL, &fn); napi_set_named_property(env, prototype, "onWindowStageCreate", fn);
+    fn = NULL; napi_create_function(env, "onWindowStageDestroy", NAPI_AUTO_LENGTH, SDL_NAPI_UIAbilityOnWindowStageDestroy, NULL, &fn); napi_set_named_property(env, prototype, "onWindowStageDestroy", fn);
+}
+
 // ArkTS calls this once near startup to pass us the Ability, so we can call back into Javascript as necessary.
 static napi_value SDL_NAPI_ProvideArkTSObjects(napi_env env, napi_callback_info info)
 {
     SDL_assert(!native_resource_mgr);  // don't call this more than once!
 
     // we don't bother cleaning up most things in this function, because they are intended to live as long as the process.
-    #define expected_argc 4
+    #define expected_argc 3
     size_t argc = expected_argc;
     napi_value argv[expected_argc] = { NULL };
     napi_get_cb_info(env, info, &argc, argv, NULL, NULL);
@@ -561,20 +651,20 @@ static napi_value SDL_NAPI_ProvideArkTSObjects(napi_env env, napi_callback_info 
     napi_value ability = argv[0];
     napi_value atmanager = argv[1];
     napi_value locale = argv[2];
-    napi_value window = argv[3];
     napi_create_reference(env, ability, 1, &ability_object_ref);
     napi_create_reference(env, atmanager, 1, &atmanager_ref);
-    napi_create_reference(env, window, 1, &window_ref);
+
+    TakeOverUIAbility(env, ability);
 
     napi_value context = NULL; napi_get_named_property(env, ability, "context", &context);
     napi_value resourceManager = NULL; napi_get_named_property(env, context, "resourceManager", &resourceManager);
     native_resource_mgr = OH_ResourceManager_InitNativeResourceManager(env, resourceManager);
 
+    // Store off a copy of the locale string.
     napi_value language = NULL; napi_get_named_property(env, locale, "language", &language);
     napi_value region = NULL; napi_get_named_property(env, locale, "region", &region);
     char *language_sdl = CreateSDLStringFromNAPIValue(env, language);
     char *region_sdl = CreateSDLStringFromNAPIValue(env, region);
-
     if (language_sdl && region_sdl) {
         if (SDL_asprintf(&system_locale, "%s_%s", language_sdl, region_sdl) < 0) {
             system_locale = NULL;
@@ -583,6 +673,7 @@ static napi_value SDL_NAPI_ProvideArkTSObjects(napi_env env, napi_callback_info 
     SDL_free(language_sdl);
     SDL_free(region_sdl);
 
+    // Set up some threadsafe functions, for calling back into ArkTS from the main thread, regardless of what thread native code is operating from.
     napi_value permname = NULL; napi_create_string_utf8(env, "SDL_RequestOpenHarmonyPermission", NAPI_AUTO_LENGTH, &permname);
     napi_create_threadsafe_function(env, NULL, NULL, permname, 0, 1, NULL, NULL, NULL, CallJSRequestPermissions, &req_permissions_threadsafefn);
 
