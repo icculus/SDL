@@ -528,6 +528,7 @@ static void SDL_XComponent_DispatchHoverEventCallback(OH_NativeXComponent* compo
     // !!! FIXME: use this?
 }
 
+
 static char *CreateSDLStringFromNAPIValue(napi_env env, napi_value val)
 {
     char *retval = NULL;
@@ -546,7 +547,6 @@ static char *CreateSDLStringFromNAPIValue(napi_env env, napi_value val)
 // Called when windowStage.loadContent finishes.
 static napi_value SDL_NAPI_LoadContentResult(napi_env env, napi_callback_info info)
 {
-    OH_LOG_Print(LOG_APP, LOG_FATAL, LOG_DOMAIN, "SDL/STARTUP", "%{public}s", SDL_FUNCTION);
     size_t argc = 1;
     napi_value err = NULL;
     napi_get_cb_info(env, info, &argc, &err, NULL, NULL);
@@ -566,7 +566,6 @@ static napi_value SDL_NAPI_LoadContentResult(napi_env env, napi_callback_info in
 // Our native version of UIAbility.onDestroy().
 static napi_value SDL_NAPI_UIAbilityOnDestroy(napi_env env, napi_callback_info info)
 {
-    OH_LOG_Print(LOG_APP, LOG_FATAL, LOG_DOMAIN, "SDL/STARTUP", "%{public}s", SDL_FUNCTION);
     SDL_FlushEvents(SDL_EVENT_FIRST, SDL_EVENT_LAST);
     SDL_SendQuit();
     SDL_OnApplicationWillTerminate();
@@ -577,7 +576,6 @@ static napi_value SDL_NAPI_UIAbilityOnDestroy(napi_env env, napi_callback_info i
 // Our native version of UIAbility.onForeground().
 static napi_value SDL_NAPI_UIAbilityOnForeground(napi_env env, napi_callback_info info)
 {
-    OH_LOG_Print(LOG_APP, LOG_FATAL, LOG_DOMAIN, "SDL/STARTUP", "%{public}s", SDL_FUNCTION);
     SDL_OnApplicationWillEnterForeground();
     SDL_OnApplicationDidEnterForeground();
     napi_value retval = NULL; napi_get_undefined(env, &retval);
@@ -587,7 +585,6 @@ static napi_value SDL_NAPI_UIAbilityOnForeground(napi_env env, napi_callback_inf
 // Our native version of UIAbility.onBackround().
 static napi_value SDL_NAPI_UIAbilityOnBackground(napi_env env, napi_callback_info info)
 {
-    OH_LOG_Print(LOG_APP, LOG_FATAL, LOG_DOMAIN, "SDL/STARTUP", "%{public}s", SDL_FUNCTION);
     SDL_OnApplicationWillEnterBackground();
     SDL_OnApplicationDidEnterBackground();
     napi_value retval = NULL; napi_get_undefined(env, &retval);
@@ -621,7 +618,6 @@ static napi_value SDL_NAPI_UIAbilityOnWindowStageCreate(napi_env env, napi_callb
 // Our native version of UIAbility.onWindowStageDestroy().
 static napi_value SDL_NAPI_UIAbilityOnWindowStageDestroy(napi_env env, napi_callback_info info)
 {
-    OH_LOG_Print(LOG_APP, LOG_FATAL, LOG_DOMAIN, "SDL/STARTUP", "%{public}s", SDL_FUNCTION);
     napi_value retval = NULL; napi_get_undefined(env, &retval);
     return retval;
 }
@@ -629,8 +625,6 @@ static napi_value SDL_NAPI_UIAbilityOnWindowStageDestroy(napi_env env, napi_call
 // Our native version of UIAbility.onMemoryLevel().
 static napi_value SDL_NAPI_UIAbilityOnMemoryLevel(napi_env env, napi_callback_info info)
 {
-    OH_LOG_Print(LOG_APP, LOG_FATAL, LOG_DOMAIN, "SDL/STARTUP", "%{public}s", SDL_FUNCTION);
-
     size_t argc = 1;
     napi_value level = NULL;
     napi_get_cb_info(env, info, &argc, &level, NULL, NULL);

@@ -33,36 +33,6 @@
 #include "../SDL_sysvideo.h"
 #include "../../events/SDL_events_c.h"
 
-
-#if 0
-typedef struct {
-    /** Unique identifier of a finger. */
-    int32_t id;
-    /** X coordinate of the touch point relative to the left edge of the screen. */
-    float screenX;
-    /** Y coordinate of the touch point relative to the upper edge of the screen. */
-    float screenY;
-    /** X coordinate of the touch point relative to the left edge of the element to touch. */
-    float x;
-    /** Y coordinate of the touch point relative to the upper edge of the element to touch. */
-    float y;
-    /** Touch type of the touch event. */
-    OH_NativeXComponent_TouchEventType type;
-    /** Contact area between the finger pad and the screen. */
-    double size;
-    /** Pressure of the current touch event. */
-    float force;
-    /** ID of the device where the current touch event is generated. */
-    int64_t deviceId;
-    /** Timestamp of the current touch event. */
-    int64_t timeStamp;
-    /** Array of the current touch points. */
-    OH_NativeXComponent_TouchPoint touchPoints[OH_NATIVE_XCOMPONENT_MAX_TOUCH_POINTS_NUMBER];
-    /** Number of current touch points. */
-    uint32_t numPoints;
-} OH_NativeXComponent_TouchEvent;
-#endif
-
 void SDL_OpenHarmonyDispatchTouchEvent(void *component, void *window)
 {
     OH_NativeXComponent *xcomponent = (OH_NativeXComponent *) component;
