@@ -482,7 +482,7 @@ bool SDL_OpenHarmonyChangeScreenSaver(bool enable)
     if (!window_ref) {
         return SDL_SetError("Window not initialized");
     }
-    return (napi_call_threadsafe_function(change_screensaver_threadsafefn, (void *) (enable ? 0x1 : 0x0), napi_tsfn_nonblocking) == napi_ok);
+    return (napi_call_threadsafe_function(change_screensaver_threadsafefn, (void *) (size_t) (enable ? 0x1 : 0x0), napi_tsfn_nonblocking) == napi_ok);
 }
 
 
