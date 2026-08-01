@@ -94,14 +94,9 @@ static char *system_locale = NULL;
     napi_value self = NULL; \
     napi_get_cb_info(env, info, &argc, argv, &self, (void **) &userdata)
 
-
-#if 0
-napi_get_element
-napi_set_element
-napi_set_named_property
-napi_call_function
-napi_call_threadsafe_function
-#endif
+#define CallNapiThreadsafeFunction napi_call_threadsafe_function
+#define SetNapiArrayElement napi_set_element
+#define SetNapiObjField napi_set_named_property
 
 static char *CreateSDLStringFromNAPIValue(napi_env env, napi_value val)
 {
@@ -149,6 +144,15 @@ static napi_value CreateNapiFunction(napi_env env, const char *name, napi_callba
 {
     napi_value retval = NULL;
     if (napi_create_function(env, name, name ? NAPI_AUTO_LENGTH : 0, cb, userdata, &retval) != napi_ok) {
+        return NULL;
+    }
+    return retval;
+}
+
+static napi_value GetNapiArrayElement(napi_env env, napi_value arr, int idx)
+{
+    napi_value retval = NULL;
+    if (napi_get_element(env, arr, idx, &retval) != napi_ok) {
         return NULL;
     }
     return retval;
@@ -206,6 +210,14 @@ static napi_threadsafe_function CreateNapiThreadsafeFunction(napi_env env, const
     return retval;
 }
 
+static napi_value CallNapiMethod(napi_env env, napi_value obj, const char *method, int num_args, napi_value *args)
+{
+    napi_value retval = NULL;
+    if (napi_call_function(env, obj, GetNapiObjField(env, obj, method), num_args, args, &retval) != napi_ok) {
+        return NULL;
+    }
+    return retval;
+}
 
 
 int SDL_GetOpenHarmonySDKVersion(void)
@@ -444,9 +456,7 @@ typedef struct RequestPermissionData
 static napi_value SDL_JS_RequestPermissionResult(napi_env env, napi_callback_info info)
 {
     SDL_JS_ENTRY_USERDATA(2, RequestPermissionData);
-
-    napi_value authResults = GetNapiObjField(env, argv[1], "authResults");  // Array<number>
-    napi_value result = NULL; napi_get_element(env, authResults, 0, &result);
+    napi_value result = GetNapiArrayElement(env, GetNapiObjField(env, argv[1], "authResults"), 0);
     const bool granted = (GetNapiInt(env, result, -1) == 0);
     userdata->callback(userdata->callback_userdata, userdata->permission, granted);
 
@@ -460,14 +470,11 @@ static napi_value SDL_JS_RequestPermissionResult(napi_env env, napi_callback_inf
 static void CallJSRequestPermissions(napi_env env, napi_value js_callback, void *context, void *userdata)
 {
     RequestPermissionData *data = (RequestPermissionData *) userdata;
-
-    //atmanager.requestPermissionsFromUser(context: Context, permissionList: Array<Permissions>, requestCallback: AsyncCallback<PermissionRequestResult>): void;
     napi_value ability = GetNapiRefValue(env, ability_object_ref);
     napi_value atmanager = GetNapiRefValue(env, atmanager_ref);
-    napi_value fn = GetNapiObjField(env, atmanager, "requestPermissionsFromUser");
-    napi_value args[3] = { GetNapiObjField(env, ability, "context"), CreateNapiArray(env, 1), CreateNapiFunction(env, NULL, SDL_JS_RequestPermissionResult, data) };
-    napi_set_element(env, args[1], 0, CreateNapiString(env, data->permission));
-    napi_value rc = NULL; napi_call_function(env, atmanager, fn, SDL_arraysize(args), args, &rc);
+    napi_value args[] = { GetNapiObjField(env, ability, "context"), CreateNapiArray(env, 1), CreateNapiFunction(env, NULL, SDL_JS_RequestPermissionResult, data) };
+    SetNapiArrayElement(env, args[1], 0, CreateNapiString(env, data->permission));
+    CallNapiMethod(env, atmanager, "requestPermissionsFromUser", SDL_arraysize(args), args);
     // okay, assuming this worked out, we'll get a callback to SDL_JS_RequestPermissionResult() at some point in the future (if we haven't already).
 }
 
@@ -491,7 +498,7 @@ bool SDL_RequestOpenHarmonyPermission(const char *permission, SDL_RequestOpenHar
     data->callback = cb;
     data->callback_userdata = userdata;
 
-    return (napi_call_threadsafe_function(req_permissions_threadsafefn, data, napi_tsfn_nonblocking) == napi_ok);
+    return (CallNapiThreadsafeFunction(req_permissions_threadsafefn, data, napi_tsfn_nonblocking) == napi_ok);
 }
 
 // AsyncCallback when CallJSOpenURL() finishes its work.
@@ -508,11 +515,10 @@ static void CallJSOpenURL(napi_env env, napi_value js_callback, void *context, v
     char *url = (char *) userdata;
     napi_value ability = GetNapiRefValue(env, ability_object_ref);
     napi_value abcontext = GetNapiObjField(env, ability, "context");
-    napi_value startAbility = GetNapiObjField(env, abcontext, "startAbility");
     napi_value want = CreateNapiObject(env);
-    napi_set_named_property(env, want, "uri", CreateNapiString(env, url));
-    napi_value args[2] = { want, CreateNapiFunction(env, NULL, SDL_JS_OpenURLResult, url) };
-    napi_value rc = NULL; napi_call_function(env, abcontext, startAbility, SDL_arraysize(args), args, &rc);
+    SetNapiObjField(env, want, "uri", CreateNapiString(env, url));
+    napi_value args[] = { want, CreateNapiFunction(env, NULL, SDL_JS_OpenURLResult, url) };
+    CallNapiMethod(env, abcontext, "startAbility", SDL_arraysize(args), args);
     SDL_free(url);
 }
 
@@ -526,7 +532,7 @@ bool SDL_OpenHarmonyOpenURL(const char *url)
     } else if ((data = SDL_strdup(url)) == NULL) {
         return false;
     }
-    return (napi_call_threadsafe_function(open_url_threadsafefn, data, napi_tsfn_nonblocking) == napi_ok);
+    return (CallNapiThreadsafeFunction(open_url_threadsafefn, data, napi_tsfn_nonblocking) == napi_ok);
 }
 
 
@@ -549,15 +555,15 @@ static void CallJSChangeSysBars(napi_env env, napi_value js_callback, void *cont
     napi_value arr = CreateNapiArray(env, arrlen);
     arrlen = 0;
     if (status_bar) {
-        napi_set_element(env, arr, arrlen++, CreateNapiString(env, "status"));
+        SetNapiArrayElement(env, arr, arrlen++, CreateNapiString(env, "status"));
     }
     if (navigation_bar) {
-        napi_set_element(env, arr, arrlen++, CreateNapiString(env, "navigation"));
+        SetNapiArrayElement(env, arr, arrlen++, CreateNapiString(env, "navigation"));
     }
 
     napi_value window = GetNapiRefValue(env, window_ref);
-    napi_value args[2] = { arr, CreateNapiFunction(env, NULL, SDL_JS_ChangeSysBarsResult, NULL) };
-    napi_value rc = NULL; napi_call_function(env, window, GetNapiObjField(env, window, "setSystemBarEnable"), SDL_arraysize(args), args, &rc);
+    napi_value args[] = { arr, CreateNapiFunction(env, NULL, SDL_JS_ChangeSysBarsResult, NULL) };
+    CallNapiMethod(env, window, "setSystemBarEnable", SDL_arraysize(args), args);
 }
 
 bool SDL_OpenHarmonyToggleSystemBars(bool status_bar, bool navigation_bar)
@@ -566,7 +572,7 @@ bool SDL_OpenHarmonyToggleSystemBars(bool status_bar, bool navigation_bar)
     if (!window_ref) {
         return SDL_SetError("Window not initialized");
     }
-    return (napi_call_threadsafe_function(change_sysbars_threadsafefn, (void *) flags, napi_tsfn_nonblocking) == napi_ok);
+    return (CallNapiThreadsafeFunction(change_sysbars_threadsafefn, (void *) flags, napi_tsfn_nonblocking) == napi_ok);
 }
 
 // AsyncCallback when CallJSChangeScreenSaver() finishes its work.
@@ -579,8 +585,8 @@ static napi_value SDL_JS_ChangeScreenSaverResult(napi_env env, napi_callback_inf
 static void CallJSChangeScreenSaver(napi_env env, napi_value js_callback, void *context, void *userdata)
 {
     napi_value window = GetNapiRefValue(env, window_ref);
-    napi_value args[2] = { GetNapiBoolean(env, (userdata != NULL)), CreateNapiFunction(env, NULL, SDL_JS_ChangeScreenSaverResult, NULL) };
-    napi_value rc = NULL; napi_call_function(env, window, GetNapiObjField(env, window, "setWindowKeepScreenOn"), SDL_arraysize(args), args, &rc);
+    napi_value args[] = { GetNapiBoolean(env, (userdata != NULL)), CreateNapiFunction(env, NULL, SDL_JS_ChangeScreenSaverResult, NULL) };
+    CallNapiMethod(env, window, "setWindowKeepScreenOn", SDL_arraysize(args), args);
 }
 
 bool SDL_OpenHarmonyChangeScreenSaver(bool enable)
@@ -588,7 +594,7 @@ bool SDL_OpenHarmonyChangeScreenSaver(bool enable)
     if (!window_ref) {
         return SDL_SetError("Window not initialized");
     }
-    return (napi_call_threadsafe_function(change_screensaver_threadsafefn, (void *) (size_t) (enable ? 0x1 : 0x0), napi_tsfn_nonblocking) == napi_ok);
+    return (CallNapiThreadsafeFunction(change_screensaver_threadsafefn, (void *) (size_t) (enable ? 0x1 : 0x0), napi_tsfn_nonblocking) == napi_ok);
 }
 
 
@@ -677,11 +683,11 @@ static napi_value SDL_JS_UIAbility_OnWindowStageCreate(napi_env env, napi_callba
     OH_LOG_Print(LOG_APP, LOG_FATAL, LOG_DOMAIN, "SDL/STARTUP", "%{public}s", SDL_FUNCTION);
     SDL_JS_ENTRY(1);
     napi_value windowStage = argv[0];
-    napi_value window = NULL; napi_call_function(env, windowStage, GetNapiObjField(env, windowStage, "getMainWindowSync"), 0, NULL, &window);
+    napi_value window = CallNapiMethod(env, windowStage, "getMainWindowSync", 0, NULL);
     napi_create_reference(env, window, 1, &window_ref);
 
-    napi_value args[2] = { CreateNapiString(env, "pages/Index"), CreateNapiFunction(env, NULL, SDL_JS_LoadContentResult, NULL) };
-    napi_value rc = NULL; napi_call_function(env, windowStage, GetNapiObjField(env, windowStage, "loadContent"), SDL_arraysize(args), args, &rc);
+    napi_value args[] = { CreateNapiString(env, "pages/Index"), CreateNapiFunction(env, NULL, SDL_JS_LoadContentResult, NULL) };
+    CallNapiMethod(env, windowStage, "loadContent", SDL_arraysize(args), args);
 
     return GetNapiUndefined(env);
 }
@@ -705,12 +711,12 @@ static napi_value SDL_JS_UIAbility_OnMemoryLevel(napi_env env, napi_callback_inf
 static void TakeOverUIAbility(napi_env env, napi_value ability)
 {
     napi_value prototype = GetNapiObjField(env, GetNapiObjField(env, ability, "constructor"), "prototype");
-    napi_set_named_property(env, prototype, "onDestroy", CreateNapiFunction(env, "onDestroy", SDL_JS_UIAbility_OnDestroy, NULL));
-    napi_set_named_property(env, prototype, "onForeground", CreateNapiFunction(env, "onForeground", SDL_JS_UIAbility_OnForeground, NULL));
-    napi_set_named_property(env, prototype, "onBackground", CreateNapiFunction(env, "onBackground", SDL_JS_UIAbility_OnBackground, NULL));
-    napi_set_named_property(env, prototype, "onWindowStageCreate", CreateNapiFunction(env, "onWindowStageCreate", SDL_JS_UIAbility_OnWindowStageCreate, NULL));
-    napi_set_named_property(env, prototype, "onWindowStageDestroy", CreateNapiFunction(env, "onWindowStageDestroy", SDL_JS_UIAbility_OnWindowStageDestroy, NULL));
-    napi_set_named_property(env, prototype, "onMemoryLevel", CreateNapiFunction(env, "onMemoryLevel", SDL_JS_UIAbility_OnMemoryLevel, NULL));
+    SetNapiObjField(env, prototype, "onDestroy", CreateNapiFunction(env, "onDestroy", SDL_JS_UIAbility_OnDestroy, NULL));
+    SetNapiObjField(env, prototype, "onForeground", CreateNapiFunction(env, "onForeground", SDL_JS_UIAbility_OnForeground, NULL));
+    SetNapiObjField(env, prototype, "onBackground", CreateNapiFunction(env, "onBackground", SDL_JS_UIAbility_OnBackground, NULL));
+    SetNapiObjField(env, prototype, "onWindowStageCreate", CreateNapiFunction(env, "onWindowStageCreate", SDL_JS_UIAbility_OnWindowStageCreate, NULL));
+    SetNapiObjField(env, prototype, "onWindowStageDestroy", CreateNapiFunction(env, "onWindowStageDestroy", SDL_JS_UIAbility_OnWindowStageDestroy, NULL));
+    SetNapiObjField(env, prototype, "onMemoryLevel", CreateNapiFunction(env, "onMemoryLevel", SDL_JS_UIAbility_OnMemoryLevel, NULL));
 }
 
 // ArkTS calls this once near startup to pass us the Ability, so we can call back into Javascript as necessary.
