@@ -142,23 +142,21 @@ See if the phone is visible/accessible:
 hdc list targets -v
 ```
 
-You can also connect the phone over Wifi and not use USB, but I couldn't get
-this to work with the command line tools. If you want to try, turn on
-"Wireless debugging" in Developer Options, note the IP address and port, and
-run:
+You can also connect the phone over Wifi on the same LAN and not use USB. If
+you want to try, turn on "Wireless debugging" in Developer Options, note the
+IP address and port, and run:
 
 ```bash
-hdc tconn device 192.168.1.104:40317
+hdc tconn 192.168.1.104:40317
 ```
 
-Where the IP address and port match the phone. But again, this didn't work for
-me, whereas USB worked fine. Report back if you get this working!
+Where the IP address and port match the phone.
 
-(DevEco Studio worked fine, though: add the device by IP address and port by
-going to "Tools" -> "IP Connection" on the menu bar. This appears to be IPv4
-only at the moment, but it successfully connected to the phone. This was a
-good option, because for whatever reason the phone's USB connection would
-continually drop and reconnect on my VirtualBox Windows 10 VM. But YMMV!)
+(DevEco Studio: add the device by IP address and port by going to "Tools" ->
+"IP Connection" on the menu bar. This appears to be IPv4 only at the moment,
+but it successfully connected to the phone. This was a good option, because
+for whatever reason the phone's USB connection would continually drop and
+reconnect on my VirtualBox Windows 10 VM. But YMMV!)
 
 
 ## HarmonyOS App Development with SDL
