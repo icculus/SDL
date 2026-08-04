@@ -173,7 +173,7 @@ void SDL_OpenHarmonyDispatchUIInputEvent(void *vcomponent, void *vevent, int32_t
         // !!! FIXME: OpenHarmony has a system setting for "natural" scrolling we can use for SDL_MouseWheelDirection, but I
         // !!! FIXME: don't know how to access it right now.
         // a single "click" of the wheel on my mouse is 45 degrees (360 / 8 click positions), so let's assume that's normal (and what Windows would do with WHEEL_DELTA, which is a different value with the same concept).
-        SDL_SendMouseWheel((Uint64) OH_ArkUI_UIInputEvent_GetEventTime(event), OPENHARMONY_Window, mouseid, 0.0f, vertical / 45.0f, SDL_MOUSEWHEEL_NORMAL);
+        SDL_SendMouseWheel((Uint64) OH_ArkUI_UIInputEvent_GetEventTime(event), OPENHARMONY_Window, mouseid, 0.0f, -(vertical / 45.0f), SDL_MOUSEWHEEL_NORMAL);
     }
 
     // !!! FIXME: this is in pixels, not degrees, and I'm not sure how to convert that yet.
