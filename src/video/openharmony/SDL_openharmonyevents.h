@@ -25,6 +25,7 @@
 // src/core/openharmony/SDL_openharmony.c calls these when it gets events from the system.
 extern void SDL_OpenHarmonyDispatchTouchEvent(void *component, void *window);
 extern void SDL_OpenHarmonyDispatchMouseEvent(void *component, void *window);
+extern void SDL_OpenHarmonyDispatchUIInputEvent(void *component, void *event, int32_t type);
 
 extern void OPENHARMONY_InitEvents(void);
 extern void OPENHARMONY_PumpEvents(SDL_VideoDevice *_this);

@@ -155,6 +155,36 @@ void SDL_OpenHarmonyDispatchMouseEvent(void *component, void *window)
     }
 }
 
+void SDL_OpenHarmonyDispatchUIInputEvent(void *vcomponent, void *vevent, int32_t vtype)
+{
+    OH_NativeXComponent *component = (OH_NativeXComponent *) vcomponent;
+    ArkUI_UIInputEvent *event = (ArkUI_UIInputEvent *) vevent;
+    const ArkUI_UIInputEvent_Type type = (const ArkUI_UIInputEvent_Type) vtype;
+
+    if (type != ARKUI_UIINPUTEVENT_TYPE_AXIS) {
+        return;  // this is all we handle here for now. Maybe more in the future!
+    } else if (OH_ArkUI_UIInputEvent_GetSourceType(event) != UI_INPUT_EVENT_SOURCE_TYPE_MOUSE) {
+        return;  // skip two-finger scrolling (...for now...?)
+    }
+
+    const SDL_MouseID mouseid = SDL_DEFAULT_MOUSE_ID;  // !!! FIXME: should this be SDL_GLOBAL_MOUSE_ID or SDL_DEFAULT_MOUSE_ID?
+    const double vertical = OH_ArkUI_AxisEvent_GetVerticalAxisValue(event);
+    if (vertical != 0.0) {
+        // !!! FIXME: OpenHarmony has a system setting for "natural" scrolling we can use for SDL_MouseWheelDirection, but I
+        // !!! FIXME: don't know how to access it right now.
+        // a single "click" of the wheel on my mouse is 45 degrees (360 / 8 click positions), so let's assume that's normal (and what Windows would do with WHEEL_DELTA, which is a different value with the same concept).
+        SDL_SendMouseWheel((Uint64) OH_ArkUI_UIInputEvent_GetEventTime(event), OPENHARMONY_Window, mouseid, 0.0f, vertical / 45.0f, SDL_MOUSEWHEEL_NORMAL);
+    }
+
+    // !!! FIXME: this is in pixels, not degrees, and I'm not sure how to convert that yet.
+    // !!! FIXME: It's possible they don't support horizontal mouse wheels, and this is only for two-finger scrolling.
+    #if 0
+    const double horizontal = OH_ArkUI_AxisEvent_GetHorizontalAxisValue(event);
+    if (horizontal != 0.0) {
+    }
+    #endif
+}
+
 void OPENHARMONY_InitEvents(void)
 {
 }

@@ -635,6 +635,12 @@ static void SDL_XComponent_DispatchHoverEventCallback(OH_NativeXComponent* compo
     // !!! FIXME: use this?
 }
 
+static void SDL_XComponent_DispatchUIInputEventCallback(OH_NativeXComponent* component, ArkUI_UIInputEvent* event, ArkUI_UIInputEvent_Type type)
+{
+    SDL_OpenHarmonyDispatchUIInputEvent(component, event, type);  // this is in src/video/openharmony/SDL_openharmonyvideo.c
+}
+
+
 // Called when windowStage.loadContent finishes.
 static napi_value SDL_JS_LoadContentResult(napi_env env, napi_callback_info info)
 {
@@ -800,6 +806,10 @@ static napi_value SDL_Init_Native_Interfaces(napi_env env, napi_value exports)
         .DispatchHoverEvent = SDL_XComponent_DispatchHoverEventCallback
     };
     OH_NativeXComponent_RegisterMouseEventCallback(nativeXComponent, &xcomp_mouse_callbacks);
+
+    // only AXIS events supported here, at the moment, apparently, but most of the other things (mouse, touch, key) come through other supported callbacks.
+    // "Axis" in this case only means mousewheel, afaict.
+    OH_NativeXComponent_RegisterUIInputEventCallback(nativeXComponent, SDL_XComponent_DispatchUIInputEventCallback, ARKUI_UIINPUTEVENT_TYPE_AXIS);
 
     return exports;
 }
