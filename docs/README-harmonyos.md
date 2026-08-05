@@ -482,7 +482,7 @@ browser, custom URL schemes can launch specific apps, etc.
 - Sensor
 - Storage
 - Pen
-
+- SDL_HINT_ORIENTATION (for runtime control; but you _can_ explicitly set the "orientation" setting in module.json5 for now if you need a specific global, unchanging setting.)
 
 ## Building SDL for HarmonyOS
 
