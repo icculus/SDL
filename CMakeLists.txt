@@ -1731,13 +1731,6 @@ elseif(OHOS)  # OpenHarmony/HarmonyOS
   set(HAVE_SDL_MISC TRUE)
 
   if(SDL_AUDIO)
-#    set(SDL_AUDIO_DRIVER_OPENSLES 1)
-#    sdl_glob_sources(
-#      "${SDL3_SOURCE_DIR}/src/audio/openslES/*.c"
-#      "${SDL3_SOURCE_DIR}/src/audio/openslES/*.h"
-#    )
-#    sdl_link_dependency(opensles LIBS ${ANDROID_DL_LIBRARY} OpenSLES)
-
     set(SDL_AUDIO_DRIVER_OHAUDIO 1)
     sdl_glob_sources(
       "${SDL3_SOURCE_DIR}/src/audio/ohaudio/*.c"
