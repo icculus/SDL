@@ -42,8 +42,8 @@
 #include "SDL_openharmonyopengl.h"
 #include "SDL_openharmonyclipboard.h"
 #include "SDL_openharmonyevents.h"
-//#include "SDL_openharmonykeyboard.h"
-//#include "SDL_openharmonymouse.h"
+#include "SDL_openharmonykeyboard.h"
+#include "SDL_openharmonymouse.h"
 //#include "SDL_openharmonytouch.h"
 #include "SDL_openharmonywindow.h"
 #include "SDL_openharmonyvulkan.h"
@@ -251,12 +251,10 @@ static SDL_VideoDevice *OPENHARMONY_CreateDevice(void)
 
     device->PumpEvents = OPENHARMONY_PumpEvents;
 
-#if 0  // !!! FIXME
     // Screen keyboard
     device->HasScreenKeyboardSupport = OPENHARMONY_HasScreenKeyboardSupport;
     device->ShowScreenKeyboard = OPENHARMONY_ShowScreenKeyboard;
     device->HideScreenKeyboard = OPENHARMONY_HideScreenKeyboard;
-#endif
 
     // Clipboard
     device->GetTextMimeTypes = OPENHARMONY_GetTextMimeTypes;

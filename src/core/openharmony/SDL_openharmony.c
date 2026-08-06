@@ -71,11 +71,18 @@ bool OH_ResourceManager_ReleaseRawFileDescriptor64(const RawFileDescriptor64 *de
 static napi_ref ability_object_ref = NULL;
 static napi_ref atmanager_ref = NULL;
 static napi_ref window_ref = NULL;
+static napi_ref ime_controller_ref = NULL;
+static napi_ref pointer_ref = NULL;
+static napi_ref on_insert_text_ref = NULL;
+static napi_ref on_delete_left_ref = NULL;
 static NativeResourceManager *native_resource_mgr = NULL;
 static napi_threadsafe_function req_permissions_threadsafefn = NULL;
 static napi_threadsafe_function open_url_threadsafefn = NULL;
 static napi_threadsafe_function change_sysbars_threadsafefn = NULL;
 static napi_threadsafe_function change_screensaver_threadsafefn = NULL;
+static napi_threadsafe_function show_screenkeyboard_threadsafefn = NULL;
+static napi_threadsafe_function hide_screenkeyboard_threadsafefn = NULL;
+static napi_threadsafe_function change_mouseptr_threadsafefn = NULL;
 static char *system_locale = NULL;
 
 
@@ -122,7 +129,6 @@ static napi_value CreateNapiString(napi_env env, const char *str)
     return retval;
 }
 
-#if 0  // currently unused, might need later. Equivalent of JS `return {};`
 static napi_value CreateNapiObject(napi_env env)
 {
     napi_value retval = NULL;
@@ -131,7 +137,6 @@ static napi_value CreateNapiObject(napi_env env)
     }
     return retval;
 }
-#endif
 
 static napi_value CreateNapiArray(napi_env env, size_t len)
 {
@@ -155,6 +160,15 @@ static napi_value GetNapiArrayElement(napi_env env, napi_value arr, int idx)
 {
     napi_value retval = NULL;
     if (napi_get_element(env, arr, idx, &retval) != napi_ok) {
+        return NULL;
+    }
+    return retval;
+}
+
+static napi_value CreateNapiInt(napi_env env, int val)
+{
+    napi_value retval = NULL;
+    if (napi_create_int32(env, (int32_t) val, &retval) != napi_ok) {
         return NULL;
     }
     return retval;
@@ -596,6 +610,149 @@ bool SDL_OpenHarmonyChangeScreenSaver(bool enable)
     return (CallNapiThreadsafeFunction(change_screensaver_threadsafefn, (void *) (size_t) (enable ? 0x1 : 0x0), napi_tsfn_nonblocking) == napi_ok);
 }
 
+// Called by the IME controller for insertText events.
+static napi_value SDL_JS_IME_Controller_OnInsertText(napi_env env, napi_callback_info info)
+{
+    SDL_JS_ENTRY(1);
+    napi_value text = argv[0];
+    char *utf8 = CreateSDLStringFromNAPIValue(env, text);
+    if (utf8) {
+        SDL_SendKeyboardText(utf8);
+        SDL_free(utf8);
+    }
+    return GetNapiUndefined(env);
+}
+
+// Called by the IME controller for deleteLeft events.
+static napi_value SDL_JS_IME_Controller_OnDeleteLeft(napi_env env, napi_callback_info info)
+{
+    SDL_JS_ENTRY(1);
+    napi_value number = argv[0];
+    const int total = GetNapiInt(env, number, 0);
+    for (int i = 0; i < total; i++) {
+        SDL_SendKeyboardKey(0, SDL_DEFAULT_KEYBOARD_ID, 0, SDL_SCANCODE_BACKSPACE, true);
+        SDL_SendKeyboardKey(0, SDL_DEFAULT_KEYBOARD_ID, 0, SDL_SCANCODE_BACKSPACE, false);
+    }
+    return GetNapiUndefined(env);
+}
+
+
+typedef struct ShowKeyboardData
+{
+    int input_type;
+    int cap_type;
+    SDL_Rect *text_input_rect;
+    SDL_Rect text_input_rect_data;
+} ShowKeyboardData;
+
+// AsyncCallback when CallJSShowScreenKeyboard() finishes its work.
+static napi_value SDL_JS_ShowScreenKeyboardResult(napi_env env, napi_callback_info info)
+{
+    SDL_JS_ENTRY_USERDATA(0, ShowKeyboardData);
+    napi_value ime_controller = GetNapiRefValue(env, ime_controller_ref);
+    napi_value ime_oninserttext_args[] = { CreateNapiString(env, "insertText"), GetNapiRefValue(env, on_insert_text_ref) };
+    CallNapiMethod(env, ime_controller, "on", SDL_arraysize(ime_oninserttext_args), ime_oninserttext_args);
+    napi_value ime_ondeleteleft_args[] = { CreateNapiString(env, "deleteLeft"), GetNapiRefValue(env, on_delete_left_ref) };
+    CallNapiMethod(env, ime_controller, "on", SDL_arraysize(ime_ondeleteleft_args), ime_ondeleteleft_args);
+    SDL_SendScreenKeyboardShown();
+    SDL_free(userdata);
+    return GetNapiUndefined(env);
+}
+
+// this function is called from the main Javascript thread when it's convenient to fire it.
+static void CallJSShowScreenKeyboard(napi_env env, napi_value js_callback, void *context, void *userdata)
+{
+    ShowKeyboardData *data = (ShowKeyboardData *) userdata;
+    napi_value ime_controller = GetNapiRefValue(env, ime_controller_ref);
+
+    napi_value inputAttribute = CreateNapiObject(env);
+    SetNapiObjField(env, inputAttribute, "textInputType", CreateNapiInt(env, data->input_type));
+    SetNapiObjField(env, inputAttribute, "capitalizeMode", CreateNapiInt(env, data->cap_type));
+    SetNapiObjField(env, inputAttribute, "enterKeyType", CreateNapiInt(env, 0 /*inputMethod.enterKeyType.UNSPECIFIED*/));  // !!! FIXME
+
+    napi_value attach_params = CreateNapiObject(env);
+    SetNapiObjField(env, attach_params, "inputAttribute", inputAttribute);
+    
+    napi_value args[] = { GetNapiBoolean(env, true) /*showkeyboard*/, attach_params, CreateNapiFunction(env, NULL, SDL_JS_ShowScreenKeyboardResult, userdata) };
+    CallNapiMethod(env, ime_controller, "attach", SDL_arraysize(args), args);
+}
+
+bool SDL_OpenHarmonyShowScreenKeyboard(int input_type, int cap_type, const SDL_Rect *text_input_rect)
+{
+    if (!ime_controller_ref) {
+        return SDL_SetError("IME controller not initialized");
+    }
+
+    ShowKeyboardData *data = (ShowKeyboardData *) SDL_calloc(1, sizeof (*data));
+    if (!data) {
+        return false;
+    }
+    data->input_type = input_type;
+    data->cap_type = cap_type;
+    if (text_input_rect) {
+        SDL_copyp(&data->text_input_rect_data, text_input_rect);
+        data->text_input_rect = &data->text_input_rect_data;
+    }
+
+    return (CallNapiThreadsafeFunction(show_screenkeyboard_threadsafefn, data, napi_tsfn_nonblocking) == napi_ok);
+}
+
+// AsyncCallback when CallJSHideScreenKeyboard() finishes its work.
+static napi_value SDL_JS_HideScreenKeyboardResult(napi_env env, napi_callback_info info)
+{
+    napi_value ime_controller = GetNapiRefValue(env, ime_controller_ref);
+    napi_value ime_oninserttext_args[] = { CreateNapiString(env, "insertText"), GetNapiRefValue(env, on_insert_text_ref) };
+    CallNapiMethod(env, ime_controller, "off", SDL_arraysize(ime_oninserttext_args), ime_oninserttext_args);
+    napi_value ime_ondeleteleft_args[] = { CreateNapiString(env, "deleteLeft"), GetNapiRefValue(env, on_delete_left_ref) };
+    CallNapiMethod(env, ime_controller, "off", SDL_arraysize(ime_ondeleteleft_args), ime_ondeleteleft_args);
+    SDL_SendScreenKeyboardHidden();
+    return GetNapiUndefined(env);
+}
+
+// this function is called from the main Javascript thread when it's convenient to fire it.
+static void CallJSHideScreenKeyboard(napi_env env, napi_value js_callback, void *context, void *userdata)
+{
+    napi_value ime_controller = GetNapiRefValue(env, ime_controller_ref);
+    napi_value args[] = { CreateNapiFunction(env, NULL, SDL_JS_HideScreenKeyboardResult, userdata) };
+    CallNapiMethod(env, ime_controller, "hideTextInput", SDL_arraysize(args), args);
+}
+
+bool SDL_OpenHarmonyHideScreenKeyboard(void)
+{
+    if (!ime_controller_ref) {
+        return SDL_SetError("IME controller not initialized");
+    }
+    return (CallNapiThreadsafeFunction(hide_screenkeyboard_threadsafefn, NULL, napi_tsfn_nonblocking) == napi_ok);
+}
+
+// this function is called from the main Javascript thread when it's convenient to fire it.
+static void CallJSChangeMousePointer(napi_env env, napi_value js_callback, void *context, void *userdata)
+{
+    const bool enable = (userdata != NULL);
+    napi_value pointer = GetNapiRefValue(env, pointer_ref);
+    napi_value args[] = { GetNapiBoolean(env, enable) };
+//SDL_Log("%s MOUSE POINTER!", enable ? "SHOW" : "HIDE");
+    CallNapiMethod(env, pointer, "setPointerVisibleSync", SDL_arraysize(args), args);
+}
+
+static bool SDL_OpenHarmonyChangeMousePointer(bool enable)
+{
+    if (!pointer_ref) {
+        return SDL_SetError("Pointer namespace not initialized");
+    }
+    return (CallNapiThreadsafeFunction(change_mouseptr_threadsafefn, (void *) (size_t) (enable ? 0x1 : 0x0), napi_tsfn_nonblocking) == napi_ok);
+}
+
+bool SDL_OpenHarmonyShowMousePointer(void)
+{
+    return SDL_OpenHarmonyChangeMousePointer(true);
+}
+
+bool SDL_OpenHarmonyHideMousePointer(void)
+{
+    return SDL_OpenHarmonyChangeMousePointer(false);
+}
+
 
 // Callbacks into our custom XComponent.
 static void SDL_XComponent_OnSurfaceCreatedCallback(OH_NativeXComponent* component, void* window)
@@ -640,6 +797,11 @@ static void SDL_XComponent_DispatchHoverEventCallback(OH_NativeXComponent* compo
 static void SDL_XComponent_DispatchUIInputEventCallback(OH_NativeXComponent* component, ArkUI_UIInputEvent* event, ArkUI_UIInputEvent_Type type)
 {
     SDL_OpenHarmonyDispatchUIInputEvent(component, event, type);  // this is in src/video/openharmony/SDL_openharmonyvideo.c
+}
+
+static void SDL_XComponent_DispatchKeyEventCallback(OH_NativeXComponent* component, void* window)
+{
+    SDL_OpenHarmonyDispatchKeyEvent(component, window);
 }
 
 
@@ -730,7 +892,7 @@ static napi_value SDL_JS_ProvideArkTSObjects(napi_env env, napi_callback_info in
     SDL_assert(!native_resource_mgr);  // don't call this more than once!
 
     // we don't bother cleaning up most things in this function, because they are intended to live as long as the process.
-    #define expected_argc 3
+    #define expected_argc 5
     SDL_JS_ENTRY(expected_argc);
     if (argc != expected_argc) {
         // if you hit this, we probably changed either this C code or the ArkTS code in EntryAbility.ets and you need to update one or both to get the back in sync.
@@ -742,8 +904,12 @@ static napi_value SDL_JS_ProvideArkTSObjects(napi_env env, napi_callback_info in
     napi_value ability = argv[0];
     napi_value atmanager = argv[1];
     napi_value locale = argv[2];
+    napi_value pointer = argv[3];
+    napi_value ime_controller = argv[4];
     napi_create_reference(env, ability, 1, &ability_object_ref);
     napi_create_reference(env, atmanager, 1, &atmanager_ref);
+    napi_create_reference(env, pointer, 1, &pointer_ref);
+    napi_create_reference(env, ime_controller, 1, &ime_controller_ref);
 
     TakeOverUIAbility(env, ability);
 
@@ -762,11 +928,19 @@ static napi_value SDL_JS_ProvideArkTSObjects(napi_env env, napi_callback_info in
     SDL_free(language);
     SDL_free(region);
 
+    napi_value on_insert_text = CreateNapiFunction(env, "onInsertText", SDL_JS_IME_Controller_OnInsertText, NULL);
+    napi_create_reference(env, on_insert_text, 1, &on_insert_text_ref);
+    napi_value on_delete_left = CreateNapiFunction(env, "onDeleteLeft", SDL_JS_IME_Controller_OnDeleteLeft, NULL);
+    napi_create_reference(env, on_delete_left, 1, &on_delete_left_ref);
+
     // Set up some threadsafe functions, for calling back into ArkTS from the main thread, regardless of what thread native code is operating from.
     req_permissions_threadsafefn = CreateNapiThreadsafeFunction(env, "SDL_RequestOpenHarmonyPermission", CallJSRequestPermissions);
     open_url_threadsafefn = CreateNapiThreadsafeFunction(env, "SDL_OpenHarmonyOpenURL", CallJSOpenURL);
     change_sysbars_threadsafefn = CreateNapiThreadsafeFunction(env, "SDL_OpenHarmonyChangeSystemBars", CallJSChangeSysBars);
     change_screensaver_threadsafefn = CreateNapiThreadsafeFunction(env, "SDL_OpenHarmonyChangeScreenSaver", CallJSChangeScreenSaver);
+    show_screenkeyboard_threadsafefn = CreateNapiThreadsafeFunction(env, "SDL_OpenHarmonyShowScreenKeyboard", CallJSShowScreenKeyboard);
+    hide_screenkeyboard_threadsafefn = CreateNapiThreadsafeFunction(env, "SDL_OpenHarmonyHideScreenKeyboard", CallJSHideScreenKeyboard);
+    change_mouseptr_threadsafefn = CreateNapiThreadsafeFunction(env, "SDL_OpenHarmonyChangeMousePointer", CallJSChangeMousePointer);
 
     return GetNapiUndefined(env);
 }
@@ -812,6 +986,8 @@ static napi_value SDL_Init_Native_Interfaces(napi_env env, napi_value exports)
     // only AXIS events supported here, at the moment, apparently, but most of the other things (mouse, touch, key) come through other supported callbacks.
     // "Axis" in this case only means mousewheel, afaict.
     OH_NativeXComponent_RegisterUIInputEventCallback(nativeXComponent, SDL_XComponent_DispatchUIInputEventCallback, ARKUI_UIINPUTEVENT_TYPE_AXIS);
+
+    OH_NativeXComponent_RegisterKeyEventCallback(nativeXComponent, SDL_XComponent_DispatchKeyEventCallback);
 
     return exports;
 }

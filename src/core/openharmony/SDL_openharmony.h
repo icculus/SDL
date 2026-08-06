@@ -36,6 +36,10 @@ const char *SDL_GetOpenHarmonySystemLocale(void);
 bool SDL_OpenHarmonyOpenURL(const char *url);
 bool SDL_OpenHarmonyToggleSystemBars(bool status_bar, bool navigation_bar);
 bool SDL_OpenHarmonyChangeScreenSaver(bool enable);
+bool SDL_OpenHarmonyShowScreenKeyboard(int input_type, int cap_type, const SDL_Rect *text_input_rect);
+bool SDL_OpenHarmonyHideScreenKeyboard(void);
+bool SDL_OpenHarmonyShowMousePointer(void);
+bool SDL_OpenHarmonyHideMousePointer(void);
 
 bool SDL_IsOpenHarmonyPhone(void);
 bool SDL_IsOpenHarmonyTablet(void);
