@@ -122,6 +122,7 @@ static napi_value CreateNapiString(napi_env env, const char *str)
     return retval;
 }
 
+#if 0  // currently unused, might need later. Equivalent of JS `return {};`
 static napi_value CreateNapiObject(napi_env env)
 {
     napi_value retval = NULL;
@@ -130,6 +131,7 @@ static napi_value CreateNapiObject(napi_env env)
     }
     return retval;
 }
+#endif
 
 static napi_value CreateNapiArray(napi_env env, size_t len)
 {
