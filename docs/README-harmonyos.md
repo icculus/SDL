@@ -400,7 +400,16 @@ One SDL_Window is allowed at a time and it takes the entire available display
 screen).
 
 Touch events work, and multitouch is supported. Mouse events (from an external,
-physical mouse) are supported. More events to come soon.
+physical mouse) are supported.
+
+Clipboard is supported for text. SDL_SetClipboardText() works as expected
+and other apps will see the text. However, an app needs the
+`ohos.permission.READ_PASTEBOARD` permission to obtain data from the system
+clipboard, and this is a _restricted_ permission: you must list it in
+modules.json5, prompt the user to approve it beforehand by calling
+SDL_RequestOpenHarmonyPermission(), and also the app developer must
+explicitly apply for permission from Huawei through AppGallery Connect!
+Consider if you actually need to read clipboard data into your app that badly.
 
 
 ### Render/GPU

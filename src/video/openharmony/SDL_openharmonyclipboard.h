@@ -20,28 +20,15 @@
 */
 #include "SDL_internal.h"
 
-#ifndef SDL_openharmonyvideo_h_
-#define SDL_openharmonyvideo_h_
+#ifndef SDL_openharmonyclipboard_h_
+#define SDL_openharmonyclipboard_h_
 
-#include "../SDL_sysvideo.h"
+extern void OPENHARMONY_InitClipboard(SDL_VideoDevice *_this);
+extern void OPENHARMONY_QuitClipboard(SDL_VideoDevice *_this);
 
-// these are fired from XComponent callbacks registered in src/core/openharmony/SDL_openharmony.c
-extern void SDL_OpenHarmonyVideoSurfaceDestroyed(void *component, void *window);
-extern void SDL_OpenHarmonyVideoSurfaceChanged(void *component, void *window);
-extern void SDL_OpenHarmonyVideoSurfaceCreated(void *component, void *window);
+extern const char *const *OPENHARMONY_GetTextMimeTypes(SDL_VideoDevice *_this, size_t *num_mime_types);
+extern bool OPENHARMONY_SetClipboardText(SDL_VideoDevice *_this, const char *text);
+extern char *OPENHARMONY_GetClipboardText(SDL_VideoDevice *_this);
+extern bool OPENHARMONY_HasClipboardText(SDL_VideoDevice *_this);
 
-// Get the app's current native window.
-extern void SDL_OpenHarmonyGetNativeWindowPointers(void **xcomponent, void **window);
-
-struct SDL_VideoData
-{
-    void *oh_pasteboard;
-    void *oh_pasteboard_observer;
-    bool clipboard_set;
-
-// !!! FIXME: Android stuff.
-    int isPaused;
-    int isPausing;
-};
-
-#endif // SDL_openharmonyvideo_h_
+#endif // SDL_openharmonyclipboard_h_

@@ -23,6 +23,10 @@
     {
       "name": "perm_reason_INTERNET",
       "value": "Used to download additional content"
+    },
+    {
+      "name": "perm_reason_READ_PASTEBOARD",
+      "value": "Used to read from the pasteboard"
     }
   ]
 }

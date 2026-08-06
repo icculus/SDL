@@ -14,10 +14,12 @@
     // PERMISSIONS: Uncomment if your app needs any of these things. Please edit the "reason" text to more-clearly explain why you need access to the feature.
     // Documentation on this section: https://developer.huawei.com/consumer/en/doc/harmonyos-guides/declare-permissions
     // Lists of specific permissions: https://developer.huawei.com/consumer/en/doc/harmonyos-guides/app-permissions
+    // Note that READ_PASTEBOARD is a restricted permission, you need to take serious extra steps to use it. https://developer.huawei.com/consumer/en/doc/harmonyos-guides/restricted-permissions#ohospermissionread_pasteboard
     "requestPermissions": [
       //{ "name": "ohos.permission.MICROPHONE", "reason": "$string:perm_reason_MICROPHONE", "usedScene": { "abilities": [ "EntryAbility" ], "when": "inuse" } },
       //{ "name": "ohos.permission.CAMERA", "reason": "$string:perm_reason_CAMERA", "usedScene": { "abilities": [ "EntryAbility" ], "when": "inuse" } },
-      //{ "name": "ohos.permission.INTERNET", "reason": "$string:perm_reason_INTERNET" "usedScene": { "abilities": [ "EntryAbility" ], "when": "inuse" } },
+      //{ "name": "ohos.permission.INTERNET", "reason": "$string:perm_reason_INTERNET", "usedScene": { "abilities": [ "EntryAbility" ], "when": "inuse" } },
+      //{ "name": "ohos.permission.READ_PASTEBOARD", "reason": "$string:perm_reason_READ_PASTEBOARD", "usedScene": { "abilities": [ "EntryAbility" ], "when": "inuse" } },
     ],
 
     "abilities": [

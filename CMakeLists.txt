@@ -1839,7 +1839,7 @@ endif()
       "${SDL3_SOURCE_DIR}/src/video/openharmony/*.h"
     )
     set(HAVE_SDL_VIDEO TRUE)
-    sdl_link_dependency(openharmonyvideo LIBS native_display_manager)
+    sdl_link_dependency(openharmonyvideo LIBS native_display_manager pasteboard udmf)
 
     # Core stuff
     # find_library(ANDROID_DL_LIBRARY dl)

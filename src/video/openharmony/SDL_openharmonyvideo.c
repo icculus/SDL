@@ -40,8 +40,7 @@
 
 #include "SDL_openharmonyvideo.h"
 #include "SDL_openharmonyopengl.h"
-// !!! FIXME
-//#include "SDL_openharmonyclipboard.h"
+#include "SDL_openharmonyclipboard.h"
 #include "SDL_openharmonyevents.h"
 //#include "SDL_openharmonykeyboard.h"
 //#include "SDL_openharmonymouse.h"
@@ -168,6 +167,7 @@ static bool OPENHARMONY_VideoInit(SDL_VideoDevice *_this)
     OPENHARMONY_InitTouch();
     OPENHARMONY_InitMouse();
 #endif
+    OPENHARMONY_InitClipboard(_this);
 
     // We're done!
     return true;
@@ -175,6 +175,8 @@ static bool OPENHARMONY_VideoInit(SDL_VideoDevice *_this)
 
 void OPENHARMONY_VideoQuit(SDL_VideoDevice *_this)
 {
+    OPENHARMONY_QuitClipboard(_this);
+
 // !!! FIXME
 #if 0
     OPENHARMONY_QuitMouse();
@@ -254,12 +256,13 @@ static SDL_VideoDevice *OPENHARMONY_CreateDevice(void)
     device->HasScreenKeyboardSupport = OPENHARMONY_HasScreenKeyboardSupport;
     device->ShowScreenKeyboard = OPENHARMONY_ShowScreenKeyboard;
     device->HideScreenKeyboard = OPENHARMONY_HideScreenKeyboard;
+#endif
 
     // Clipboard
+    device->GetTextMimeTypes = OPENHARMONY_GetTextMimeTypes;
     device->SetClipboardText = OPENHARMONY_SetClipboardText;
     device->GetClipboardText = OPENHARMONY_GetClipboardText;
     device->HasClipboardText = OPENHARMONY_HasClipboardText;
-#endif
 
     device->device_caps = VIDEO_DEVICE_CAPS_SENDS_FULLSCREEN_DIMENSIONS;
 
