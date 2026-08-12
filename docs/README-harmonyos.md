@@ -280,11 +280,25 @@ hdc install ./entry/build/default/outputs/default/entry-default-signed.hap
 
 ### Debugging
 
-!!! FIXME: write me! I confess, I mostly used "printf debugging" with
-SDL_Log() calls. DevEco Studio, of course, has a GUI that can debug software
-running on real hardware, and I'm pretty sure I saw a document on Huawei's
-website about setting up remote GDB debugging from the command line, but I
-have not explored either option further at the moment.
+If you just want to do "printf debugging," then SDL_Log() will write to the
+system's "hilog" output, and you can use `hdc hilog |grep SDL` to find your
+app's output in the absolute firehose of text that is produced through that
+interface.
+
+One can use a real GUI debugger through DevEco Studio without a lot of drama,
+and one can also use lldb from the command line with "remote debugging." The
+latter option takes a lot of manual setup, and additionally you have to be
+familiar with LLDB's text interface to find this useful, but it _can_ be done
+from Linux, where DevEco Studio isn't available (and also Windows and macOS,
+if all you have are the command line tools).
+
+The instructions on setup are here:
+
+https://developer.huawei.com/consumer/en/doc/harmonyos-guides/debug-lldb#remote-debugging
+
+The only thing that document fails to mention is that the PID number you need
+for LLDB's `attach` command can be obtained by running `hdc shell ps` and
+looking for your app's bundle ID.
 
 
 ## SDL/HarmonyOS subsystem details
