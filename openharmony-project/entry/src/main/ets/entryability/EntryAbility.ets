@@ -18,7 +18,11 @@ export default class EntryAbility extends UIAbility {
     //
     // ONLY EVER ADD PARAMETERS TO THIS FUNCTION CALL. THE C CODE WILL ABORT IF IT DOESN'T GET THE EXACT NUMBER IT EXPECTS.
     hilog.info(DOMAIN, 'SDL/STARTUP', '%{public}s', 'Handing control from ArkTS to native SDL.');
-    sdl.provideArkTSObjects(this, abilityAccessCtrl.createAtManager(), new intl.Locale(), pointer.setPointerVisibleSync, inputMethod.getController());
+    try {
+        sdl.provideArkTSObjects(this, abilityAccessCtrl.createAtManager(), new intl.Locale(), pointer.setPointerVisibleSync, inputMethod.getController());
+    } catch (e) {
+        hilog.info(DOMAIN, 'SDL/STARTUP', '%{public}s', 'Exception thrown! App will not start.');
+    }
   }
 }
 
