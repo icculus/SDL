@@ -813,7 +813,7 @@ static napi_value SDL_JS_LoadContentResult(napi_env env, napi_callback_info info
         OH_LOG_Print(LOG_APP, LOG_FATAL, LOG_DOMAIN, "SDL/STARTUP", "Failed to load the content page! Aborting!");
         exit(1);
     }
-    OH_LOG_Print(LOG_APP, LOG_FATAL, LOG_DOMAIN, "SDL/STARTUP", "Succeeded in loading the content page. Startup may now continue.");
+    //OH_LOG_Print(LOG_APP, LOG_FATAL, LOG_DOMAIN, "SDL/STARTUP", "Succeeded in loading the content page. Startup may now continue.");
 
     return GetNapiUndefined(env);
 }
@@ -847,7 +847,7 @@ static napi_value SDL_JS_UIAbility_OnBackground(napi_env env, napi_callback_info
 static napi_value SDL_JS_UIAbility_OnWindowStageCreate(napi_env env, napi_callback_info info)
 {
     // grab the window object, load "pages/Index" to continue startup.
-    OH_LOG_Print(LOG_APP, LOG_FATAL, LOG_DOMAIN, "SDL/STARTUP", "%{public}s", SDL_FUNCTION);
+    //OH_LOG_Print(LOG_APP, LOG_FATAL, LOG_DOMAIN, "SDL/STARTUP", "%{public}s", SDL_FUNCTION);
     SDL_JS_ENTRY(1);
     napi_value windowStage = argv[0];
     napi_value window = CallNapiMethod(env, windowStage, "getMainWindowSync", 0, NULL);
