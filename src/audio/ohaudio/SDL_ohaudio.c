@@ -47,8 +47,9 @@ struct SDL_PrivateAudioData
     SDL_AtomicInt error_callback_triggered;
 };
 
+// !!! FIXME: Remove this LOGI macro.
 // Debug
-#if 1
+#if 0
 #define LOGI(...) SDL_Log(__VA_ARGS__);
 #else
 #define LOGI(...)
@@ -305,7 +306,6 @@ static int OHAUDIO_RecordDevice(SDL_AudioDevice *device, void *buffer, int bufle
 static void OHAUDIO_CloseDevice(SDL_AudioDevice *device)
 {
     struct SDL_PrivateAudioData *hidden = device->hidden;
-    LOGI(SDL_FUNCTION);
 
     if (hidden) {
         if ((device->recording) && (hidden->stream.capturer)) {
@@ -500,8 +500,6 @@ static void SDLCALL RequestAndroidPermissionBlockingCallback(void *userdata, con
 
 static bool OHAUDIO_OpenDevice(SDL_AudioDevice *device)
 {
-    LOGI(SDL_FUNCTION);
-
 #if 0  // !!! FIXME: look up how to do this in HarmonyOS.
     if (device->recording) {
         // !!! FIXME: make this non-blocking!
@@ -588,12 +586,10 @@ void OHAUDIO_ResumeDevices(void)
 
 static void OHAUDIO_Deinitialize(void)
 {
-    LOGI(SDL_FUNCTION);
     if (ctx.handle) {
         SDL_UnloadObject(ctx.handle);
     }
     SDL_zero(ctx);
-    LOGI("End OHAudio %s", SDL_GetError());
 }
 
 
@@ -610,8 +606,6 @@ static void OHAUDIO_ThreadInit(SDL_AudioDevice *device)
 
 static bool OHAUDIO_Init(SDL_AudioDriverImpl *impl)
 {
-    LOGI(SDL_FUNCTION);
-
     SDL_zero(ctx);
 
     ctx.handle = SDL_LoadObject(LIB_OHAUDIO_SO);
