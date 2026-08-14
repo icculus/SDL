@@ -52,6 +52,8 @@ bool OH_ResourceManager_ReleaseRawFileDescriptor64(const RawFileDescriptor64 *de
 #include <ace/xcomponent/native_interface_xcomponent.h>
 
 #include <AbilityKit/ability_runtime/application_context.h>
+#include <BasicServicesKit/oh_commonevent.h>
+#include <BasicServicesKit/oh_commonevent_support.h>
 #include <deviceinfo.h>
 #include <rawfile/raw_file_manager.h>
 #include <hilog/log.h>
@@ -68,6 +70,7 @@ bool OH_ResourceManager_ReleaseRawFileDescriptor64(const RawFileDescriptor64 *de
 #include "../../video/openharmony/SDL_openharmonyvideo.h"
 #include "../../video/openharmony/SDL_openharmonyevents.h"
 
+static CommonEvent_Subscriber *commonevent_subscriber = NULL;
 static napi_ref ability_object_ref = NULL;
 static napi_ref atmanager_ref = NULL;
 static napi_ref window_ref = NULL;
@@ -75,7 +78,9 @@ static napi_ref ime_controller_ref = NULL;
 static napi_ref pointer_ref = NULL;
 static napi_ref on_insert_text_ref = NULL;
 static napi_ref on_delete_left_ref = NULL;
+static napi_ref i18nsystem_ref = NULL;
 static NativeResourceManager *native_resource_mgr = NULL;
+static napi_threadsafe_function syslocalechanged_threadsafefn = NULL;
 static napi_threadsafe_function req_permissions_threadsafefn = NULL;
 static napi_threadsafe_function open_url_threadsafefn = NULL;
 static napi_threadsafe_function change_sysbars_threadsafefn = NULL;
@@ -754,6 +759,60 @@ bool SDL_OpenHarmonyHideMousePointer(void)
 }
 
 
+// This _must_ be called from the Javascript thread, since it makes NAPI calls!
+static bool UpdateSystemLocale(napi_env env)  // true if known locale changed, false otherwise.
+{
+    if (!i18nsystem_ref) {
+        return false;
+    }
+
+    napi_value i18n = GetNapiRefValue(env, i18nsystem_ref);
+    if (!i18n) {
+        return false;  // uhoh.
+    }
+
+    napi_value language = CallNapiMethod(env, i18n, "getSystemLanguage", 0, NULL);
+    napi_value region = CallNapiMethod(env, i18n, "getSystemRegion", 0, NULL);
+
+    bool retval = false;
+    if (language && region) {
+        char *utf8lang = CreateSDLStringFromNAPIValue(env, language);
+        char *utf8region = CreateSDLStringFromNAPIValue(env, region);
+        if (utf8lang && utf8region) {
+            char *ptr = SDL_strchr(utf8lang, '-');  // if we get "en-Latn-US" or whatever, we just want "en".
+            if (ptr) {
+                *ptr = '\0';  // chop it off.
+            }
+            char *utf8locale = NULL;
+            if (SDL_asprintf(&utf8locale, "%s_%s", utf8lang, utf8region) > 0) {
+                retval = (!system_locale || (SDL_strcmp(system_locale, utf8locale) != 0));
+                if (!retval) {  // didn't change, free the new string.
+                    SDL_free(utf8locale);
+                } else {  // changed, swap them out, free the old string.
+                    char *tmp = system_locale;
+                    system_locale = utf8locale;
+                    SDL_free(tmp);
+                }
+            }
+        }
+        SDL_free(utf8region);
+        SDL_free(utf8lang);
+    }
+
+    return retval;
+}
+
+// this function is called from the main Javascript thread when it's convenient to fire it.
+static void CallJSSystemLocaleChanged(napi_env env, napi_value js_callback, void *context, void *userdata)
+{
+    if (UpdateSystemLocale(env)) {
+        SDL_SendLocaleChangedEvent();
+    }
+}
+
+
+// !!! FIXME: remove the `SDL_` prefix on these static functions.
+
 // Callbacks into our custom XComponent.
 static void SDL_XComponent_OnSurfaceCreatedCallback(OH_NativeXComponent* component, void* window)
 {
@@ -804,6 +863,18 @@ static void SDL_XComponent_DispatchKeyEventCallback(OH_NativeXComponent* compone
     SDL_OpenHarmonyDispatchKeyEvent(component, window);
 }
 
+static void OpenHarmonyCommonEventReceiver(const CommonEvent_RcvData *data)
+{
+    const char *evname = OH_CommonEvent_GetEventFromRcvData(data);
+    if (!evname) {
+        return;
+    } else if (SDL_strcmp(evname, COMMON_EVENT_LOCALE_CHANGED) == 0) {
+        // make sure we're in the javascript thread so we can call into the i18n system object via NAPI.
+        // this will update system_locale and then fire the SDL locale-changed event if appropriate.
+        CallNapiThreadsafeFunction(syslocalechanged_threadsafefn, data, napi_tsfn_nonblocking);
+    }
+}
+
 
 // Called when windowStage.loadContent finishes.
 static napi_value SDL_JS_LoadContentResult(napi_env env, napi_callback_info info)
@@ -824,6 +895,16 @@ static napi_value SDL_JS_UIAbility_OnDestroy(napi_env env, napi_callback_info in
     SDL_FlushEvents(SDL_EVENT_FIRST, SDL_EVENT_LAST);
     SDL_SendQuit();
     SDL_OnApplicationWillTerminate();
+
+    if (commonevent_subscriber) {
+        OH_CommonEvent_UnSubscribe(commonevent_subscriber);
+        OH_CommonEvent_DestroySubscriber(commonevent_subscriber);
+        commonevent_subscriber = NULL;
+    }
+
+    SDL_free(system_locale);
+    system_locale = NULL;
+
     return GetNapiUndefined(env);
 }
 
@@ -892,6 +973,7 @@ static napi_value SDL_JS_ProvideArkTSObjects(napi_env env, napi_callback_info in
     SDL_assert(!native_resource_mgr);  // don't call this more than once!
 
     // we don't bother cleaning up most things in this function, because they are intended to live as long as the process.
+    // !!! FIXME: but for completeness, maybe we should, in SDL_JS_UIAbility_OnDestroy().
     #define expected_argc 5
     SDL_JS_ENTRY(expected_argc);
     if (argc != expected_argc) {
@@ -903,11 +985,12 @@ static napi_value SDL_JS_ProvideArkTSObjects(napi_env env, napi_callback_info in
 
     napi_value ability = argv[0];
     napi_value atmanager = argv[1];
-    napi_value locale = argv[2];
+    napi_value i18nsystem = argv[2];
     napi_value pointer = argv[3];
     napi_value ime_controller = argv[4];
     napi_create_reference(env, ability, 1, &ability_object_ref);
     napi_create_reference(env, atmanager, 1, &atmanager_ref);
+    napi_create_reference(env, i18nsystem, 1, &i18nsystem_ref);
     napi_create_reference(env, pointer, 1, &pointer_ref);
     napi_create_reference(env, ime_controller, 1, &ime_controller_ref);
 
@@ -917,23 +1000,15 @@ static napi_value SDL_JS_ProvideArkTSObjects(napi_env env, napi_callback_info in
     napi_value resourceManager = GetNapiObjField(env, context, "resourceManager");
     native_resource_mgr = OH_ResourceManager_InitNativeResourceManager(env, resourceManager);
 
-    // Store off a copy of the locale string.
-    char *language = CreateSDLStringFromNAPIValue(env, GetNapiObjField(env, locale, "language"));
-    char *region = CreateSDLStringFromNAPIValue(env, GetNapiObjField(env, locale, "region"));
-    if (language && region) {
-        if (SDL_asprintf(&system_locale, "%s_%s", language, region) < 0) {
-            system_locale = NULL;
-        }
-    }
-    SDL_free(language);
-    SDL_free(region);
-
     napi_value on_insert_text = CreateNapiFunction(env, "onInsertText", SDL_JS_IME_Controller_OnInsertText, NULL);
     napi_create_reference(env, on_insert_text, 1, &on_insert_text_ref);
     napi_value on_delete_left = CreateNapiFunction(env, "onDeleteLeft", SDL_JS_IME_Controller_OnDeleteLeft, NULL);
     napi_create_reference(env, on_delete_left, 1, &on_delete_left_ref);
 
+    UpdateSystemLocale(env);  // do this at startup, so we have it saved off while we know we're on the Javascript thread.
+
     // Set up some threadsafe functions, for calling back into ArkTS from the main thread, regardless of what thread native code is operating from.
+    syslocalechanged_threadsafefn = CreateNapiThreadsafeFunction(env, "SDL_SystemLocaleChanged", CallJSSystemLocaleChanged);
     req_permissions_threadsafefn = CreateNapiThreadsafeFunction(env, "SDL_RequestOpenHarmonyPermission", CallJSRequestPermissions);
     open_url_threadsafefn = CreateNapiThreadsafeFunction(env, "SDL_OpenHarmonyOpenURL", CallJSOpenURL);
     change_sysbars_threadsafefn = CreateNapiThreadsafeFunction(env, "SDL_OpenHarmonyChangeSystemBars", CallJSChangeSysBars);
@@ -988,6 +1063,16 @@ static napi_value SDL_Init_Native_Interfaces(napi_env env, napi_value exports)
     OH_NativeXComponent_RegisterUIInputEventCallback(nativeXComponent, SDL_XComponent_DispatchUIInputEventCallback, ARKUI_UIINPUTEVENT_TYPE_AXIS);
 
     OH_NativeXComponent_RegisterKeyEventCallback(nativeXComponent, SDL_XComponent_DispatchKeyEventCallback);
+
+    static const char * const common_events[] = { COMMON_EVENT_LOCALE_CHANGED };
+    CommonEvent_SubscribeInfo *subinfo = OH_CommonEvent_CreateSubscribeInfo(common_events, SDL_arraysize(common_events));
+    if (subinfo) {
+        commonevent_subscriber = OH_CommonEvent_CreateSubscriber(subinfo, OpenHarmonyCommonEventReceiver);
+        if (commonevent_subscriber) {
+            OH_CommonEvent_Subscribe(commonevent_subscriber);
+        }
+        OH_CommonEvent_DestroySubscribeInfo(subinfo);
+    }
 
     return exports;
 }
