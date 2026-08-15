@@ -27,6 +27,14 @@ viewpoint, you are actually targeting OpenHarmony, even if you're building
 with intent to only target HarmonyOS on Huawei-produced phones.
 
 
+## Supported versions
+
+All testing to date has been done on a real phone, a Huawei Mate 80. In
+theory, most of SDL should support HarmonyOS 5.0.0 (or likely _could_, with
+some modifications and concessions), but in practice, it's likely that 6.0.0
+is the lowest version until proven otherwise.
+
+
 ## Some basic target platform truths
 
 More or less, an app on HarmonyOS is a NodeJS process, in the same way that
@@ -117,10 +125,11 @@ export PATH=$PATH:$CLT/sdk/default/openharmony/toolchains:$CLT/bin
 
 ## Putting a HarmonyOS phone in developer mode.
 
-If you want to run your SDL apps natively on a real phone directly, you have
-to put the device in Developer Mode. Any retail phone running HarmonyOS should
-be able to do this. This is almost identical to how one would do this for
-local Android development.
+If you want to test and debug your SDL apps natively on a real phone directly,
+you have to put the device in Developer Mode. As the name implies, this is not
+necessary to install published apps, but only apps under development locally.
+Any retail phone running HarmonyOS should be able to do this. This is almost
+identical to how one would do this for local Android development.
 
 On the phone, go to Settings, Device Name (it's "Mate 80" on mine, in a box by
 itself near the top of the main settings page). This will bring up an "About"
@@ -236,6 +245,13 @@ file, where "base" is replaced with the proper localization ("en_GB" or
 whatever). See the documentation at:
 
 https://developer.huawei.com/consumer/en/doc/harmonyos-guides/resource-categories-and-access
+
+Static data files that ship with your app go in the directory:
+
+openharmony-project/entry/src/main/resources/rawfile/
+
+The file tree under this directory will be packaged up with the app and made
+available through SDL APIs (see "Filesystem" and "IOStream" sections, below).
 
 
 ### Get a HarmonyOS Debug Certificate
@@ -371,9 +387,9 @@ SDL_GetBasePath() returns "assets://" unconditionally (see IOStream section,
 below). SDL_GetPrefPath() returns a path under the string returned from
 OH_AbilityRuntime_ApplicationContextGetFilesDir(), which in practice looks
 like "/data/storage/el2/base/files/APPNAME" ... this looks like an absolute
-path, but HarmonyOS maps this to a specific app-and-user-specific path behind
-the scenes. The prefpath is readable/writable with both SDL_IOStream and
-"normal" APIs like fopen().
+path, but HarmonyOS maps this to an app-and-user-specific path behind the
+scenes. The prefpath is readable/writable with both SDL_IOStream and "normal"
+APIs like fopen().
 
 There is also SDL_GetOpenHarmonyInternalStoragePath(), which returns the base
 directory used for SDL_GetPrefPath() without extra subdirs appended to it or
@@ -413,8 +429,14 @@ One SDL_Window is allowed at a time and it takes the entire available display
 (like Android). Currently we only report a single display (the phone/tablet's
 screen).
 
+Setting an SDL_Window to be fullscreen means it will turn off the system
+status and navigation bars, allowing the window to use those extra pixels. A
+non-fullscreen window leaves those bars in place, letting users see the
+current time, battery/network/etc status, and other icon things.
+
 Touch events work, and multitouch is supported. Mouse events (from an external,
-physical mouse) are supported.
+physical mouse) are supported. Physical keyboard input works, and enabling
+text input will pop up a screen keyboard.
 
 Clipboard is supported for text. SDL_SetClipboardText() works as expected
 and other apps will see the text. However, an app needs the
@@ -438,7 +460,7 @@ Like other platforms, we favor OpenGL ES 2 for the 2D renderer; Vulkan and "GPU"
 also works, but SDL's GLES is assumed to be more trusted at the current moment,
 and historically GLES has been more solid on mobile devices than Vulkan, but
 HarmonyOS-based phones might have significantly better Vulkan support than
-other comparable smart phones; this is yet to be determined.
+other comparable smartphones; this is yet to be determined.
 
 Since Vulkan works, the SDL3 GPU API is available and operational, in addition
 to the hardware-accelerated 2D Renderer API.
@@ -450,6 +472,23 @@ HarmonyOS support OpenSL ES, but like on Android, it is deprecated. As our
 OpenSL ES backend is heavy with Android-specific code, it is not used on
 HarmonyOS. There is a new backend using HarmonyOS's OHAudio API. This is
 almost exactly like Android's AAudio API.
+
+Recording works, but you must request `ohos.permission.MICROPHONE` permission
+before it will work. You must list it in modules.json5, and prompt the user to
+approve it beforehand by calling SDL_RequestOpenHarmonyPermission(). Once
+permission is granted, recording audio devices can be opened as usual, and
+this permission remains for future runs, unless the user revokes in in the
+system preferences later. On HarmonyOS, if a user denies permission, they will
+never get the popup request dialog again, and must go and grant permission
+through the system preferences. Plan accordingly if you want your UI to
+explain this to users.
+
+Note that SDL for Android currently requests permission from the user on
+behalf of the app when opening a recording device, and blocks until the user
+approves or denies the request, but on HarmonyOS this is not done. This may
+change in the future, but for now the app should handle requesting permission
+before opening the device. If a future revision of SDL tries to manage the
+permission, it won't hurt anything if the app has already taken care of it.
 
 
 ### Power
@@ -484,6 +523,9 @@ The Time and Timer subsystems use the usual Unix implementations and work fine.
 SDL_GetPreferredLocales() returns a single locale, as specified in System
 Preferences -> "System" -> "Language & Region". In my case, I have it set to
 English/United States, so SDL reports "en_US".
+
+SDL will send SDL_EVENT_LOCALE_CHANGED events if the user changes their locale
+in the system preferences while the app is running.
 
 
 ### Misc
