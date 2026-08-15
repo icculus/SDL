@@ -871,7 +871,7 @@ static void OpenHarmonyCommonEventReceiver(const CommonEvent_RcvData *data)
     } else if (SDL_strcmp(evname, COMMON_EVENT_LOCALE_CHANGED) == 0) {
         // make sure we're in the javascript thread so we can call into the i18n system object via NAPI.
         // this will update system_locale and then fire the SDL locale-changed event if appropriate.
-        CallNapiThreadsafeFunction(syslocalechanged_threadsafefn, data, napi_tsfn_nonblocking);
+        CallNapiThreadsafeFunction(syslocalechanged_threadsafefn, NULL, napi_tsfn_nonblocking);
     }
 }
 
@@ -1065,7 +1065,7 @@ static napi_value SDL_Init_Native_Interfaces(napi_env env, napi_value exports)
     OH_NativeXComponent_RegisterKeyEventCallback(nativeXComponent, SDL_XComponent_DispatchKeyEventCallback);
 
     static const char * const common_events[] = { COMMON_EVENT_LOCALE_CHANGED };
-    CommonEvent_SubscribeInfo *subinfo = OH_CommonEvent_CreateSubscribeInfo(common_events, SDL_arraysize(common_events));
+    CommonEvent_SubscribeInfo *subinfo = OH_CommonEvent_CreateSubscribeInfo((const char **) common_events, SDL_arraysize(common_events));
     if (subinfo) {
         commonevent_subscriber = OH_CommonEvent_CreateSubscriber(subinfo, OpenHarmonyCommonEventReceiver);
         if (commonevent_subscriber) {
