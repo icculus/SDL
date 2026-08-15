@@ -909,6 +909,7 @@ static napi_value SDL_JS_UIAbility_OnDestroy(napi_env env, napi_callback_info in
 }
 
 // Our native version of UIAbility.onForeground().
+// This is for older devices; on newer ones we use OnWillForeground and OnDidForeground instead.
 static napi_value SDL_JS_UIAbility_OnForeground(napi_env env, napi_callback_info info)
 {
     SDL_OnApplicationWillEnterForeground();
@@ -916,10 +917,43 @@ static napi_value SDL_JS_UIAbility_OnForeground(napi_env env, napi_callback_info
     return GetNapiUndefined(env);
 }
 
-// Our native version of UIAbility.onBackround().
+// Our native version of UIAbility.onWillForeground().
+// This is for newer devices; on older ones we use OnForeground instead.
+static napi_value SDL_JS_UIAbility_OnWillForeground(napi_env env, napi_callback_info info)
+{
+    SDL_OnApplicationWillEnterForeground();
+    return GetNapiUndefined(env);
+}
+
+// Our native version of UIAbility.onDidForeground().
+// This is for newer devices; on older ones we use OnForeground instead.
+static napi_value SDL_JS_UIAbility_OnDidForeground(napi_env env, napi_callback_info info)
+{
+    SDL_OnApplicationDidEnterForeground();
+    return GetNapiUndefined(env);
+}
+
+// Our native version of UIAbility.onBackground().
+// This is for older devices; on newer ones we use OnWillBackground and OnDidBackground instead.
 static napi_value SDL_JS_UIAbility_OnBackground(napi_env env, napi_callback_info info)
 {
     SDL_OnApplicationWillEnterBackground();
+    SDL_OnApplicationDidEnterBackground();
+    return GetNapiUndefined(env);
+}
+
+// Our native version of UIAbility.onWillBackground().
+// This is for newer devices; on older ones we use OnBackground instead.
+static napi_value SDL_JS_UIAbility_OnWillBackground(napi_env env, napi_callback_info info)
+{
+    SDL_OnApplicationWillEnterBackground();
+    return GetNapiUndefined(env);
+}
+
+// Our native version of UIAbility.onDidBackground().
+// This is for newer devices; on older ones we use OnBackground instead.
+static napi_value SDL_JS_UIAbility_OnDidBackground(napi_env env, napi_callback_info info)
+{
     SDL_OnApplicationDidEnterBackground();
     return GetNapiUndefined(env);
 }
@@ -958,10 +992,20 @@ static napi_value SDL_JS_UIAbility_OnMemoryLevel(napi_env env, napi_callback_inf
 
 static void TakeOverUIAbility(napi_env env, napi_value ability)
 {
+    const int apilevel = SDL_GetOpenHarmonySDKVersion();
     napi_value prototype = GetNapiObjField(env, GetNapiObjField(env, ability, "constructor"), "prototype");
+
+    if (apilevel < 20) {
+        SetNapiObjField(env, prototype, "onForeground", CreateNapiFunction(env, "onForeground", SDL_JS_UIAbility_OnForeground, NULL));
+        SetNapiObjField(env, prototype, "onBackground", CreateNapiFunction(env, "onBackground", SDL_JS_UIAbility_OnBackground, NULL));
+    } else {
+        SetNapiObjField(env, prototype, "onWillForeground", CreateNapiFunction(env, "onWillForeground", SDL_JS_UIAbility_OnWillForeground, NULL));
+        SetNapiObjField(env, prototype, "onDidForeground", CreateNapiFunction(env, "onDidForeground", SDL_JS_UIAbility_OnDidForeground, NULL));
+        SetNapiObjField(env, prototype, "onWillBackground", CreateNapiFunction(env, "onWillBackground", SDL_JS_UIAbility_OnWillBackground, NULL));
+        SetNapiObjField(env, prototype, "onDidBackground", CreateNapiFunction(env, "onDidBackground", SDL_JS_UIAbility_OnDidBackground, NULL));
+    }
+
     SetNapiObjField(env, prototype, "onDestroy", CreateNapiFunction(env, "onDestroy", SDL_JS_UIAbility_OnDestroy, NULL));
-    SetNapiObjField(env, prototype, "onForeground", CreateNapiFunction(env, "onForeground", SDL_JS_UIAbility_OnForeground, NULL));
-    SetNapiObjField(env, prototype, "onBackground", CreateNapiFunction(env, "onBackground", SDL_JS_UIAbility_OnBackground, NULL));
     SetNapiObjField(env, prototype, "onWindowStageCreate", CreateNapiFunction(env, "onWindowStageCreate", SDL_JS_UIAbility_OnWindowStageCreate, NULL));
     SetNapiObjField(env, prototype, "onWindowStageDestroy", CreateNapiFunction(env, "onWindowStageDestroy", SDL_JS_UIAbility_OnWindowStageDestroy, NULL));
     SetNapiObjField(env, prototype, "onMemoryLevel", CreateNapiFunction(env, "onMemoryLevel", SDL_JS_UIAbility_OnMemoryLevel, NULL));
