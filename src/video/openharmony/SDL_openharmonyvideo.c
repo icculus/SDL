@@ -208,9 +208,7 @@ static SDL_VideoDevice *OPENHARMONY_CreateDevice(void)
     }
 
     device->internal = data;
-#if 0 // !!! FIXME:
-    device->system_theme = Android_SystemTheme;
-#endif
+    device->system_theme = SDL_GetOpenHarmonySystemTheme();
 
     // Set the function pointers
     device->VideoInit = OPENHARMONY_VideoInit;

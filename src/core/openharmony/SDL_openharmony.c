@@ -89,6 +89,7 @@ static napi_threadsafe_function show_screenkeyboard_threadsafefn = NULL;
 static napi_threadsafe_function hide_screenkeyboard_threadsafefn = NULL;
 static napi_threadsafe_function change_mouseptr_threadsafefn = NULL;
 static char *system_locale = NULL;
+static SDL_SystemTheme system_theme = SDL_SYSTEM_THEME_UNKNOWN;
 
 
 // Some NAPI helper code...
@@ -319,6 +320,11 @@ void SDL_DebugLogOpenHarmonyInfo(void)
 const char *SDL_GetOpenHarmonySystemLocale(void)
 {
     return system_locale;
+}
+
+SDL_SystemTheme SDL_GetOpenHarmonySystemTheme(void)
+{
+    return system_theme;
 }
 
 const char *SDL_GetOpenHarmonyInternalStoragePath(void)
@@ -990,6 +996,24 @@ static napi_value SDL_JS_UIAbility_OnMemoryLevel(napi_env env, napi_callback_inf
     return GetNapiUndefined(env);
 }
 
+static SDL_SystemTheme GetSDLSystemThemeFromAbilityConfig(napi_env env, napi_value config)
+{
+    switch (GetNapiInt(env, GetNapiObjField(env, config, "colorMode"), -1)) {
+        case 0: return SDL_SYSTEM_THEME_DARK;
+        case 1: return SDL_SYSTEM_THEME_LIGHT;
+        default: return SDL_SYSTEM_THEME_UNKNOWN;
+    }
+}
+
+// Our native version of UIAbility.onConfigurationUpdate().
+static napi_value SDL_JS_UIAbility_OnConfigurationUpdate(napi_env env, napi_callback_info info)
+{
+    SDL_JS_ENTRY(1);
+    system_theme = GetSDLSystemThemeFromAbilityConfig(env, argv[0]);
+    SDL_SetSystemTheme(system_theme);
+    return GetNapiUndefined(env);
+}
+
 static void TakeOverUIAbility(napi_env env, napi_value ability)
 {
     const int apilevel = SDL_GetOpenHarmonySDKVersion();
@@ -1009,6 +1033,7 @@ static void TakeOverUIAbility(napi_env env, napi_value ability)
     SetNapiObjField(env, prototype, "onWindowStageCreate", CreateNapiFunction(env, "onWindowStageCreate", SDL_JS_UIAbility_OnWindowStageCreate, NULL));
     SetNapiObjField(env, prototype, "onWindowStageDestroy", CreateNapiFunction(env, "onWindowStageDestroy", SDL_JS_UIAbility_OnWindowStageDestroy, NULL));
     SetNapiObjField(env, prototype, "onMemoryLevel", CreateNapiFunction(env, "onMemoryLevel", SDL_JS_UIAbility_OnMemoryLevel, NULL));
+    SetNapiObjField(env, prototype, "onConfigurationUpdate", CreateNapiFunction(env, "onConfigurationUpdate", SDL_JS_UIAbility_OnConfigurationUpdate, NULL));
 }
 
 // ArkTS calls this once near startup to pass us the Ability, so we can call back into Javascript as necessary.
@@ -1043,6 +1068,9 @@ static napi_value SDL_JS_ProvideArkTSObjects(napi_env env, napi_callback_info in
     napi_value context = GetNapiObjField(env, ability, "context");
     napi_value resourceManager = GetNapiObjField(env, context, "resourceManager");
     native_resource_mgr = OH_ResourceManager_InitNativeResourceManager(env, resourceManager);
+    napi_value config = GetNapiObjField(env, context, "config");
+
+    system_theme = GetSDLSystemThemeFromAbilityConfig(env, config);
 
     napi_value on_insert_text = CreateNapiFunction(env, "onInsertText", SDL_JS_IME_Controller_OnInsertText, NULL);
     napi_create_reference(env, on_insert_text, 1, &on_insert_text_ref);

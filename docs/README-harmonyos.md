@@ -447,6 +447,8 @@ SDL_RequestOpenHarmonyPermission(), and also the app developer must
 explicitly apply for permission from Huawei through AppGallery Connect!
 Consider if you actually need to read clipboard data into your app that badly.
 
+SDL_GetSystemTheme() and SDL_EVENT_SYSTEM_THEME_CHANGED both work.
+
 
 ### Render/GPU
 
