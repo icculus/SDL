@@ -138,7 +138,9 @@ static void ReadDataCallback(OH_AudioCapturer *capturer, void *userData, void *a
     const size_t size = SDL_min(available_bytes, callback_bytes);
     const size_t offset = hidden->callback_bytes % hidden->mixbuf_bytes;
     const size_t end = (offset + size) % hidden->mixbuf_bytes;
+
     SDL_assert(size <= hidden->mixbuf_bytes);
+    (void) framesize;  // only used in macros that bubble out of release code, etc.
 
     //LOGI("Recorded %zu frames, %zu available, %zu max (%zu written, %zu read)", callback_bytes / framesize, available_bytes / framesize, hidden->mixbuf_bytes / framesize, hidden->callback_bytes / framesize, hidden->processed_bytes / framesize);
 
@@ -178,7 +180,9 @@ static OH_AudioData_Callback_Result WriteDataCallback(OH_AudioRenderer *renderer
     const size_t size = SDL_min(available_bytes, callback_bytes);
     const size_t offset = hidden->callback_bytes % hidden->mixbuf_bytes;
     const size_t end = (offset + size) % hidden->mixbuf_bytes;
+
     SDL_assert(size <= hidden->mixbuf_bytes);
+    (void) framesize;  // only used in macros that bubble out of release code, etc.
 
     //LOGI("Playing %zu frames, %zu available, %zu max (%zu written, %zu read)", callback_bytes / framesize, available_bytes / framesize, hidden->mixbuf_bytes / framesize, hidden->processed_bytes / framesize, hidden->callback_bytes / framesize);
 
