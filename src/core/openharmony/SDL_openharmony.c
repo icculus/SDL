@@ -340,7 +340,7 @@ const char *SDL_GetOpenHarmonyInternalStoragePath(void)
             if (rc == ABILITY_RUNTIME_ERROR_CODE_NO_ERROR) {
                 break;
             } else if (rc != ABILITY_RUNTIME_ERROR_CODE_PARAM_INVALID) {
-                SDL_SetError("OH_AbilityRuntime_ApplicationContextGetBundleName failed: %d", (int) rc);
+                SDL_SetError("OH_AbilityRuntime_ApplicationContextGetFilesDir failed: %d", (int) rc);
                 SDL_free(path);
                 return NULL;
             }
