@@ -781,7 +781,7 @@ static void SDLCALL SDL_LogOutput(void *userdata, int category, SDL_LogPriority 
         #if defined(SDL_PLATFORM_ANDROID)
         __android_log_write(SDL_android_priority[priority], tag, message);
         #elif defined(SDL_PLATFORM_OPENHARMONY)
-        OH_LOG_PrintMsg(LOG_APP, SDL_openharmony_priority[priority], LOG_DOMAIN, tag, message);
+        OH_LOG_Print(LOG_APP, SDL_openharmony_priority[priority], LOG_DOMAIN, tag, "%{public}s", message);
         #endif
     }
 #elif defined(SDL_PLATFORM_APPLE) && (defined(SDL_VIDEO_DRIVER_COCOA) || defined(SDL_VIDEO_DRIVER_UIKIT))
