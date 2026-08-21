@@ -144,6 +144,8 @@ static bool OPENHARMONY_VideoInit(SDL_VideoDevice *_this)
         default: display->natural_orientation = SDL_ORIENTATION_UNKNOWN; break;
     }
 
+    // !!! FIXME: this is probably wrong, I think on OpenHarmony phones/tablets, these are setting both orientation and rotation, and this works out because most people are launching apps while holding the phone in portrait mode (0 rotation).
+    // !!! FIXME: if I'm right, we should decide if this is a phone/tablet screen and just set the natural orientation to portrait and then use this code to calculate current orientation.
     if (rotation == DISPLAY_MANAGER_ROTATION_90) {  // rotations are clockwise on OpenHarmony.
         static const SDL_DisplayOrientation rotated[5] = { SDL_ORIENTATION_UNKNOWN, SDL_ORIENTATION_PORTRAIT, SDL_ORIENTATION_PORTRAIT_FLIPPED, SDL_ORIENTATION_LANDSCAPE_FLIPPED, SDL_ORIENTATION_LANDSCAPE };
         SDL_assert(((int) display->natural_orientation) < SDL_arraysize(rotated));
@@ -161,6 +163,9 @@ static bool OPENHARMONY_VideoInit(SDL_VideoDevice *_this)
     }
 
     display->content_scale = mode.pixel_density;
+
+    // !!! FIXME: look at SDL_OnApplicationDidChangeStatusBarOrientation() and do something similar.
+
 
 // !!! FIXME
 #if 0

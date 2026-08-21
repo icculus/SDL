@@ -45,6 +45,7 @@ void OH_ResourceManager_CloseRawFile64(RawFile64 *rawFile) __attribute__((__avai
 bool OH_ResourceManager_GetRawFileDescriptor64(const RawFile64 *rawFile, RawFileDescriptor64 *descriptor) __attribute__((__availability__(ohos, introduced=11.0.0)));
 bool OH_ResourceManager_ReleaseRawFileDescriptor64(const RawFileDescriptor64 *descriptor) __attribute__((__availability__(ohos, introduced=11.0.0)));
 
+#include <window_manager/oh_display_manager.h>
 
 // !!! FIXME: these are defined as "const uint32_t VARNAME = VALUE;" in native_interface_xcomponent.h, which becomes a global variable in _our_ C code! Maybe C++ handles this differently...?
 #define OH_XCOMPONENT_ID_LEN_MAX sdl_core_ohos_OH_XCOMPONENT_ID_LEN_MAX
@@ -90,6 +91,7 @@ static napi_threadsafe_function hide_screenkeyboard_threadsafefn = NULL;
 static napi_threadsafe_function change_mouseptr_threadsafefn = NULL;
 static char *system_locale = NULL;
 static SDL_SystemTheme system_theme = SDL_SYSTEM_THEME_UNKNOWN;
+static SDL_DisplayOrientation device_orientation = SDL_ORIENTATION_PORTRAIT;
 
 
 // Some NAPI helper code...
@@ -325,6 +327,11 @@ const char *SDL_GetOpenHarmonySystemLocale(void)
 SDL_SystemTheme SDL_GetOpenHarmonySystemTheme(void)
 {
     return system_theme;
+}
+
+SDL_DisplayOrientation SDL_GetOpenHarmonyDeviceCurrentOrientation(void)
+{
+    return device_orientation;
 }
 
 const char *SDL_GetOpenHarmonyInternalStoragePath(void)
@@ -881,6 +888,33 @@ static void OpenHarmonyCommonEventReceiver(const CommonEvent_RcvData *data)
     }
 }
 
+static void UpdateDeviceOrientation(void)
+{
+    NativeDisplayManager_Orientation orientation = DISPLAY_MANAGER_PORTRAIT;
+    OH_NativeDisplayManager_GetDefaultDisplayOrientation(&orientation);
+
+    switch (orientation) {
+        #define CHECKROT(ohenum, sdlenum) case DISPLAY_MANAGER_##ohenum: device_orientation = SDL_ORIENTATION_##sdlenum; break
+        CHECKROT(PORTRAIT, PORTRAIT);
+        CHECKROT(LANDSCAPE, LANDSCAPE);
+        CHECKROT(PORTRAIT_INVERTED, PORTRAIT_FLIPPED);
+        CHECKROT(LANDSCAPE_INVERTED, LANDSCAPE_FLIPPED);
+        CHECKROT(UNKNOWN, UNKNOWN);
+        #undef CHECKROT
+    }
+}
+
+// Called when phone/tablet rotates to a new orientation.
+static void OnDisplayChangeCallback(uint64_t displayId)
+{
+    uint64_t defdpyid = 0;
+    OH_NativeDisplayManager_GetDefaultDisplayId(&defdpyid);
+    if (displayId != defdpyid) {
+        return;  // we don't care if external displays change orientation.
+    }
+    UpdateDeviceOrientation();
+}
+
 
 // Called when windowStage.loadContent finishes.
 static napi_value SDL_JS_LoadContentResult(napi_env env, napi_callback_info info)
@@ -1078,6 +1112,11 @@ static napi_value SDL_JS_ProvideArkTSObjects(napi_env env, napi_callback_info in
     napi_create_reference(env, on_delete_left, 1, &on_delete_left_ref);
 
     UpdateSystemLocale(env);  // do this at startup, so we have it saved off while we know we're on the Javascript thread.
+
+    // the Video subsystem will also register one of these for tracking displays, but this is so we can track device orientation changes independently.
+    uint32_t display_change_listener_idx = 0;
+    OH_NativeDisplayManager_RegisterDisplayChangeListener(OnDisplayChangeCallback, &display_change_listener_idx);
+    UpdateDeviceOrientation();
 
     // Set up some threadsafe functions, for calling back into ArkTS from the main thread, regardless of what thread native code is operating from.
     syslocalechanged_threadsafefn = CreateNapiThreadsafeFunction(env, "SDL_SystemLocaleChanged", CallJSSystemLocaleChanged);
