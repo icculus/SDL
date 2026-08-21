@@ -29,10 +29,10 @@ with intent to only target HarmonyOS on Huawei-produced phones.
 
 ## Supported versions
 
-All testing to date has been done on a real phone, a Huawei Mate 80. In
-theory, most of SDL should support HarmonyOS 5.0.0 (or likely _could_, with
-some modifications and concessions), but in practice, it's likely that 6.0.0
-is the lowest version until proven otherwise.
+All testing to date has been done on a real phone, a Huawei Mate 80. SDL
+currently supports HarmonyOS 5.0.4 (API level 16) and later, although low-end
+testing hasn't been done so there might be little changes needed for extreme
+compatibility. Report bugs or send patches if this becomes a problem.
 
 
 ## Some basic target platform truths
@@ -567,7 +567,7 @@ possible to generate a real Visual Studio, Xcode, etc, project.
 cd SDL
 mkdir buildbot-ohos   # or whatever you want to call the build directory.
 cd buildbot-ohos
-$CLT/sdk/default/openharmony/native/build-tools/cmake/bin/cmake -G Ninja -DCMAKE_TOOLCHAIN_FILE=$CLT/sdk/default/openharmony/native/build/cmake/ohos.toolchain.cmake -DCMAKE_BUILD_TYPE=Release ..
+$CLT/sdk/default/openharmony/native/build-tools/cmake/bin/cmake -G Ninja -DCMAKE_TOOLCHAIN_FILE=$CLT/sdk/default/openharmony/native/build/cmake/ohos.toolchain.cmake -DCMAKE_BUILD_TYPE=Release -DOHOS_COMPATIBLE_SDK_VERSION=16.0.0 ..
 ```
 
 (One can also add -DOHOS_ARCH=cputype, where "cputype" is "arm64-v8a" for ARM64, "armeabi-v7a" for ARM32, and "x86_64" Intel 64-bit. It defaults to ARM64 if unspecified.)

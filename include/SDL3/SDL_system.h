@@ -622,6 +622,7 @@ extern SDL_DECLSPEC bool SDLCALL SDL_SendAndroidMessage(Uint32 command, int para
  *
  * - API level 20: OpenHarmony 6.0.0
  * - API level 18: OpenHarmony 5.1.0
+ * - API level 16: OpenHarmony 5.0.4
  * - API level 15: OpenHarmony 5.0.3
  * - API level 14: OpenHarmony 5.0.2
  * - API level 13: OpenHarmony 5.0.1

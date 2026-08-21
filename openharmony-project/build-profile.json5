@@ -4,8 +4,8 @@
       {
         "name": "default",
         "signingConfig": "default",
-        "targetSdkVersion": "6.1.1(24)",
-        "compatibleSdkVersion": "6.1.1(24)",
+        "targetSdkVersion": "5.0.4(16)",
+        "compatibleSdkVersion": "5.0.4(16)",
         "runtimeOS": "HarmonyOS",
         "buildOption": {
           "nativeCompiler": "BiSheng",
