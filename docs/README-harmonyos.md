@@ -284,6 +284,9 @@ hvigorw assembleHap
 If everything went well (AND IT OFTEN DOES NOT, READ THE OUTPUT!), you'll have
 a signed HarmonyOS app bundle (a ".hap" file) you can install to a device.
 
+There is a Bash shell script to automate this as much as possible: see the
+"The Helper Script" section, below.
+
 
 ### Install on real hardware from the command line.
 
@@ -293,6 +296,10 @@ Make sure the phone is connected (run `hdc list targets -v` to verify).
 # (or whatever the directory and .hap file are named.)
 hdc install ./entry/build/default/outputs/default/entry-default-signed.hap
 ```
+
+There is a Bash shell script to automate this as much as possible: see the
+"The Helper Script" section, below.
+
 
 ### Debugging
 
@@ -308,13 +315,65 @@ familiar with LLDB's text interface to find this useful, but it _can_ be done
 from Linux, where DevEco Studio isn't available (and also Windows and macOS,
 if all you have are the command line tools).
 
-The instructions on setup are here:
+There is a Bash shell script to automate this as much as possible: see the
+"The Helper Script" section, below.
+
+The instructions on setup from scratch, without the shell script, are here:
 
 https://developer.huawei.com/consumer/en/doc/harmonyos-guides/debug-lldb#remote-debugging
 
 The only thing that document fails to mention is that the PID number you need
 for LLDB's `attach` command can be obtained by running `hdc shell ps` and
 looking for your app's bundle ID.
+
+
+### The Helper Script
+
+There is a Bash shell script to simplify several tasks, if you're using the
+command line tools. This is not necessary from DevEco Studio. This has only
+been tested on Linux.
+
+Make sure your PATH is set up (see "Install Command Line Tools," above), and
+run this command:
+
+```bash
+SDL/build-scripts/harmonyos-tool.sh openharmony-project --build --debug
+```
+
+"openharmony-project" is literally the path to your project file. It can be a
+relative path, including "." if you are sitting in the directory.
+
+All the other command line arguments are optional, and can be used in any
+combination (for example, you can --launch without --build'ing, or --install
+and --debug in one run, etc.)
+
+If you specify --build, the script will compile C/C++ code and assemble the
+.hap file to be run on a device or emulator.
+
+If you specify --install, the script will install the .hap on a device
+(which will kill the process if it's currently running).
+
+If you specify --launch, the script will launch the app on a device, if it
+isn't already running.
+
+If you specify --debug, the script will prepare remote debugging via lldb,
+and attach to the running app.
+
+If you specify --kill, the script will force-stop any existing process.
+
+(--debug implies --launch, "--build --launch" and "--build --debug" imply
+--install.)
+
+Most of these tasks obviously need a phone that hdc can talk to.
+
+Note that debugging always attaches to a process, so if you need to debug
+something at startup, plan to add a sleep to the start of the program, as it
+can take several seconds for the attachment to complete. It isn't clear to me
+how to launch an app from the debugger so you can break at startup, but there
+is probably a way.
+
+Also note that this script is fragile in general; be gentle, report bugs, send
+patches.
 
 
 ## SDL/HarmonyOS subsystem details
