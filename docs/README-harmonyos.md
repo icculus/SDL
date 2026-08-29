@@ -304,9 +304,9 @@ There is a Bash shell script to automate this as much as possible: see the
 ### Debugging
 
 If you just want to do "printf debugging," then SDL_Log() will write to the
-system's "hilog" output, and you can use `hdc hilog |grep SDL` to find your
-app's output in the absolute firehose of text that is produced through that
-interface.
+system's "hilog" output, and you can use `hdc hilog |grep -F "APPBUNDLENAME"`
+to find your app's output in the absolute firehose of text that is produced
+through that interface.
 
 One can use a real GUI debugger through DevEco Studio without a lot of drama,
 and one can also use lldb from the command line with "remote debugging." The
@@ -346,6 +346,15 @@ relative path, including "." if you are sitting in the directory.
 All the other command line arguments are optional, and can be used in any
 combination (for example, you can --launch without --build'ing, or --install
 and --debug in one run, etc.)
+
+If you specify --log, the script will fire up `hdc hilog` in the background
+and filter out everything but your app bundle's log calls, so you can watch
+the log while other tasks complete. It will start this once passed the
+--install stage (even if you didn't install), so you are watching it while
+launching/debugging begins. After all other tasks are done, harmonyos-tool.sh
+won't terminate until either the `hdc` process terminates or the user hits
+CTRL-C (rather, until SIGINT is delivered, which CTRL-C does). The script will
+kill the `hdc` process in that case before terminating itself.
 
 If you specify --build, the script will compile C/C++ code and assemble the
 .hap file to be run on a device or emulator.
