@@ -1821,6 +1821,7 @@ if(False)
       "${SDL3_SOURCE_DIR}/src/sensor/openharmony/*.h"
     )
   endif()
+endif()
 
   if(SDL_CAMERA)
     set(SDL_CAMERA_DRIVER_OPENHARMONY 1)
@@ -1829,8 +1830,8 @@ if(False)
       "${SDL3_SOURCE_DIR}/src/camera/openharmony/*.c"
       "${SDL3_SOURCE_DIR}/src/camera/openharmony/*.h"
     )
+    sdl_link_dependency(openharmonycamera LIBS ohcamera ohimage image_receiver native_image native_buffer)
   endif()
-endif()
 
   if(SDL_VIDEO)
     set(SDL_VIDEO_DRIVER_OPENHARMONY 1)

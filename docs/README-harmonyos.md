@@ -598,6 +598,16 @@ SDL will send SDL_EVENT_LOCALE_CHANGED events if the user changes their locale
 in the system preferences while the app is running.
 
 
+### Camera
+
+Camera access works. You must request the `ohos.permission.CAMERA` permission
+in modules.json5. SDL will handle the UI to prompt the user for permission
+during SDL_OpenCamera() if necessary, so the app doesn't have to manage this
+further (unlike using a microphone in the audio API, SDL's camera API was
+built on the idea that the user's permission or refusal might be coming at a
+later time).
+
+
 ### Misc
 
 SDL_OpenURL() works, and will launch the appropriate app ("ability") for
@@ -608,7 +618,6 @@ browser, custom URL schemes can launch specific apps, etc.
 ### STILL TODO
 
 - Assert
-- Camera
 - Dialog
 - Haptic
 - HIDAPI

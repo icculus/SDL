@@ -33,6 +33,7 @@ extern "C" {
 void SDL_DebugLogOpenHarmonyInfo(void);
 const char *SDL_GetOpenHarmonySystemLocale(void);
 SDL_SystemTheme SDL_GetOpenHarmonySystemTheme(void);
+SDL_DisplayOrientation SDL_GetOpenHarmonyDeviceCurrentOrientation(void);
 
 bool SDL_OpenHarmonyOpenURL(const char *url);
 bool SDL_OpenHarmonyToggleSystemBars(bool status_bar, bool navigation_bar);
