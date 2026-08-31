@@ -359,8 +359,11 @@ kill the `hdc` process in that case before terminating itself.
 If you specify --build, the script will compile C/C++ code and assemble the
 .hap file to be run on a device or emulator.
 
-If you specify --install, the script will install the .hap on a device
+If you specify --install, the script will (re)install the .hap on a device
 (which will kill the process if it's currently running).
+
+If you specify --uninstall, the script will remove the existing app on a
+device (which will kill the process if it's currently running).
 
 If you specify --launch, the script will launch the app on a device, if it
 isn't already running.

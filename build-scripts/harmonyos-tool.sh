@@ -36,6 +36,7 @@ else
 fi
 
 do_build=0
+do_uninstall=0
 do_install=0
 do_kill=0
 do_launch=0
@@ -53,6 +54,10 @@ while [ $# -gt 0 ]; do
             ;;
         --install)
             do_install=1
+            shift
+            ;;
+        --uninstall)
+            do_uninstall=1
             shift
             ;;
         --kill)
@@ -85,7 +90,7 @@ if [ "$do_anything" == "0" ]; then
 fi
 
 if [ "$need_usage" == "1" ]; then
-    echo "USAGE: $0 <project_dir> [--build] [--install] [--launch] [--debug] [--kill] [--log]" 1>&2
+    echo "USAGE: $0 <project_dir> [--kill] [--uninstall] [--build] [--install] [--launch] [--debug] [--log]" 1>&2
     echo "" 1>&2
     exit 1
 fi
@@ -115,6 +120,11 @@ cd "$PROJDIR"
 if [ "$do_kill" == "1" ]; then
     echo "KILLING..."
     hdc shell aa force-stop $BUNDLE || exit 1
+fi
+
+if [ "$do_uninstall" == "1" ]; then
+    echo "UNINSTALLING..."
+    hdc uninstall $BUNDLE || exit 1
 fi
 
 if [ "$do_build" == "1" ]; then
